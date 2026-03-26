@@ -60,7 +60,7 @@ target_link_options(
         -static
         -z max-page-size=0x1000
         --gc-sections
-        -T${CMAKE_CURRENT_SOURCE_DIR}/src/arch/x86_64/linker.ld)
+        -T${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 #-------------------------------------------------------------------------------------------
 # Iso Gen
