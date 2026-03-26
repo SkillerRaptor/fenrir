@@ -1,0 +1,44 @@
+AlignEscapedNewlines: Left
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllArgumentsOnNextLine: false
+AllowShortEnumsOnASingleLine: false
+BasedOnStyle: WebKit
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterFunction: true
+BreakBeforeBraces: Custom
+BreakTemplateDeclarations: Yes
+BreakBeforeInheritanceComma: true
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 120
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<[^/]+>$'
+    Priority: 1
+  - Regex: '^<hyper_[^>]+>$'
+    Priority: 3
+  - Regex: '^<[^/]+/.+>$'
+    Priority: 2
+  - Regex: '^"[^"]+"$'
+    Priority: 4
+IndentPPDirectives: AfterHash
+IndentWrappedFunctionNames: true
+InsertBraces: true
+InsertNewlineAtEOF: true
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: false
+  AtStartOfFile: false
+LineEnding: LF
+NamespaceIndentation: None
+PointerAlignment: Right
+QualifierAlignment: Left
+RemoveSemicolon: true
+RequiresExpressionIndentation: OuterScope
+ShortNamespaceLines: 0
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: true
+TabWidth: 4
+UseTab: Never
