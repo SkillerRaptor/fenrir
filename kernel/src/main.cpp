@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "misc/cxxabi.hpp"
+
 __attribute__((used, section(".limine_requests"))) volatile uint64_t s_base_revision[] = LIMINE_BASE_REVISION(6);
 
 __attribute__((used, section(".limine_requests"))) volatile limine_framebuffer_request s_framebuffer_request
@@ -18,31 +20,19 @@ __attribute__((used, section(".limine_requests_start"))) volatile uint64_t s_sta
 
 __attribute__((used, section(".limine_requests_end"))) volatile uint64_t s_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
-extern "C" {
-
-int __cxa_atexit(void (*)(void *), void *, void *) { return 0; }
-void __cxa_pure_virtual() { asm volatile("hlt"); }
-void *__dso_handle;
-}
-
-extern void (*__init_array[])();
-extern void (*__init_array_end[])();
-
 __attribute__((noreturn)) extern "C" void kmain()
 {
     if (LIMINE_BASE_REVISION_SUPPORTED(s_base_revision) == false) {
         asm volatile("hlt");
     }
 
-    for (size_t i = 0; &__init_array[i] != __init_array_end; ++i) {
-        __init_array[i]();
-    }
+    cxxabi::construct();
 
     if (s_framebuffer_request.response == nullptr || s_framebuffer_request.response->framebuffer_count < 1) {
         asm volatile("hlt");
     }
 
-    limine_framebuffer *framebuffer = s_framebuffer_request.response->framebuffers[0];
+    auto *framebuffer = s_framebuffer_request.response->framebuffers[0];
 
     volatile auto *framebuffer_ptr = static_cast<volatile uint32_t *>(framebuffer->address);
     for (size_t y = 0; y < framebuffer->height; ++y) {

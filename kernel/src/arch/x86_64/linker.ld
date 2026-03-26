@@ -43,10 +43,10 @@ SECTIONS
     } :rodata
 
     .init_array : {
-        __init_array = .;
+        __constructors_start = .;
         KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
         KEEP(*(.init_array .ctors))
-        __init_array_end = .;
+        __constructors_end = .;
     } :rodata
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
