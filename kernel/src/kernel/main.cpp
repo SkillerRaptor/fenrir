@@ -7,6 +7,7 @@
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/arch/x86_64/idt.hpp"
+#include "kernel/arch/x86_64/pic.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/misc/cxxabi.hpp"
@@ -33,6 +34,7 @@ __attribute__((noreturn)) extern "C" void kmain()
     logger::log("\n");
 
     gdt::initialize();
+    pic::remap();
     idt::initialize();
 
     cpu::enable_interrupts();

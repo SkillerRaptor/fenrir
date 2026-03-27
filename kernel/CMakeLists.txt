@@ -10,6 +10,7 @@ set(SOURCES
         src/kernel/arch/x86_64/gdt.cpp
         src/kernel/arch/x86_64/idt.asm
         src/kernel/arch/x86_64/idt.cpp
+        src/kernel/arch/x86_64/pic.cpp
         src/kernel/core/boot.cpp
         src/kernel/core/logger.cpp
         src/kernel/core/memory.cpp
@@ -19,6 +20,8 @@ set(HEADERS
         include/kernel/arch/x86_64/cpu.hpp
         include/kernel/arch/x86_64/gdt.hpp
         include/kernel/arch/x86_64/idt.hpp
+        include/kernel/arch/x86_64/io.hpp
+        include/kernel/arch/x86_64/pic.hpp
         include/kernel/arch/x86_64/registers.hpp
         include/kernel/core/boot.hpp
         include/kernel/core/logger.hpp
