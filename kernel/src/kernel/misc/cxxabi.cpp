@@ -8,6 +8,7 @@
 
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/core/types.hpp"
+#include "kernel/memory/kmalloc.hpp"
 
 namespace kernel::cxxabi {
 
@@ -58,3 +59,12 @@ void construct()
 }
 
 } // namespace kernel::cxxabi
+
+[[nodiscard]] void *operator new(const kernel::usize size) { return kernel::memory::kmalloc(size); }
+[[nodiscard]] void *operator new[](const kernel::usize size) { return kernel::memory::kmalloc(size); }
+
+void operator delete(void *ptr) noexcept { kernel::memory::kfree(ptr); }
+void operator delete(void *ptr, kernel::usize) noexcept { kernel::memory::kfree(ptr); }
+
+void operator delete[](void *ptr) noexcept { kernel::memory::kfree(ptr); }
+void operator delete[](void *ptr, kernel::usize) noexcept { kernel::memory::kfree(ptr); }

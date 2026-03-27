@@ -7,7 +7,6 @@
 #include "kernel/core/boot.hpp"
 
 namespace kernel::boot {
-
 __attribute__((used, section(".limine_requests"))) volatile u64 s_base_revision[] = LIMINE_BASE_REVISION(6);
 
 __attribute__((used, section(".limine_requests"))) volatile limine_bootloader_info_request s_bootloader_info_request {
@@ -24,6 +23,18 @@ __attribute__((used, section(".limine_requests"))) volatile limine_firmware_type
 
 __attribute__((used, section(".limine_requests"))) volatile limine_framebuffer_request s_framebuffer_request {
     .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
+
+__attribute__((used, section(".limine_requests"))) volatile limine_hhdm_request s_hhdm_request {
+    .id = LIMINE_HHDM_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
+
+__attribute__((used, section(".limine_requests"))) volatile limine_memmap_request s_memmap_request {
+    .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 0,
     .response = nullptr,
 };
@@ -55,9 +66,12 @@ const char *get_firmware_type()
 
 usize get_framebuffer_count() { return s_framebuffer_request.response->framebuffer_count; }
 
-limine_framebuffer *get_framebuffer(const usize framebuffer)
-{
-    return s_framebuffer_request.response->framebuffers[framebuffer];
-}
+limine_framebuffer *get_framebuffer(const usize index) { return s_framebuffer_request.response->framebuffers[index]; }
+
+u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
+
+usize get_memory_map_entry_count() { return s_memmap_request.response->entry_count; }
+
+limine_memmap_entry *get_memory_map_entry(const usize index) { return s_memmap_request.response->entries[index]; }
 
 } // namespace kernel::boot

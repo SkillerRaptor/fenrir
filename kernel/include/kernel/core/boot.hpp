@@ -19,6 +19,11 @@ const char *get_bootloader_version();
 const char *get_firmware_type();
 
 usize get_framebuffer_count();
-limine_framebuffer *get_framebuffer(usize framebuffer);
+limine_framebuffer *get_framebuffer(usize index);
+
+u64 get_hhdm_offset();
+
+usize get_memory_map_entry_count();
+limine_memmap_entry *get_memory_map_entry(usize index);
 
 } // namespace kernel::boot

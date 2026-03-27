@@ -10,6 +10,8 @@
 #include "kernel/arch/x86_64/pic.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
+#include "kernel/memory/kmalloc.hpp"
+#include "kernel/memory/pmm.hpp"
 #include "kernel/misc/cxxabi.hpp"
 
 namespace kernel {
@@ -36,6 +38,8 @@ __attribute__((noreturn)) extern "C" void kmain()
     gdt::initialize();
     pic::remap();
     idt::initialize();
+
+    pmm::initialize();
 
     cpu::enable_interrupts();
 
