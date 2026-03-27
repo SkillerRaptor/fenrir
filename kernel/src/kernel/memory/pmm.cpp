@@ -86,6 +86,10 @@ void initialize()
 
 static void *internal_allocate(const usize pages, const usize limit)
 {
+    if (pages == 0) {
+        return nullptr;
+    }
+
     usize current_pages = 0;
     while (s_last_used_index < limit) {
         if (s_bitmap.get(s_last_used_index++)) {

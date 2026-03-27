@@ -98,7 +98,7 @@ void initialize()
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
 
     s_descriptor.size = sizeof(s_entries) - 1;
-    s_descriptor.address = reinterpret_cast<u64>(&s_entries[0]);
+    s_descriptor.address = reinterpret_cast<u64>(s_entries);
 
     load_gdt(&s_descriptor);
     reload_segments();

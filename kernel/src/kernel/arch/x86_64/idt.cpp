@@ -60,7 +60,7 @@ void initialize()
     }
 
     s_descriptor.size = sizeof(s_entries) - 1;
-    s_descriptor.address = reinterpret_cast<u64>(&s_entries[0]);
+    s_descriptor.address = reinterpret_cast<u64>(s_entries);
 
     load_idt(&s_descriptor);
 
