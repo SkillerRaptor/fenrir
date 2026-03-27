@@ -8,6 +8,7 @@
 
 #include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/gdt.hpp"
+#include "arch/x86_64/idt.hpp"
 #include "core/types.hpp"
 #include "misc/cxxabi.hpp"
 
@@ -32,6 +33,9 @@ __attribute__((noreturn)) extern "C" void kmain()
     }
 
     gdt::initialize();
+    idt::initialize();
+
+    cpu::enable_interrupts();
 
     cxxabi::construct();
 

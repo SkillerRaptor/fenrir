@@ -8,11 +8,15 @@ set(SOURCES
         src/main.cpp
         src/arch/x86_64/gdt.asm
         src/arch/x86_64/gdt.cpp
+        src/arch/x86_64/idt.asm
+        src/arch/x86_64/idt.cpp
         src/misc/cxxabi.cpp)
 
 set(HEADERS
         include/arch/x86_64/cpu.hpp
         include/arch/x86_64/gdt.hpp
+        include/arch/x86_64/idt.hpp
+        include/arch/x86_64/registers.hpp
         include/core/types.hpp
         include/misc/cxxabi.hpp)
 
