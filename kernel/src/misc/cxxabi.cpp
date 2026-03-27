@@ -6,7 +6,7 @@
 
 #include "misc/cxxabi.hpp"
 
-#include <stddef.h>
+#include "core/types.hpp"
 
 extern "C" {
 
@@ -16,9 +16,9 @@ struct AtexitFunctionEntry {
     void *dso_handle;
 };
 
-static constexpr size_t s_atexit_max_functions { 128 };
+static constexpr usize s_atexit_max_functions { 128 };
 
-static size_t s_atexit_function_count { 0 };
+static usize s_atexit_function_count { 0 };
 static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
 
 void *__dso_handle { nullptr };

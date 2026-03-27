@@ -10,7 +10,7 @@
 #include "core/types.hpp"
 #include "misc/cxxabi.hpp"
 
-__attribute__((used, section(".limine_requests"))) volatile uint64_t s_base_revision[] = LIMINE_BASE_REVISION(6);
+__attribute__((used, section(".limine_requests"))) volatile u64 s_base_revision[] = LIMINE_BASE_REVISION(6);
 
 __attribute__((used, section(".limine_requests"))) volatile limine_framebuffer_request s_framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
@@ -18,10 +18,10 @@ __attribute__((used, section(".limine_requests"))) volatile limine_framebuffer_r
     .response = nullptr,
 };
 
-__attribute__((used, section(".limine_requests_start"))) volatile uint64_t s_start_marker[]
+__attribute__((used, section(".limine_requests_start"))) volatile u64 s_start_marker[]
     = LIMINE_REQUESTS_START_MARKER;
 
-__attribute__((used, section(".limine_requests_end"))) volatile uint64_t s_end_marker[] = LIMINE_REQUESTS_END_MARKER;
+__attribute__((used, section(".limine_requests_end"))) volatile u64 s_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
 __attribute__((noreturn)) extern "C" void kmain()
 {
