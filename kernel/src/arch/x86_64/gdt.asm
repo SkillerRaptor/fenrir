@@ -4,6 +4,10 @@
 ; SPDX-License-Identifier: MIT
 ;
 
+bits 64
+
+section .text
+
 global load_gdt
 global reload_segments
 

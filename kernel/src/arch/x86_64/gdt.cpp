@@ -61,35 +61,43 @@ void initialize()
     s_entries[0] = create_entry(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
 
     s_entries[1] = create_entry(
-        0x00000000, 0x0000ffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READ_WRITE,
+        0x00000000,
+        0x0000ffff,
+        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
+            | ACCESS_ATTRIBUTE_READ_WRITE,
         FLAG_ATTRIBUTE_NONE);
     s_entries[2] = create_entry(
-        0x00000000, 0x0000ffff,
+        0x00000000,
+        0x0000ffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
         FLAG_ATTRIBUTE_NONE);
 
     s_entries[3] = create_entry(
-        0x00000000, 0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READ_WRITE,
+        0x00000000,
+        0xffffffff,
+        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
+            | ACCESS_ATTRIBUTE_READ_WRITE,
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_32);
     s_entries[4] = create_entry(
-        0x00000000, 0xffffffff,
+        0x00000000,
+        0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_32);
 
     s_entries[5] = create_entry(
-        0x00000000, 0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READ_WRITE
-            | ACCESS_ATTRIBUTE_ACCESS,
+        0x00000000,
+        0xffffffff,
+        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
+            | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
     s_entries[6] = create_entry(
-        0x00000000, 0xffffffff,
+        0x00000000,
+        0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
 
     s_descriptor.size = sizeof(s_entries) - 1;
-    s_descriptor.address = reinterpret_cast<u64>(&s_entries);
+    s_descriptor.address = reinterpret_cast<u64>(&s_entries[0]);
 
     load_gdt(&s_descriptor);
     reload_segments();
