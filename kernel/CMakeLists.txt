@@ -20,9 +20,12 @@ set(HEADERS
         include/kernel/core/types.hpp
         include/kernel/misc/cxxabi.hpp)
 
+set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
+
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
 target_link_libraries(kernel PRIVATE limine)
+set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------
 # Base Options
@@ -70,12 +73,19 @@ target_link_options(
         -static
         -z max-page-size=0x1000
         --gc-sections
-        -T${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
+        -T${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------
 # Iso Gen
 #-------------------------------------------------------------------------------------------
 set(LIMINE_DIR ${CMAKE_BINARY_DIR}/_deps/limine-src)
+
+set(LIMINE_FILES
+        ${LIMINE_DIR}/limine-bios.sys
+        ${LIMINE_DIR}/limine-bios-cd.bin
+        ${LIMINE_DIR}/limine-uefi-cd.bin
+        ${LIMINE_DIR}/BOOTX64.EFI
+        ${LIMINE_DIR}/BOOTIA32.EFI)
 
 add_custom_command(
         OUTPUT leviathan.iso
@@ -94,13 +104,15 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy ${LIMINE_DIR}/BOOTIA32.EFI ${CMAKE_CURRENT_BINARY_DIR}/iso_root/EFI/BOOT/BOOTIA32.EFI
 
         COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
-        DEPENDS kernel ${CMAKE_SOURCE_DIR}/limine.conf
+
+        DEPENDS kernel ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
+
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(
         iso
         ALL
-        DEPENDS leviathan.iso)
+        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso)
 
 #-------------------------------------------------------------------------------------------
 # Run
