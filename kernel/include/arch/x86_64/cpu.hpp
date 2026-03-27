@@ -8,9 +8,10 @@
 
 namespace cpu {
 
-void halt();
+inline void halt() { asm volatile("hlt"); }
 
-void enable_interrupts();
-void disable_interrupts();
+inline void enable_interrupts() { asm volatile("sti"); }
+
+inline void disable_interrupts() { asm volatile("cli"); }
 
 } // namespace cpu

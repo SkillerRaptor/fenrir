@@ -6,7 +6,6 @@
 
 set(SOURCES
         src/main.cpp
-        src/arch/x86_64/cpu.cpp
         src/arch/x86_64/gdt.asm
         src/arch/x86_64/gdt.cpp
         src/misc/cxxabi.cpp)
@@ -27,6 +26,7 @@ target_link_libraries(kernel PRIVATE limine)
 target_compile_options(
         kernel
         PRIVATE
+        -O1
         -g
         -Wall
         -Wextra
