@@ -59,7 +59,7 @@ void initialize()
         s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
     }
 
-    s_descriptor.size = sizeof(s_descriptor) - 1;
+    s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(&s_entries[0]);
 
     load_idt(&s_descriptor);
