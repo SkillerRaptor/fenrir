@@ -6,6 +6,7 @@
 
 #include "kernel/arch/x86_64/gdt.hpp"
 
+#include "kernel/core/logger.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::gdt {
@@ -101,6 +102,8 @@ void initialize()
 
     load_gdt(&s_descriptor);
     reload_segments();
+
+    logger::ok("GDT: Initialized\n");
 }
 
 } // namespace kernel::gdt

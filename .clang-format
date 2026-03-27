@@ -17,12 +17,8 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '^<[^/]+>$'
     Priority: 1
-  - Regex: '^<hyper_[^>]+>$'
-    Priority: 3
-  - Regex: '^<[^/]+/.+>$'
-    Priority: 2
   - Regex: '^"[^"]+"$'
-    Priority: 4
+    Priority: 2
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: true
 InsertBraces: true

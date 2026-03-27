@@ -10,6 +10,9 @@ set(SOURCES
         src/kernel/arch/x86_64/gdt.cpp
         src/kernel/arch/x86_64/idt.asm
         src/kernel/arch/x86_64/idt.cpp
+        src/kernel/core/boot.cpp
+        src/kernel/core/logger.cpp
+        src/kernel/core/memory.cpp
         src/kernel/misc/cxxabi.cpp)
 
 set(HEADERS
@@ -17,6 +20,9 @@ set(HEADERS
         include/kernel/arch/x86_64/gdt.hpp
         include/kernel/arch/x86_64/idt.hpp
         include/kernel/arch/x86_64/registers.hpp
+        include/kernel/core/boot.hpp
+        include/kernel/core/logger.hpp
+        include/kernel/core/memory.hpp
         include/kernel/core/types.hpp
         include/kernel/misc/cxxabi.hpp)
 
@@ -24,44 +30,18 @@ set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE limine)
+target_link_libraries(kernel PRIVATE limine flanterm nanoprintf)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------
 # Base Options
 #-------------------------------------------------------------------------------------------
-target_compile_options(
-        kernel
-        PRIVATE
-        -O1
-        -g
-        -Wall
-        -Wextra
-        -ffreestanding
-        -fno-stack-protector
-        -fno-stack-check
-        -fno-lto
-        -fno-PIC
-        -ffunction-sections
-        -fdata-sections
-        -fno-rtti
-        -fno-exceptions)
+target_compile_options(kernel PRIVATE ${KERNEL_BASE_OPTIONS})
 
 #-------------------------------------------------------------------------------------------
 # Arch Options
 #-------------------------------------------------------------------------------------------
-target_compile_options(
-        kernel
-        PRIVATE
-        -m64
-        -march=x86-64
-        -mabi=sysv
-        -mno-80387
-        -mno-mmx
-        -mno-sse
-        -mno-sse2
-        -mno-red-zone
-        -mcmodel=kernel)
+target_compile_options(kernel PRIVATE ${KERNEL_ARCH_OPTIONS})
 
 #-------------------------------------------------------------------------------------------
 # Link Options
@@ -88,7 +68,7 @@ set(LIMINE_FILES
         ${LIMINE_DIR}/BOOTIA32.EFI)
 
 add_custom_command(
-        OUTPUT leviathan.iso
+        OUTPUT ${CMAKE_BINARY_DIR}/leviathan.iso
 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:kernel> ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/kernel
@@ -112,7 +92,7 @@ add_custom_command(
 add_custom_target(
         iso
         ALL
-        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso)
+        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel)
 
 #-------------------------------------------------------------------------------------------
 # Run

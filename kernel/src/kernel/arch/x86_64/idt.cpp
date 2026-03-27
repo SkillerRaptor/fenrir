@@ -8,6 +8,7 @@
 
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/registers.hpp"
+#include "kernel/core/logger.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::idt {
@@ -62,6 +63,8 @@ void initialize()
     s_descriptor.address = reinterpret_cast<u64>(&s_entries[0]);
 
     load_idt(&s_descriptor);
+
+    logger::ok("IDT: Initialized\n");
 }
 
 __attribute__((noreturn)) extern "C" void interrupt_raise(const Registers *)
