@@ -6,7 +6,7 @@
 
 #include "arch/x86_64/gdt.hpp"
 
-#include <stdint.h>
+#include "core/types.hpp"
 
 namespace gdt {
 
@@ -23,18 +23,18 @@ namespace gdt {
 #define FLAG_ATTRIBUTE_4K (1 << 3)
 
 struct Entry {
-    uint16_t limit_low { 0 };
-    uint16_t base_low { 0 };
-    uint8_t base_middle { 0 };
-    uint8_t access { 0 };
-    uint8_t limit_high : 4 { 0 };
-    uint8_t flags : 4 { 0 };
-    uint8_t base_high { 0 };
+    u16 limit_low { 0 };
+    u16 base_low { 0 };
+    u8 base_middle { 0 };
+    u8 access { 0 };
+    u8 limit_high : 4 { 0 };
+    u8 flags : 4 { 0 };
+    u8 base_high { 0 };
 } __attribute__((packed));
 
 struct Descriptor {
-    uint16_t size { 0 };
-    uint64_t address { 0 };
+    u16 size { 0 };
+    u64 address { 0 };
 } __attribute__((packed));
 
 extern "C" void load_gdt(const Descriptor *descriptor);
@@ -43,16 +43,16 @@ extern "C" void reload_segments();
 static Entry s_entries[7] { };
 static Descriptor s_descriptor { };
 
-static Entry create_entry(const uint32_t base, const uint32_t limit, const uint8_t access, const uint8_t flags)
+static Entry create_entry(const u32 base, const u32 limit, const u8 access, const u8 flags)
 {
     return {
-        .limit_low = static_cast<uint16_t>(limit & 0xffff),
-        .base_low = static_cast<uint16_t>(base & 0xffff),
-        .base_middle = static_cast<uint8_t>((base >> 16) & 0xff),
-        .access = static_cast<uint8_t>(access),
-        .limit_high = static_cast<uint8_t>((limit >> 16) & 0x0f),
-        .flags = static_cast<uint8_t>(flags),
-        .base_high = static_cast<uint8_t>((base >> 24) & 0xff),
+        .limit_low = static_cast<u16>(limit & 0xffff),
+        .base_low = static_cast<u16>(base & 0xffff),
+        .base_middle = static_cast<u8>((base >> 16) & 0xff),
+        .access = static_cast<u8>(access),
+        .limit_high = static_cast<u8>((limit >> 16) & 0x0f),
+        .flags = static_cast<u8>(flags),
+        .base_high = static_cast<u8>((base >> 24) & 0xff),
     };
 }
 
@@ -89,7 +89,7 @@ void initialize()
         FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
 
     s_descriptor.size = sizeof(s_entries) - 1;
-    s_descriptor.address = reinterpret_cast<uint64_t>(&s_entries);
+    s_descriptor.address = reinterpret_cast<u64>(&s_entries);
 
     load_gdt(&s_descriptor);
     reload_segments();

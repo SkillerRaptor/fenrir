@@ -12,6 +12,7 @@ set(SOURCES
 
 set(HEADERS
         include/arch/x86_64/gdt.hpp
+        include/core/types.hpp
         include/misc/cxxabi.hpp)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
