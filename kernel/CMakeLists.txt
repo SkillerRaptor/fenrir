@@ -5,11 +5,14 @@
 #-------------------------------------------------------------------------------------------
 
 set(SOURCES
-    src/main.cpp
-    src/misc/cxxabi.cpp)
+        src/main.cpp
+        src/arch/x86_64/gdt.asm
+        src/arch/x86_64/gdt.cpp
+        src/misc/cxxabi.cpp)
 
 set(HEADERS
-    include/misc/cxxabi.hpp)
+        include/arch/x86_64/gdt.hpp
+        include/misc/cxxabi.hpp)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)

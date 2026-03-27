@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "arch/x86_64/gdt.hpp"
 #include "misc/cxxabi.hpp"
 
 __attribute__((used, section(".limine_requests"))) volatile uint64_t s_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -25,6 +26,8 @@ __attribute__((noreturn)) extern "C" void kmain()
     if (LIMINE_BASE_REVISION_SUPPORTED(s_base_revision) == false) {
         asm volatile("hlt");
     }
+
+    gdt::initialize();
 
     cxxabi::construct();
 
