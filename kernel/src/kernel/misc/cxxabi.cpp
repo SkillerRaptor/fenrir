@@ -51,7 +51,8 @@ extern "C" ConstructorFunction __constructors_end[];
 
 void construct()
 {
-    for (const auto *constructor = __constructors_start; constructor < __constructors_end; ++constructor) {
+    for (const ConstructorFunction *constructor = __constructors_start; constructor < __constructors_end;
+         ++constructor) {
         (*constructor)();
     }
 }

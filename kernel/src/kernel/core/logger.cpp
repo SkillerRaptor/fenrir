@@ -28,7 +28,7 @@ static flanterm_context *s_context { nullptr };
 
 void initialize()
 {
-    const auto *framebuffer = boot::get_framebuffer(0);
+    const limine_framebuffer *framebuffer = boot::get_framebuffer(0);
 
     s_context = flanterm_fb_init(
         nullptr,
@@ -62,9 +62,9 @@ void initialize()
 
 static void internal_write(const int c, void *)
 {
-    const auto character = static_cast<char>(c);
+    const char character = static_cast<char>(c);
     if (character == '\n') {
-        constexpr auto end_of_line = '\r';
+        constexpr char end_of_line = '\r';
         flanterm_write(s_context, &end_of_line, 1);
     }
 

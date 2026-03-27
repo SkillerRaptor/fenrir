@@ -38,7 +38,7 @@ static Descriptor s_descriptor { };
 
 static Entry create_entry(void *handler, const u8 attributes)
 {
-    const auto address = reinterpret_cast<u64>(handler);
+    const u64 address = reinterpret_cast<u64>(handler);
 
     return {
         .offset_low = static_cast<u16>(address & 0xffff),
