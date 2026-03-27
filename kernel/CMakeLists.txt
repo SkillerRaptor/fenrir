@@ -5,20 +5,20 @@
 #-------------------------------------------------------------------------------------------
 
 set(SOURCES
-        src/main.cpp
-        src/arch/x86_64/gdt.asm
-        src/arch/x86_64/gdt.cpp
-        src/arch/x86_64/idt.asm
-        src/arch/x86_64/idt.cpp
-        src/misc/cxxabi.cpp)
+        src/kernel/main.cpp
+        src/kernel/arch/x86_64/gdt.asm
+        src/kernel/arch/x86_64/gdt.cpp
+        src/kernel/arch/x86_64/idt.asm
+        src/kernel/arch/x86_64/idt.cpp
+        src/kernel/misc/cxxabi.cpp)
 
 set(HEADERS
-        include/arch/x86_64/cpu.hpp
-        include/arch/x86_64/gdt.hpp
-        include/arch/x86_64/idt.hpp
-        include/arch/x86_64/registers.hpp
-        include/core/types.hpp
-        include/misc/cxxabi.hpp)
+        include/kernel/arch/x86_64/cpu.hpp
+        include/kernel/arch/x86_64/gdt.hpp
+        include/kernel/arch/x86_64/idt.hpp
+        include/kernel/arch/x86_64/registers.hpp
+        include/kernel/core/types.hpp
+        include/kernel/misc/cxxabi.hpp)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)

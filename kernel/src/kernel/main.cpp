@@ -6,11 +6,13 @@
 
 #include <limine.h>
 
-#include "arch/x86_64/cpu.hpp"
-#include "arch/x86_64/gdt.hpp"
-#include "arch/x86_64/idt.hpp"
-#include "core/types.hpp"
-#include "misc/cxxabi.hpp"
+#include "kernel/arch/x86_64/cpu.hpp"
+#include "kernel/arch/x86_64/gdt.hpp"
+#include "kernel/arch/x86_64/idt.hpp"
+#include "kernel/core/types.hpp"
+#include "kernel/misc/cxxabi.hpp"
+
+namespace kernel {
 
 __attribute__((used, section(".limine_requests"))) volatile u64 s_base_revision[] = LIMINE_BASE_REVISION(6);
 
@@ -47,8 +49,8 @@ __attribute__((noreturn)) extern "C" void kmain()
     volatile auto *framebuffer_ptr = static_cast<volatile u32 *>(framebuffer->address);
     for (usize y = 0; y < framebuffer->height; ++y) {
         for (usize x = 0; x < framebuffer->width; ++x) {
-            u32 green = (y * 255) / framebuffer->height;
-            u32 blue = (x * 255) / framebuffer->width;
+            const u32 green = (y * 255) / framebuffer->height;
+            const u32 blue = (x * 255) / framebuffer->width;
             framebuffer_ptr[y * (framebuffer->pitch / 4) + x] = (green << 8) | blue;
         }
     }
@@ -58,3 +60,5 @@ __attribute__((noreturn)) extern "C" void kmain()
         cpu::halt();
     }
 }
+
+} // namespace kernel

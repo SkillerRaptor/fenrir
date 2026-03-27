@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "misc/cxxabi.hpp"
+#include "kernel/misc/cxxabi.hpp"
 
-#include "arch/x86_64/cpu.hpp"
-#include "core/types.hpp"
+#include "kernel/arch/x86_64/cpu.hpp"
+#include "kernel/core/types.hpp"
 
-extern "C" {
+namespace kernel::cxxabi {
 
 struct AtexitFunctionEntry {
     void (*destructor)(void *);
@@ -22,9 +22,9 @@ static constexpr usize s_atexit_max_functions { 128 };
 static usize s_atexit_function_count { 0 };
 static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
 
-void *__dso_handle { nullptr };
+extern "C" void *__dso_handle { nullptr };
 
-int __cxa_atexit(void (*destructor)(void *), void *object_ptr, void *dso_handle)
+extern "C" int __cxa_atexit(void (*destructor)(void *), void *object_ptr, void *dso_handle)
 {
     if (s_atexit_function_count >= s_atexit_max_functions) {
         return -1;
@@ -38,16 +38,12 @@ int __cxa_atexit(void (*destructor)(void *), void *object_ptr, void *dso_handle)
     return 0;
 }
 
-void __cxa_pure_virtual()
+extern "C" void __cxa_pure_virtual()
 {
     // TODO: Panic here
 
     cpu::halt();
 }
-
-} // extern "C"
-
-namespace cxxabi {
 
 using ConstructorFunction = void (*)();
 extern "C" ConstructorFunction __constructors_start[];
@@ -60,4 +56,4 @@ void construct()
     }
 }
 
-} // namespace cxxabi
+} // namespace kernel::cxxabi

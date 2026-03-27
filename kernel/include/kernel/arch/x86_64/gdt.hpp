@@ -6,8 +6,8 @@
 
 #pragma once
 
-namespace idt {
+namespace kernel::gdt {
 
 void initialize();
 
-} // namespace idt
+} // namespace kernel::gdt

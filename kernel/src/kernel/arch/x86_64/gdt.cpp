@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "arch/x86_64/gdt.hpp"
+#include "kernel/arch/x86_64/gdt.hpp"
 
-#include "core/types.hpp"
+#include "kernel/core/types.hpp"
 
-namespace gdt {
+namespace kernel::gdt {
 
 #define ACCESS_ATTRIBUTE_NONE (0 << 0)
 #define ACCESS_ATTRIBUTE_ACCESS (1 << 0)
@@ -103,4 +103,4 @@ void initialize()
     reload_segments();
 }
 
-} // namespace gdt
+} // namespace kernel::gdt

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "arch/x86_64/idt.hpp"
+#include "kernel/arch/x86_64/idt.hpp"
 
-#include "arch/x86_64/cpu.hpp"
-#include "arch/x86_64/registers.hpp"
-#include "core/types.hpp"
+#include "kernel/arch/x86_64/cpu.hpp"
+#include "kernel/arch/x86_64/registers.hpp"
+#include "kernel/core/types.hpp"
 
-namespace idt {
+namespace kernel::idt {
 
 #define ATTRIBUTE_PRESENT (1 << 7)
 #define ATTRIBUTE_INTERRUPT_GATE (1 << 1 | 1 << 2 | 1 << 3)
@@ -72,4 +72,4 @@ __attribute__((noreturn)) extern "C" void interrupt_raise(const Registers *)
     }
 }
 
-} // namespace idt
+} // namespace kernel::idt

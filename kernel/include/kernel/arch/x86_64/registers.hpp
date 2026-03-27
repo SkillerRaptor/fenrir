@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "core/types.hpp"
+#include "kernel/core/types.hpp"
+
+namespace kernel {
 
 struct Registers {
     u64 r15 { 0 };
@@ -35,3 +37,5 @@ struct Registers {
     u64 rsp { 0 };
     u64 ss { 0 };
 };
+
+} // namespace kernel
