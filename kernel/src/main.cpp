@@ -6,6 +6,7 @@
 
 #include <limine.h>
 
+#include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/gdt.hpp"
 #include "core/types.hpp"
 #include "misc/cxxabi.hpp"
@@ -18,15 +19,16 @@ __attribute__((used, section(".limine_requests"))) volatile limine_framebuffer_r
     .response = nullptr,
 };
 
-__attribute__((used, section(".limine_requests_start"))) volatile u64 s_start_marker[]
-    = LIMINE_REQUESTS_START_MARKER;
+__attribute__((used, section(".limine_requests_start"))) volatile u64 s_start_marker[] = LIMINE_REQUESTS_START_MARKER;
 
 __attribute__((used, section(".limine_requests_end"))) volatile u64 s_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
 __attribute__((noreturn)) extern "C" void kmain()
 {
+    cpu::disable_interrupts();
+
     if (LIMINE_BASE_REVISION_SUPPORTED(s_base_revision) == false) {
-        asm volatile("hlt");
+        cpu::halt();
     }
 
     gdt::initialize();
@@ -34,11 +36,10 @@ __attribute__((noreturn)) extern "C" void kmain()
     cxxabi::construct();
 
     if (s_framebuffer_request.response == nullptr || s_framebuffer_request.response->framebuffer_count < 1) {
-        asm volatile("hlt");
+        cpu::halt();
     }
 
-    auto *framebuffer = s_framebuffer_request.response->framebuffers[0];
-
+    const auto *framebuffer = s_framebuffer_request.response->framebuffers[0];
     volatile auto *framebuffer_ptr = static_cast<volatile u32 *>(framebuffer->address);
     for (usize y = 0; y < framebuffer->height; ++y) {
         for (usize x = 0; x < framebuffer->width; ++x) {
@@ -49,6 +50,7 @@ __attribute__((noreturn)) extern "C" void kmain()
     }
 
     while (true) {
-        asm volatile("hlt");
+        cpu::disable_interrupts();
+        cpu::halt();
     }
 }

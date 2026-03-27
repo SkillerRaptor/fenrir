@@ -6,11 +6,13 @@
 
 set(SOURCES
         src/main.cpp
+        src/arch/x86_64/cpu.cpp
         src/arch/x86_64/gdt.asm
         src/arch/x86_64/gdt.cpp
         src/misc/cxxabi.cpp)
 
 set(HEADERS
+        include/arch/x86_64/cpu.hpp
         include/arch/x86_64/gdt.hpp
         include/core/types.hpp
         include/misc/cxxabi.hpp)

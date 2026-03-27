@@ -6,6 +6,7 @@
 
 #include "misc/cxxabi.hpp"
 
+#include "arch/x86_64/cpu.hpp"
 #include "core/types.hpp"
 
 extern "C" {
@@ -41,7 +42,7 @@ void __cxa_pure_virtual()
 {
     // TODO: Panic here
 
-    asm volatile("hlt");
+    cpu::halt();
 }
 
 } // extern "C"
