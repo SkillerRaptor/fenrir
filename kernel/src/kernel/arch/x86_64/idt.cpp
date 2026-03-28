@@ -16,6 +16,8 @@ namespace kernel::idt {
 #define ATTRIBUTE_PRESENT (1 << 7)
 #define ATTRIBUTE_INTERRUPT_GATE (1 << 1 | 1 << 2 | 1 << 3)
 
+using InterruptHandler = void (*)(const Registers *);
+
 struct Entry {
     u16 offset_low { 0 };
     u16 selector { 0 };
@@ -35,6 +37,7 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 static Entry s_entries[256] { };
 static Descriptor s_descriptor { };
+static InterruptHandler s_interrupt_handlers[256] { };
 
 static Entry create_entry(void *handler, const u8 attributes)
 {
@@ -53,6 +56,81 @@ static Entry create_entry(void *handler, const u8 attributes)
 
 extern "C" void *interrupt_handlers[];
 
+#define ENUMERATE_EXCEPTIONS                                                                 \
+    _ENUMERATE_EXCEPTION(0, divide_by_zero, "Divide-by-zero Error")                          \
+    _ENUMERATE_EXCEPTION(1, debug, "Debug")                                                  \
+    _ENUMERATE_EXCEPTION(2, non_maskable_interrupt, "Non-maskable Interrupt")                \
+    _ENUMERATE_EXCEPTION(3, breakpoint, "Breakpoint")                                        \
+    _ENUMERATE_EXCEPTION(4, overflow, "Overflow")                                            \
+    _ENUMERATE_EXCEPTION(5, bound_range_exceeded, "Bound Range Exceeded")                    \
+    _ENUMERATE_EXCEPTION(6, invalid_opcode, "Invalid Opcode")                                \
+    _ENUMERATE_EXCEPTION(7, device_not_available, "Device Not Available")                    \
+    _ENUMERATE_EXCEPTION(8, double_fault, "Double Fault")                                    \
+    _ENUMERATE_EXCEPTION(10, invalid_tss, "Invalid TSS")                                     \
+    _ENUMERATE_EXCEPTION(11, segment_not_present, "Segment Not Present")                     \
+    _ENUMERATE_EXCEPTION(12, stack_segment_fault, "Stack-Segment-Fault")                     \
+    _ENUMERATE_EXCEPTION(13, general_protection_fault, "General-Protection-Fault")           \
+    _ENUMERATE_EXCEPTION(16, x87_floating_point_exception, "x87 Floating-Point Exception")   \
+    _ENUMERATE_EXCEPTION(17, alignment_check, "Alignment Check")                             \
+    _ENUMERATE_EXCEPTION(18, machine_check, "Machine Check")                                 \
+    _ENUMERATE_EXCEPTION(19, simd_floating_point_exception, "SIMD Floating-Point Exception") \
+    _ENUMERATE_EXCEPTION(20, virtualization_exception, "Virtualization Exception")           \
+    _ENUMERATE_EXCEPTION(30, security_exception, "Security Exception")
+
+#define _ENUMERATE_EXCEPTION(i, fn, exception)                                    \
+    __attribute__((noreturn)) void fn(const Registers *registers)                 \
+    {                                                                             \
+        logger::err(exception " occured with error code %u\n", registers->error); \
+                                                                                  \
+        while (true) {                                                            \
+            cpu::disable_interrupts();                                            \
+            cpu::halt();                                                          \
+        }                                                                         \
+    }
+
+ENUMERATE_EXCEPTIONS
+
+#undef _ENUMERATE_EXCEPTION
+
+__attribute__((noreturn)) void page_fault(const Registers *registers)
+{
+    u64 faulting_address = 0;
+    asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
+
+    logger::err("Page Fault at address 0x%llx with error code %b\n", faulting_address, registers->error);
+
+    if (registers->error & 0b00001) {
+        logger::err(" - Page-level protection violation\n");
+    } else {
+        logger::err(" - Non-present page\n");
+    }
+
+    if (registers->error & 0b00010) {
+        logger::err(" - Write access\n");
+    } else {
+        logger::err(" - Read access\n");
+    }
+
+    if (registers->error & 0b00100) {
+        logger::err(" - User-mode\n");
+    } else {
+        logger::err(" - Kernel-mode\n");
+    }
+
+    if (registers->error & 0b01000) {
+        logger::err(" - Reserved bit set\n");
+    }
+
+    if (registers->error & 0b10000) {
+        logger::err(" - Instruction fetch fault\n");
+    }
+
+    while (true) {
+        cpu::disable_interrupts();
+        cpu::halt();
+    }
+}
+
 void initialize()
 {
     logger::info("IDT: Initializing...\n");
@@ -60,6 +138,12 @@ void initialize()
     for (usize i = 0; i < 256; ++i) {
         s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
     }
+
+#define _ENUMERATE_EXCEPTION(i, fn, err) s_interrupt_handlers[i] = fn;
+    ENUMERATE_EXCEPTIONS
+#undef _ENUMERATE_EXCEPTION
+
+    s_interrupt_handlers[14] = page_fault;
 
     s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(s_entries);
@@ -69,12 +153,13 @@ void initialize()
     logger::ok("IDT: Initialized\n");
 }
 
-__attribute__((noreturn)) extern "C" void interrupt_raise(const Registers *)
+extern "C" void interrupt_raise(const Registers *registers)
 {
-    while (true) {
-        cpu::disable_interrupts();
-        cpu::halt();
+    if (s_interrupt_handlers[registers->isr]) {
+        s_interrupt_handlers[registers->isr](registers);
     }
+
+    // NOTE: Send end of interrupt
 }
 
 } // namespace kernel::idt
