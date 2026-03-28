@@ -22,7 +22,7 @@ void *kmalloc(const usize size)
     const usize page_count = div_round_up(size, s_page_size);
 
     // NOTE: Allocate one extra page for the header
-    u8 *ptr = static_cast<u8 *>(pmm::allocate(page_count + 1));
+    u8 *ptr = static_cast<u8 *>(pmm::allocate(page_count + 1, false));
     if (!ptr) {
         return nullptr;
     }

@@ -11,6 +11,7 @@
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/memory/pmm.hpp"
+#include "kernel/memory/vmm.hpp"
 #include "kernel/misc/cxxabi.hpp"
 
 namespace kernel {
@@ -39,6 +40,7 @@ __attribute__((noreturn)) extern "C" void kmain()
     idt::initialize();
 
     pmm::initialize();
+    vmm::initialize();
 
     cpu::enable_interrupts();
 

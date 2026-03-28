@@ -15,6 +15,13 @@ __attribute__((used, section(".limine_requests"))) volatile limine_bootloader_in
     .response = nullptr,
 };
 
+__attribute__((
+    used, section(".limine_requests"))) volatile limine_executable_address_request s_executable_address_request {
+    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
+
 __attribute__((used, section(".limine_requests"))) volatile limine_firmware_type_request s_firmware_type_request {
     .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID,
     .revision = 0,
@@ -63,6 +70,10 @@ const char *get_firmware_type()
         return nullptr;
     }
 }
+
+u64 get_executable_physical_base() { return s_executable_address_request.response->physical_base; }
+
+u64 get_executable_virtual_base() { return s_executable_address_request.response->virtual_base; }
 
 usize get_framebuffer_count() { return s_framebuffer_request.response->framebuffer_count; }
 

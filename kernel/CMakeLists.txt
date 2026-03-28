@@ -17,6 +17,7 @@ set(SOURCES
         src/kernel/memory/bitmap.cpp
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
+        src/kernel/memory/vmm.cpp
         src/kernel/misc/cxxabi.cpp)
 
 set(HEADERS
@@ -33,6 +34,7 @@ set(HEADERS
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/pmm.hpp
+        include/kernel/memory/vmm.hpp
         include/kernel/misc/cxxabi.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)

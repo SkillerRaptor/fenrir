@@ -18,6 +18,9 @@ const char *get_bootloader_name();
 const char *get_bootloader_version();
 const char *get_firmware_type();
 
+u64 get_executable_physical_base();
+u64 get_executable_virtual_base();
+
 usize get_framebuffer_count();
 limine_framebuffer *get_framebuffer(usize index);
 

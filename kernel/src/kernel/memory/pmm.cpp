@@ -53,7 +53,7 @@ void initialize()
             }
         }();
 
-        logger::info("PMM:   %02u: [%016llx - %016llx] - %s\n", i, entry->base, entry->base + entry->length, type);
+        logger::info("PMM:   %02zu: [%016llx - %016llx] - %s\n", i, entry->base, entry->base + entry->length, type);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
@@ -161,7 +161,7 @@ static void *internal_allocate(const usize pages, const usize limit)
     return nullptr;
 }
 
-void *allocate(const usize pages)
+void *allocate(const usize pages, const bool clear)
 {
     const usize limit = s_last_used_index;
     void *ptr = internal_allocate(pages, s_highest_page / memory::s_page_size);
@@ -172,6 +172,12 @@ void *allocate(const usize pages)
 
     if (!ptr) {
         logger::err("PMM: Out of memory - failed to allocate %zu pages\n", pages);
+    } else if (clear) {
+        u64 *address = reinterpret_cast<u64 *>(reinterpret_cast<u64>(ptr) + boot::get_hhdm_offset());
+
+        for (usize i = 0; i < pages * (memory::s_page_size / sizeof(u64)); ++i) {
+            address[i] = 0;
+        }
     }
 
     return ptr;
