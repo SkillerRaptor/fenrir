@@ -59,6 +59,8 @@ static Entry create_entry(const u32 base, const u32 limit, const u8 access, cons
 
 void initialize()
 {
+    logger::info("GDT: Initializing...\n");
+
     s_entries[0] = create_entry(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
 
     s_entries[1] = create_entry(

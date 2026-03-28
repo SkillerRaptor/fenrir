@@ -55,6 +55,8 @@ extern "C" void *interrupt_handlers[];
 
 void initialize()
 {
+    logger::info("IDT: Initializing...\n");
+
     for (usize i = 0; i < 256; ++i) {
         s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
     }

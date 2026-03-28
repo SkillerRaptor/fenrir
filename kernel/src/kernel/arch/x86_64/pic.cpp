@@ -27,6 +27,8 @@ namespace kernel::pic {
 
 void remap()
 {
+    logger::info("PIC: Remapping...\n");
+
     io::out8(MASTER_COMMAND_SELECTOR, ICW1_INIT | ICW1_ICW4);
     io::wait();
     io::out8(SLAVE_COMMAND_SELECTOR, ICW1_INIT | ICW1_ICW4);
