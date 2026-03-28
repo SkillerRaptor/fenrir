@@ -44,8 +44,6 @@ __attribute__((noreturn)) extern "C" void kmain()
 
     cxxabi::construct();
 
-    int *ptr = new int;
-
     while (true) {
         cpu::disable_interrupts();
         cpu::halt();
