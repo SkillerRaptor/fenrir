@@ -21,6 +21,7 @@
 #include <stdarg.h>
 
 #include "kernel/core/boot.hpp"
+#include "kernel/drivers/serial.hpp"
 
 namespace kernel::logger {
 
@@ -60,66 +61,86 @@ void initialize()
         FLANTERM_FB_ROTATE_0);
 }
 
-static void internal_write(const int c, void *)
+static usize strlen(const char *str)
+{
+    usize count = 0;
+
+    while (*(str++) != '\0') {
+        ++count;
+    }
+
+    return count;
+}
+
+static void write_character(const int c, void *)
 {
     const char character = static_cast<char>(c);
     if (character == '\n') {
         constexpr char end_of_line = '\r';
         flanterm_write(s_context, &end_of_line, 1);
+        serial::write(end_of_line);
     }
 
     flanterm_write(s_context, &character, 1);
+    serial::write(character);
+}
+
+static void write_string(const char *str)
+{
+    for (usize i = 0; i < strlen(str); i++) {
+        write_character(str[i], nullptr);
+    }
 }
 
 void log(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    npf_vpprintf(internal_write, nullptr, format, args);
+    npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 }
 
 void ok(const char *format, ...)
 {
     constexpr char level[] = "[   \033[38;2;0;128;0mOK\033[39m   ] ";
-    flanterm_write(s_context, level, sizeof(level));
+    write_string(level);
 
     va_list args;
     va_start(args, format);
-    npf_vpprintf(internal_write, nullptr, format, args);
+    npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 }
 
 void info(const char *format, ...)
 {
     constexpr char level[] = "[  \033[38;2;0;0;255mINFO\033[39m  ] ";
-    flanterm_write(s_context, level, sizeof(level));
+    write_string(level);
 
     va_list args;
     va_start(args, format);
-    npf_vpprintf(internal_write, nullptr, format, args);
+    npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 }
 
 void warn(const char *format, ...)
 {
     constexpr char level[] = "[  \033[38;2;255;215;0mWARN\033[39m  ] ";
-    flanterm_write(s_context, level, sizeof(level));
+    write_string(level);
 
     va_list args;
     va_start(args, format);
-    npf_vpprintf(internal_write, nullptr, format, args);
+    npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 }
 
 void err(const char *format, ...)
 {
     constexpr char level[] = "[ \033[38;2;255;0;0mFAILED\033[39m ] ";
-    flanterm_write(s_context, level, sizeof(level));
+    write_string(level);
 
     va_list args;
     va_start(args, format);
-    npf_vpprintf(internal_write, nullptr, format, args);
+    npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 }
 

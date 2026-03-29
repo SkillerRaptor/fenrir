@@ -11,6 +11,7 @@
 #include "kernel/arch/x86_64/pic.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
+#include "kernel/drivers/serial.hpp"
 #include "kernel/memory/pmm.hpp"
 #include "kernel/memory/vmm.hpp"
 #include "kernel/misc/cxxabi.hpp"
@@ -25,6 +26,7 @@ __attribute__((noreturn)) extern "C" void kmain()
         cpu::halt();
     }
 
+    serial::initialize();
     logger::initialize();
 
     logger::log("\n");

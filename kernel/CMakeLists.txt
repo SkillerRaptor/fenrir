@@ -15,6 +15,7 @@ set(SOURCES
         src/kernel/core/boot.cpp
         src/kernel/core/logger.cpp
         src/kernel/core/memory.cpp
+        src/kernel/drivers/serial.cpp
         src/kernel/memory/bitmap.cpp
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
@@ -34,6 +35,7 @@ set(HEADERS
         include/kernel/core/logger.hpp
         include/kernel/core/memory.hpp
         include/kernel/core/types.hpp
+        include/kernel/drivers/serial.hpp
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/pmm.hpp
@@ -114,13 +116,14 @@ add_custom_target(
 #-------------------------------------------------------------------------------------------
 add_custom_target(run
         COMMAND qemu-system-x86_64
-        -M q35
+        -M q35,smm=off
         -boot d
         -cdrom leviathan.iso
         --no-reboot
         --no-shutdown
         -d int
         -m 256M
-        -monitor stdio
+        -serial stdio
+        -smp 4
         DEPENDS iso
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
