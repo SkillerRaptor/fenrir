@@ -10,6 +10,8 @@ namespace kernel::cpu {
 
 inline void halt() { asm volatile("hlt"); }
 
+inline void pause() { asm volatile("pause"); }
+
 inline void enable_interrupts() { asm volatile("sti"); }
 
 inline void disable_interrupts() { asm volatile("cli"); }
