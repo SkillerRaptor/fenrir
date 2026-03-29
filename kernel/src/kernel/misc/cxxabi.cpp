@@ -60,11 +60,11 @@ void construct()
 
 } // namespace kernel::cxxabi
 
-[[nodiscard]] void *operator new(const kernel::usize size) { return kernel::memory::kmalloc(size); }
-[[nodiscard]] void *operator new[](const kernel::usize size) { return kernel::memory::kmalloc(size); }
+[[nodiscard]] void *operator new(const usize size) { return kernel::memory::kmalloc(size); }
+[[nodiscard]] void *operator new[](const usize size) { return kernel::memory::kmalloc(size); }
 
 void operator delete(void *ptr) noexcept { kernel::memory::kfree(ptr); }
-void operator delete(void *ptr, kernel::usize) noexcept { kernel::memory::kfree(ptr); }
+void operator delete(void *ptr, usize) noexcept { kernel::memory::kfree(ptr); }
 
 void operator delete[](void *ptr) noexcept { kernel::memory::kfree(ptr); }
-void operator delete[](void *ptr, kernel::usize) noexcept { kernel::memory::kfree(ptr); }
+void operator delete[](void *ptr, usize) noexcept { kernel::memory::kfree(ptr); }

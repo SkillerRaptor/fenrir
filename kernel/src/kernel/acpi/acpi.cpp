@@ -84,11 +84,11 @@ uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
  */
 void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 {
-    const kernel::u64 aligned_address = kernel::memory::align_down(addr, kernel::memory::s_page_size);
-    const kernel::u64 address_diff = addr - aligned_address;
-    const kernel::u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 aligned_address = kernel::memory::align_down(addr, kernel::memory::s_page_size);
+    const u64 address_diff = addr - aligned_address;
+    const u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
 
-    for (kernel::usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
+    for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
         kernel::vmm::map(
             kernel::vmm::get_kernel_page_map(),
             aligned_address + i,
@@ -109,12 +109,12 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
  */
 void uacpi_kernel_unmap(void *addr, const uacpi_size len)
 {
-    const kernel::u64 virtual_address = reinterpret_cast<kernel::u64>(addr);
-    const kernel::u64 aligned_address = kernel::memory::align_down(virtual_address, kernel::memory::s_page_size);
-    const kernel::u64 address_diff = virtual_address - aligned_address;
-    const kernel::u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 virtual_address = reinterpret_cast<u64>(addr);
+    const u64 aligned_address = kernel::memory::align_down(virtual_address, kernel::memory::s_page_size);
+    const u64 address_diff = virtual_address - aligned_address;
+    const u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
 
-    for (kernel::usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
+    for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
         kernel::vmm::unmap(kernel::vmm::get_kernel_page_map(), aligned_address + i);
     }
 }
@@ -214,8 +214,8 @@ uacpi_status uacpi_kernel_pci_write32(uacpi_handle device, uacpi_size offset, ua
  */
 
 struct IOMap {
-    kernel::u64 base { 0 };
-    kernel::u64 length { 0 };
+    u64 base { 0 };
+    u64 length { 0 };
 } __attribute__((packed));
 
 uacpi_status uacpi_kernel_io_map(uacpi_io_addr base, const uacpi_size len, uacpi_handle *out_handle)
@@ -243,37 +243,37 @@ void uacpi_kernel_io_unmap(uacpi_handle handle) { delete static_cast<IOMap *>(ha
  */
 uacpi_status uacpi_kernel_io_read8(uacpi_handle handle, const uacpi_size offset, uacpi_u8 *out_value)
 {
-    *out_value = kernel::io::in8(*(static_cast<kernel::u16 *>(handle) + offset));
+    *out_value = kernel::io::in8(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_read16(uacpi_handle handle, uacpi_size offset, uacpi_u16 *out_value)
 {
-    *out_value = kernel::io::in16(*(static_cast<kernel::u16 *>(handle) + offset));
+    *out_value = kernel::io::in16(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_read32(uacpi_handle handle, uacpi_size offset, uacpi_u32 *out_value)
 {
-    *out_value = kernel::io::in32(*(static_cast<kernel::u16 *>(handle) + offset));
+    *out_value = kernel::io::in32(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write8(uacpi_handle handle, const uacpi_size offset, const uacpi_u8 in_value)
 {
-    kernel::io::out8(*(static_cast<kernel::u16 *>(handle) + offset), in_value);
+    kernel::io::out8(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write16(uacpi_handle handle, const uacpi_size offset, const uacpi_u16 in_value)
 {
-    kernel::io::out16(*(static_cast<kernel::u16 *>(handle) + offset), in_value);
+    kernel::io::out16(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, const uacpi_size offset, const uacpi_u32 in_value)
 {
-    kernel::io::out32(*(static_cast<kernel::u16 *>(handle) + offset), in_value);
+    kernel::io::out32(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 

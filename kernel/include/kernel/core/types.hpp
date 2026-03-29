@@ -6,8 +6,6 @@
 
 #pragma once
 
-namespace kernel {
-
 using i8 = __INT8_TYPE__;
 static_assert(sizeof(i8) == 1);
 
@@ -37,5 +35,3 @@ static_assert(sizeof(isize) == 8);
 
 using usize = __SIZE_TYPE__;
 static_assert(sizeof(usize) == 8);
-
-} // namespace kernel
