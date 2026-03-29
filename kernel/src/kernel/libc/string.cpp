@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "kernel/core/memory.hpp"
+#include "kernel/libc/string.hpp"
 
-namespace kernel::memory {
+usize strlen(const char *str)
+{
+    const char *end = str;
+
+    while (*end != '\0') {
+        ++end;
+    }
+
+    return end - str;
+}
 
 void *memcpy(void *dst, const void *src, const usize count)
 {
@@ -15,35 +24,6 @@ void *memcpy(void *dst, const void *src, const usize count)
 
     for (usize i = 0; i < count; i++) {
         dst_ptr[i] = src_ptr[i];
-    }
-
-    return dst;
-}
-
-void *memset(void *dst, const int c, const usize count)
-{
-    u8 *dst_ptr = static_cast<u8 *>(dst);
-
-    for (usize i = 0; i < count; i++) {
-        dst_ptr[i] = static_cast<u8>(c);
-    }
-
-    return dst;
-}
-
-void *memmove(void *dst, const void *src, const usize count)
-{
-    u8 *dst_ptr = static_cast<u8 *>(dst);
-    const u8 *src_ptr = static_cast<const u8 *>(src);
-    
-    if (src > dst) {
-        for (usize i = 0; i < count; i++) {
-            dst_ptr[i] = src_ptr[i];
-        }
-    } else if (src < dst) {
-        for (usize i = count; i > 0; i--) {
-            dst_ptr[i - 1] = src_ptr[i - 1];
-        }
     }
 
     return dst;
@@ -65,4 +45,31 @@ int memcmp(const void *lhs, const void *rhs, const usize count)
     return 0;
 }
 
-} // namespace kernel::memory
+void *memset(void *dst, const int c, const usize count)
+{
+    u8 *dst_ptr = static_cast<u8 *>(dst);
+
+    for (usize i = 0; i < count; i++) {
+        dst_ptr[i] = static_cast<u8>(c);
+    }
+
+    return dst;
+}
+
+void *memmove(void *dst, const void *src, const usize count)
+{
+    u8 *dst_ptr = static_cast<u8 *>(dst);
+    const u8 *src_ptr = static_cast<const u8 *>(src);
+
+    if (src > dst) {
+        for (usize i = 0; i < count; i++) {
+            dst_ptr[i] = src_ptr[i];
+        }
+    } else if (src < dst) {
+        for (usize i = count; i > 0; i--) {
+            dst_ptr[i - 1] = src_ptr[i - 1];
+        }
+    }
+
+    return dst;
+}

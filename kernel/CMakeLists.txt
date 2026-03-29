@@ -14,8 +14,8 @@ set(SOURCES
         src/kernel/arch/x86_64/pic.cpp
         src/kernel/core/boot.cpp
         src/kernel/core/logger.cpp
-        src/kernel/core/memory.cpp
         src/kernel/drivers/serial.cpp
+        src/kernel/libc/string.cpp
         src/kernel/memory/bitmap.cpp
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
@@ -36,6 +36,7 @@ set(HEADERS
         include/kernel/core/memory.hpp
         include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
+        include/kernel/libc/string.hpp
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/pmm.hpp

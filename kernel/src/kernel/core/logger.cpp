@@ -22,6 +22,7 @@
 
 #include "kernel/core/boot.hpp"
 #include "kernel/drivers/serial.hpp"
+#include "kernel/libc/string.hpp"
 
 namespace kernel::logger {
 
@@ -59,17 +60,6 @@ void initialize()
         0,
         0,
         FLANTERM_FB_ROTATE_0);
-}
-
-static usize strlen(const char *str)
-{
-    usize count = 0;
-
-    while (*(str++) != '\0') {
-        ++count;
-    }
-
-    return count;
 }
 
 static void write_character(const int c, void *)

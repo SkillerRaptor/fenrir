@@ -9,6 +9,7 @@
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/memory.hpp"
+#include "kernel/libc/string.hpp"
 #include "kernel/memory/bitmap.hpp"
 
 namespace kernel::pmm {
@@ -87,7 +88,7 @@ void initialize()
 
         if (entry->length >= s_bitmap.size()) {
             s_bitmap.set_data(reinterpret_cast<u8 *>(entry->base + boot::get_hhdm_offset()));
-            memory::memset(s_bitmap.data(), 0xff, s_bitmap.size());
+            memset(s_bitmap.data(), 0xff, s_bitmap.size());
             break;
         }
     }

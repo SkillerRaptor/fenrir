@@ -12,11 +12,6 @@ namespace kernel::memory {
 
 static constexpr usize s_page_size { 4096 };
 
-extern "C" void *memcpy(void *dst, const void *src, usize count);
-extern "C" void *memset(void *dst, int c, usize count);
-extern "C" void *memmove(void *dst, const void *src, usize count);
-extern "C" int memcmp(const void *lhs, const void *rhs, usize count);
-
 template <typename T>
 constexpr T div_round_up(const T x, const T y)
 {
