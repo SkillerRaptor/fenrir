@@ -29,4 +29,6 @@ u64 get_hhdm_offset();
 usize get_memory_map_entry_count();
 limine_memmap_entry *get_memory_map_entry(usize index);
 
+void *get_rsdp_address();
+
 } // namespace kernel::boot

@@ -46,6 +46,12 @@ __attribute__((used, section(".limine_requests"))) volatile limine_memmap_reques
     .response = nullptr,
 };
 
+__attribute__((used, section(".limine_requests"))) volatile limine_rsdp_request s_rsdp_request {
+    .id = LIMINE_RSDP_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
+
 __attribute__((used, section(".limine_requests_start"))) volatile u64 s_start_marker[] = LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".limine_requests_end"))) volatile u64 s_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
@@ -84,5 +90,7 @@ u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
 usize get_memory_map_entry_count() { return s_memmap_request.response->entry_count; }
 
 limine_memmap_entry *get_memory_map_entry(const usize index) { return s_memmap_request.response->entries[index]; }
+
+void *get_rsdp_address() { return s_rsdp_request.response->address; }
 
 } // namespace kernel::boot

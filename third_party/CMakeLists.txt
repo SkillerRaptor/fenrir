@@ -57,3 +57,20 @@ if (nanoprintf_ADDED)
     add_library(nanoprintf INTERFACE)
     target_include_directories(nanoprintf INTERFACE ${nanoprintf_SOURCE_DIR})
 endif ()
+
+#-------------------------------------------------------------------------------------------
+# uacpi
+#-------------------------------------------------------------------------------------------
+CPMAddPackage(
+        NAME uacpi
+        GIT_REPOSITORY https://github.com/uACPI/uACPI.git
+        GIT_TAG 4.0.0
+        DOWNLOAD_ONLY YES)
+
+if (uacpi_ADDED)
+    include(${uacpi_SOURCE_DIR}/uacpi.cmake)
+
+    add_library(uacpi STATIC ${UACPI_SOURCES})
+    target_include_directories(uacpi PUBLIC ${UACPI_INCLUDES})
+    target_compile_options(uacpi PRIVATE ${KERNEL_BASE_OPTIONS} ${KERNEL_ARCH_OPTIONS})
+endif ()

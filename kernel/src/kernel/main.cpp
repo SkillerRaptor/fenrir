@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "kernel/acpi/acpi.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/arch/x86_64/idt.hpp"
@@ -41,6 +42,8 @@ __attribute__((noreturn)) extern "C" void kmain()
 
     pmm::initialize();
     vmm::initialize();
+
+    acpi::initialize();
 
     cpu::enable_interrupts();
 

@@ -6,6 +6,7 @@
 
 set(SOURCES
         src/kernel/main.cpp
+        src/kernel/acpi/acpi.cpp
         src/kernel/arch/x86_64/gdt.asm
         src/kernel/arch/x86_64/gdt.cpp
         src/kernel/arch/x86_64/idt.asm
@@ -18,9 +19,11 @@ set(SOURCES
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
         src/kernel/memory/vmm.cpp
-        src/kernel/misc/cxxabi.cpp)
+        src/kernel/misc/cxxabi.cpp
+        src/kernel/sync/spinlock.cpp)
 
 set(HEADERS
+        include/kernel/acpi/acpi.hpp
         include/kernel/arch/x86_64/cpu.hpp
         include/kernel/arch/x86_64/gdt.hpp
         include/kernel/arch/x86_64/idt.hpp
@@ -35,13 +38,14 @@ set(HEADERS
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/pmm.hpp
         include/kernel/memory/vmm.hpp
-        include/kernel/misc/cxxabi.hpp)
+        include/kernel/misc/cxxabi.hpp
+        include/kernel/sync/spinlock.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE limine flanterm nanoprintf)
+target_link_libraries(kernel PRIVATE limine flanterm nanoprintf uacpi)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------

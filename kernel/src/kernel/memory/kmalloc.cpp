@@ -38,7 +38,7 @@ void *kmalloc(const usize size)
     return ptr;
 }
 
-void kfree(const void *ptr)
+void kfree(void *ptr)
 {
     if (!ptr) {
         return;
