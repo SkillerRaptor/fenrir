@@ -91,7 +91,7 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
             kernel::vmm::get_kernel_page_map(),
             aligned_address + i,
             aligned_address + i + kernel::boot::get_hhdm_offset(),
-            ATTRIBUTE_WRITE);
+            kernel::vmm::Attribute::Write);
     }
 
     return reinterpret_cast<void *>(addr + kernel::boot::get_hhdm_offset());

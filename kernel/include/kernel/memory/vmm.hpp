@@ -5,13 +5,19 @@
  */
 
 #pragma once
+
+#include "kernel/core/bitflags.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::vmm {
 
-#define ATTRIBUTE_PRESENT (1 << 0)
-#define ATTRIBUTE_WRITE (1 << 1)
-#define ATTRIBUTE_USER (1 << 2)
+enum class Attribute : u16 {
+    Present = 1 << 0,
+    Write = 1 << 1,
+    User = 1 << 2,
+};
+
+DECLARE_BITFLAG(Attribute);
 
 struct PageMap {
     u64 top_level { 0 };
@@ -22,7 +28,7 @@ void initialize();
 PageMap *create_page_map();
 void switch_to_page_map(const PageMap *);
 
-void map(const PageMap *, u64 paddr, u64 vaddr, u16 flags);
+void map(const PageMap *, u64 paddr, u64 vaddr, Attribute attributes);
 void unmap(const PageMap *, u64 vaddr);
 
 PageMap *get_kernel_page_map();

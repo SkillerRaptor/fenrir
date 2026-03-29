@@ -49,7 +49,7 @@ void initialize()
             entry_pages);
 
         for (usize j = entry_start; j < entry_end; j += memory::s_page_size) {
-            map(s_kernel_page_map, j, j + boot::get_hhdm_offset(), ATTRIBUTE_WRITE);
+            map(s_kernel_page_map, j, j + boot::get_hhdm_offset(), Attribute::Write);
         }
 
         ++mapped_entry_count;
@@ -79,7 +79,7 @@ void initialize()
         kernel_pages);
 
     for (usize i = kernel_virtual_start; i < kernel_virtual_end; i += memory::s_page_size) {
-        map(s_kernel_page_map, i - virtual_base + physical_base, i, ATTRIBUTE_WRITE);
+        map(s_kernel_page_map, i - virtual_base + physical_base, i, Attribute::Write);
     }
 
     logger::debug("VMM: Mapped kernel (%zu KiB)\n", (kernel_virtual_end - kernel_virtual_start) / 1024);
@@ -108,9 +108,10 @@ static u64 get_next_level(const u64 pml, const u16 entry)
     u64 *pml_address = reinterpret_cast<u64 *>(pml + boot::get_hhdm_offset());
     u64 *pml_entry = &pml_address[entry];
 
-    if (!(*pml_entry & ATTRIBUTE_PRESENT)) {
+    const Attribute attributes = static_cast<Attribute>(*pml_entry & 0xfff);
+    if ((attributes & Attribute::Present) != Attribute::Present) {
         const u64 new_level = reinterpret_cast<u64>(pmm::allocate(1, true));
-        *pml_entry = new_level | ATTRIBUTE_USER | ATTRIBUTE_WRITE | ATTRIBUTE_PRESENT;
+        *pml_entry = new_level | static_cast<u64>(Attribute::User | Attribute::Write | Attribute::Present);
     }
 
     // NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
@@ -137,13 +138,13 @@ static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
     return entry;
 }
 
-void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const u16 flags)
+void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attribute attributes)
 {
     const usize aligned_physical_address = memory::align_down(paddr, memory::s_page_size);
     const usize aligned_virtual_address = memory::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
-    *entry = aligned_physical_address | flags | ATTRIBUTE_PRESENT;
+    *entry = aligned_physical_address | static_cast<u64>(attributes | Attribute::Present);
 }
 
 void unmap(const PageMap *page_map, const u64 vaddr)

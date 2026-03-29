@@ -31,11 +31,13 @@ set(HEADERS
         include/kernel/arch/x86_64/io.hpp
         include/kernel/arch/x86_64/pic.hpp
         include/kernel/arch/x86_64/registers.hpp
+        include/kernel/core/bitflags.hpp
         include/kernel/core/boot.hpp
         include/kernel/core/logger.hpp
         include/kernel/core/memory.hpp
         include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
+        include/kernel/lib/type_traits.hpp
         include/kernel/libc/string.hpp
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp

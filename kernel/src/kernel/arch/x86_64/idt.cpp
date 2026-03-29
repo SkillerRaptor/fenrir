@@ -8,13 +8,19 @@
 
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/registers.hpp"
+#include "kernel/core/bitflags.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::idt {
 
-#define ATTRIBUTE_PRESENT (1 << 7)
-#define ATTRIBUTE_INTERRUPT_GATE (1 << 1 | 1 << 2 | 1 << 3)
+enum class Attribute : u8 {
+    TrapGate = 1 << 3 | 1 << 2 | 1 << 1 | 1 << 0,
+    InterruptGate = 1 << 3 | 1 << 2 | 1 << 1 | 0 << 0,
+    Present = 1 << 7
+};
+
+DECLARE_BITFLAG(Attribute);
 
 using InterruptHandler = void (*)(const Registers *);
 
@@ -35,11 +41,13 @@ struct Descriptor {
 
 extern "C" void load_idt(const Descriptor *descriptor);
 
+extern "C" void *interrupt_handlers[];
+
 static Entry s_entries[256] { };
 static Descriptor s_descriptor { };
 static InterruptHandler s_interrupt_handlers[256] { };
 
-static Entry create_entry(void *handler, const u8 attributes)
+static Entry create_entry(void *handler, const Attribute attributes)
 {
     const u64 address = reinterpret_cast<u64>(handler);
 
@@ -47,14 +55,12 @@ static Entry create_entry(void *handler, const u8 attributes)
         .offset_low = static_cast<u16>(address & 0xffff),
         .selector = 0x28,
         .ist = 0,
-        .attributes = attributes,
+        .attributes = static_cast<u8>(attributes),
         .offset_mid = static_cast<u16>((address >> 16) & 0xffff),
         .offset_high = static_cast<u32>((address >> 32) & 0xffffffff),
         .reserved = 0,
     };
 }
-
-extern "C" void *interrupt_handlers[];
 
 #define ENUMERATE_EXCEPTIONS                                                                 \
     _ENUMERATE_EXCEPTION(0, divide_by_zero, "Divide-by-zero Error")                          \
@@ -134,7 +140,7 @@ __attribute__((noreturn)) void page_fault(const Registers *registers)
 void initialize()
 {
     for (usize i = 0; i < 256; ++i) {
-        s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
+        s_entries[i] = create_entry(interrupt_handlers[i], Attribute::Present | Attribute::InterruptGate);
     }
 
 #define _ENUMERATE_EXCEPTION(i, fn, err) s_interrupt_handlers[i] = fn;

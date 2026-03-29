@@ -6,22 +6,34 @@
 
 #include "kernel/arch/x86_64/gdt.hpp"
 
+#include "kernel/core/bitflags.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::gdt {
 
-#define ACCESS_ATTRIBUTE_NONE (0 << 0)
-#define ACCESS_ATTRIBUTE_ACCESS (1 << 0)
-#define ACCESS_ATTRIBUTE_READ_WRITE (1 << 1)
-#define ACCESS_ATTRIBUTE_EXECUTABLE (1 << 3)
-#define ACCESS_ATTRIBUTE_CODE_DATA (1 << 4)
-#define ACCESS_ATTRIBUTE_PRESENT (1 << 7)
+enum class AccessAttribute : u8 {
+    None = 0,
+    Access = 1 << 0,
+    ReadWrite = 1 << 1,
+    Direction = 1 << 2,
+    Executable = 1 << 3,
+    CodeDate = 1 << 4,
+    KernelPrivilege = 0 << 6 | 0 << 5,
+    UserPrivilege = 1 << 6 | 1 << 5,
+    Present = 1 << 7,
+};
 
-#define FLAG_ATTRIBUTE_NONE (0 << 0)
-#define FLAG_ATTRIBUTE_64 (1 << 1)
-#define FLAG_ATTRIBUTE_32 (1 << 2)
-#define FLAG_ATTRIBUTE_4K (1 << 3)
+DECLARE_BITFLAG(AccessAttribute);
+
+enum class FlagAttribute : u8 {
+    None = 0,
+    LongMode = 1 << 1,
+    Size32 = 1 << 2,
+    PageGranularity = 1 << 3,
+};
+
+DECLARE_BITFLAG(FlagAttribute);
 
 struct Entry {
     u16 limit_low { 0 };
@@ -41,10 +53,10 @@ struct Descriptor {
 extern "C" void load_gdt(const Descriptor *descriptor);
 extern "C" void reload_segments();
 
-static Entry s_entries[7] { };
-static Descriptor s_descriptor { };
+static Entry s_entries[7] = { };
+static Descriptor s_descriptor = { };
 
-static Entry create_entry(const u32 base, const u32 limit, const u8 access, const u8 flags)
+static Entry create_entry(const u32 base, const u32 limit, const AccessAttribute access, const FlagAttribute flags)
 {
     return {
         .limit_low = static_cast<u16>(limit & 0xffff),
@@ -59,43 +71,46 @@ static Entry create_entry(const u32 base, const u32 limit, const u8 access, cons
 
 void initialize()
 {
-    s_entries[0] = create_entry(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
+    s_entries[0] = create_entry(0x00000000, 0x00000000, AccessAttribute::None, FlagAttribute::None);
 
     s_entries[1] = create_entry(
         0x00000000,
         0x0000ffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
-            | ACCESS_ATTRIBUTE_READ_WRITE,
-        FLAG_ATTRIBUTE_NONE);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::Executable | AccessAttribute::ReadWrite,
+        FlagAttribute::None);
     s_entries[2] = create_entry(
         0x00000000,
         0x0000ffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
-        FLAG_ATTRIBUTE_NONE);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::None);
 
     s_entries[3] = create_entry(
         0x00000000,
         0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
-            | ACCESS_ATTRIBUTE_READ_WRITE,
-        FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_32);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::Executable | AccessAttribute::ReadWrite,
+        FlagAttribute::PageGranularity | FlagAttribute::Size32);
     s_entries[4] = create_entry(
         0x00000000,
         0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
-        FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_32);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::PageGranularity | FlagAttribute::Size32);
 
     s_entries[5] = create_entry(
         0x00000000,
         0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_EXECUTABLE
-            | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
-        FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::Executable | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::PageGranularity | FlagAttribute::LongMode);
     s_entries[6] = create_entry(
         0x00000000,
         0xffffffff,
-        ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_CODE_DATA | ACCESS_ATTRIBUTE_READ_WRITE | ACCESS_ATTRIBUTE_ACCESS,
-        FLAG_ATTRIBUTE_4K | FLAG_ATTRIBUTE_64);
+        AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::PageGranularity | FlagAttribute::LongMode);
 
     s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(s_entries);
