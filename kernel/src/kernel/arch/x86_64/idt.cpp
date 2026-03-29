@@ -133,8 +133,6 @@ __attribute__((noreturn)) void page_fault(const Registers *registers)
 
 void initialize()
 {
-    logger::debug("IDT: Initializing...\n");
-
     for (usize i = 0; i < 256; ++i) {
         s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
     }

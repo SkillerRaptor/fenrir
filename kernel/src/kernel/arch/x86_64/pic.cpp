@@ -32,8 +32,6 @@ static constexpr u8 s_mask = 0xff;
 
 void disable()
 {
-    logger::debug("PIC: Disabling...\n");
-
     io::out8(s_master_command_selector, s_icw1_init | s_icw1_icw4);
     io::out8(s_slave_command_selector, s_icw1_init | s_icw1_icw4);
     io::wait();

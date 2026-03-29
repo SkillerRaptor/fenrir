@@ -20,8 +20,6 @@ extern "C" unsigned char __kernel_end[];
 
 void initialize()
 {
-    logger::debug("VMM: Initializing...\n");
-
     s_kernel_page_map = create_page_map();
 
     const usize memory_map_entry_count = boot::get_memory_map_entry_count();

@@ -19,8 +19,6 @@ static Bitmap s_bitmap { nullptr, 0 };
 
 void initialize()
 {
-    logger::debug("PMM: Initializing...\n");
-
     const usize memory_map_entry_count = boot::get_memory_map_entry_count();
 
     logger::debug("PMM: Scanning %zu memory map entries\n", memory_map_entry_count);
