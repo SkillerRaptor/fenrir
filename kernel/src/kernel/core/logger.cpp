@@ -100,9 +100,9 @@ void log(const char *format, ...)
     va_end(args);
 }
 
-void ok(const char *format, ...)
+void info(const char *format, ...)
 {
-    constexpr char level[] = "[   \033[38;2;0;128;0mOK\033[39m   ] ";
+    constexpr char level[] = "\033[38;2;0;128;0minfo\033[39m: ";
     write_string(level);
 
     va_list args;
@@ -111,9 +111,9 @@ void ok(const char *format, ...)
     va_end(args);
 }
 
-void info(const char *format, ...)
+void debug(const char *format, ...)
 {
-    constexpr char level[] = "[  \033[38;2;0;0;255mINFO\033[39m  ] ";
+    constexpr char level[] = "\033[38;2;0;0;255mdebug\033[39m: ";
     write_string(level);
 
     va_list args;
@@ -124,7 +124,7 @@ void info(const char *format, ...)
 
 void warn(const char *format, ...)
 {
-    constexpr char level[] = "[  \033[38;2;255;215;0mWARN\033[39m  ] ";
+    constexpr char level[] = "\033[38;2;255;215;0mwarn\033[39m: ";
     write_string(level);
 
     va_list args;
@@ -135,7 +135,7 @@ void warn(const char *format, ...)
 
 void err(const char *format, ...)
 {
-    constexpr char level[] = "[ \033[38;2;255;0;0mFAILED\033[39m ] ";
+    constexpr char level[] = "\033[38;2;255;0;0merror\033[39m: ";
     write_string(level);
 
     va_list args;

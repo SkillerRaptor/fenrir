@@ -21,7 +21,7 @@ namespace kernel::acpi {
 
 void initialize()
 {
-    logger::info("ACPI: Initializing...\n");
+    logger::debug("ACPI: Initializing...\n");
 
     uacpi_status ret = uacpi_initialize(0);
     if (uacpi_unlikely_error(ret)) {
@@ -43,7 +43,7 @@ void initialize()
     //     logger::err("uacpi_finalize_gpe_initialization error: %s\n", uacpi_status_to_string(ret));
     // }
 
-    logger::ok("ACPI: Initialized\n");
+    logger::info("ACPI: Initialized\n");
 }
 
 } // namespace kernel::acpi
@@ -124,7 +124,7 @@ void uacpi_kernel_log(const uacpi_log_level level, const uacpi_char *str)
 {
     switch (level) {
     case UACPI_LOG_INFO:
-        kernel::logger::info("UACPI: %s", str);
+        kernel::logger::debug("UACPI: %s", str);
         break;
     case UACPI_LOG_WARN:
         kernel::logger::warn("UACPI: %s", str);

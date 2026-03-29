@@ -19,11 +19,11 @@ static Bitmap s_bitmap { nullptr, 0 };
 
 void initialize()
 {
-    logger::info("PMM: Initializing...\n");
+    logger::debug("PMM: Initializing...\n");
 
     const usize memory_map_entry_count = boot::get_memory_map_entry_count();
 
-    logger::info("PMM: Scanning %zu memory map entries\n", memory_map_entry_count);
+    logger::debug("PMM: Scanning %zu memory map entries\n", memory_map_entry_count);
 
     for (usize i = 0; i < memory_map_entry_count; ++i) {
         limine_memmap_entry *entry = boot::get_memory_map_entry(i);
@@ -53,7 +53,12 @@ void initialize()
             }
         }();
 
-        logger::info("PMM:   %02zu: [%016llx - %016llx] - %s\n", i, entry->base, entry->base + entry->length, type);
+        logger::debug(
+            "PMM:   %02zu: [0x%016llx - 0x%016llx] - %s\n",
+            i,
+            entry->base,
+            entry->base + entry->length,
+            type);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
@@ -71,7 +76,7 @@ void initialize()
         }
     }
 
-    logger::info("PMM: Found highest page address at 0x%llx\n", s_highest_page);
+    logger::debug("PMM: Found highest page address at 0x%llx\n", s_highest_page);
 
     s_bitmap.set_size(memory::div_round_up(s_highest_page, memory::s_page_size) / 8);
 
@@ -89,7 +94,7 @@ void initialize()
         }
     }
 
-    logger::info(
+    logger::debug(
         "PMM: Placed bitmap at 0x%p with a size of %zu bytes (%zu KiB)\n",
         s_bitmap.data(),
         s_bitmap.size(),
@@ -124,13 +129,13 @@ void initialize()
 
         free_pages += entry->length / memory::s_page_size;
     }
-    logger::info(
+    logger::debug(
         "PMM: Detected %zu free pages (%zu KiB, %zu MiB)\n",
         free_pages,
         (free_pages * memory::s_page_size) / 1024,
         (free_pages * memory::s_page_size) / 1024 / 1024);
 
-    logger::ok("PMM: Initialized\n");
+    logger::info("PMM: Initialized\n");
 }
 
 static void *internal_allocate(const usize pages, const usize limit)

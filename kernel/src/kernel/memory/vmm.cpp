@@ -20,12 +20,12 @@ extern "C" unsigned char __kernel_end[];
 
 void initialize()
 {
-    logger::info("VMM: Initializing...\n");
+    logger::debug("VMM: Initializing...\n");
 
     s_kernel_page_map = create_page_map();
 
     const usize memory_map_entry_count = boot::get_memory_map_entry_count();
-    logger::info("VMM: Mapping memory map entries...\n");
+    logger::debug("VMM: Mapping memory map entries...\n");
 
     usize mapped_entry_count = 0;
     usize mapped_bytes = 0;
@@ -42,7 +42,7 @@ void initialize()
         const usize entry_end = memory::align_up(entry->base + entry->length, memory::s_page_size);
         const usize entry_pages = (entry_end - entry_start) / memory::s_page_size;
 
-        logger::info(
+        logger::debug(
             "VMM:   [0x%016llx - 0x%016llx] -> [0x%016llx - 0x%016llx] (%zu pages)\n",
             entry_start,
             entry_end,
@@ -58,7 +58,7 @@ void initialize()
         mapped_bytes += entry_end - entry_start;
     }
 
-    logger::info(
+    logger::debug(
         "VMM: Mapped %zu entries (%zu KiB, %zu MiB)\n",
         mapped_entry_count,
         mapped_bytes / 1024,
@@ -71,8 +71,8 @@ void initialize()
     const usize virtual_base = boot::get_executable_virtual_base();
     const usize kernel_pages = (kernel_virtual_end - kernel_virtual_start) / memory::s_page_size;
 
-    logger::info("VMM: Mapping kernel image...\n");
-    logger::info(
+    logger::debug("VMM: Mapping kernel image...\n");
+    logger::debug(
         "VMM:   [0x%016llx - 0x%016llx] -> [0x%016llx - 0x%016llx] (%zu pages)\n",
         kernel_virtual_start - virtual_base + physical_base,
         kernel_virtual_end - virtual_base + physical_base,
@@ -84,12 +84,12 @@ void initialize()
         map(s_kernel_page_map, i - virtual_base + physical_base, i, ATTRIBUTE_WRITE);
     }
 
-    logger::info("VMM: Mapped kernel (%zu KiB)\n", (kernel_virtual_end - kernel_virtual_start) / 1024);
+    logger::debug("VMM: Mapped kernel (%zu KiB)\n", (kernel_virtual_end - kernel_virtual_start) / 1024);
 
-    logger::info("VMM: Switching to kernel page map...\n");
+    logger::debug("VMM: Switching to kernel page map...\n");
     switch_to_page_map(s_kernel_page_map);
 
-    logger::ok("VMM: Initialized\n");
+    logger::info("VMM: Initialized\n");
 }
 
 PageMap *create_page_map()

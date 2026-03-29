@@ -59,7 +59,7 @@ static Entry create_entry(const u32 base, const u32 limit, const u8 access, cons
 
 void initialize()
 {
-    logger::info("GDT: Initializing...\n");
+    logger::debug("GDT: Initializing...\n");
 
     s_entries[0] = create_entry(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
 
@@ -105,7 +105,7 @@ void initialize()
     load_gdt(&s_descriptor);
     reload_segments();
 
-    logger::ok("GDT: Initialized\n");
+    logger::info("GDT: Initialized\n");
 }
 
 } // namespace kernel::gdt

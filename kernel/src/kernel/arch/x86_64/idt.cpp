@@ -133,7 +133,7 @@ __attribute__((noreturn)) void page_fault(const Registers *registers)
 
 void initialize()
 {
-    logger::info("IDT: Initializing...\n");
+    logger::debug("IDT: Initializing...\n");
 
     for (usize i = 0; i < 256; ++i) {
         s_entries[i] = create_entry(interrupt_handlers[i], ATTRIBUTE_PRESENT | ATTRIBUTE_INTERRUPT_GATE);
@@ -150,7 +150,7 @@ void initialize()
 
     load_idt(&s_descriptor);
 
-    logger::ok("IDT: Initialized\n");
+    logger::info("IDT: Initialized\n");
 }
 
 extern "C" void interrupt_raise(const Registers *registers)
