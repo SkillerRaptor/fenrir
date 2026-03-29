@@ -11,45 +11,50 @@
 
 namespace kernel::pic {
 
-#define MASTER_COMMAND_SELECTOR 0x20
-#define MASTER_DATA_SELECTOR 0x21
-#define MASTER_OFFSET 0x20
-#define MASTER_IDENTITY 0x04
+static constexpr u16 s_master_command_selector = 0x20;
+static constexpr u16 s_master_data_selector = 0x21;
 
-#define SLAVE_COMMAND_SELECTOR 0xa0
-#define SLAVE_DATA_SELECTOR 0xa1
-#define SLAVE_OFFSET 0x28
-#define SLAVE_IDENTITY 0x02
+static constexpr u16 s_slave_command_selector = 0xa0;
+static constexpr u16 s_slave_data_selector = 0xa1;
 
-#define ICW1_ICW4 (1 << 0)
-#define ICW1_INIT (1 << 4)
-#define ICW1_8086 (1 << 0)
+static constexpr u8 s_icw1_init = 1 << 4;
+static constexpr u8 s_icw1_icw4 = 1 << 0;
 
-void remap()
+static constexpr u8 s_master_offset = 0x20;
+static constexpr u8 s_slave_offset = 0x28;
+
+static constexpr u8 s_master_identity = 0x04;
+static constexpr u8 s_slave_identity = 0x02;
+
+static constexpr u8 s_icw1_8086 = 1 << 0;
+
+static constexpr u8 s_mask = 0xff;
+
+void disable()
 {
-    logger::info("PIC: Remapping...\n");
+    logger::info("PIC: Disabling...\n");
 
-    io::out8(MASTER_COMMAND_SELECTOR, ICW1_INIT | ICW1_ICW4);
-    io::wait();
-    io::out8(SLAVE_COMMAND_SELECTOR, ICW1_INIT | ICW1_ICW4);
-    io::wait();
-
-    io::out8(MASTER_DATA_SELECTOR, MASTER_OFFSET);
-    io::wait();
-    io::out8(SLAVE_DATA_SELECTOR, SLAVE_OFFSET);
+    io::out8(s_master_command_selector, s_icw1_init | s_icw1_icw4);
+    io::out8(s_slave_command_selector, s_icw1_init | s_icw1_icw4);
     io::wait();
 
-    io::out8(MASTER_DATA_SELECTOR, MASTER_IDENTITY);
-    io::wait();
-    io::out8(SLAVE_DATA_SELECTOR, SLAVE_IDENTITY);
-    io::wait();
-
-    io::out8(MASTER_DATA_SELECTOR, ICW1_8086);
-    io::wait();
-    io::out8(SLAVE_DATA_SELECTOR, ICW1_8086);
+    io::out8(s_master_data_selector, s_master_offset);
+    io::out8(s_slave_data_selector, s_slave_offset);
     io::wait();
 
-    logger::ok("PIC: Remapped\n");
+    io::out8(s_master_data_selector, s_master_identity);
+    io::out8(s_slave_data_selector, s_slave_identity);
+    io::wait();
+
+    io::out8(s_master_data_selector, s_icw1_8086);
+    io::out8(s_slave_data_selector, s_icw1_8086);
+    io::wait();
+
+    io::out8(s_master_data_selector, s_mask);
+    io::out8(s_slave_data_selector, s_mask);
+    io::wait();
+
+    logger::ok("PIC: Disabled\n");
 }
 
 } // namespace kernel::pic

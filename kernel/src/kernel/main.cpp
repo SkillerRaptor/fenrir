@@ -39,8 +39,8 @@ __attribute__((noreturn)) extern "C" void kmain()
     logger::log("\n");
 
     gdt::initialize();
-    pic::remap();
     idt::initialize();
+    pic::disable();
 
     pmm::initialize();
     vmm::initialize();
