@@ -34,7 +34,9 @@ set(KERNEL_BASE_OPTIONS
         -ffunction-sections
         -fdata-sections
         -fno-rtti
-        -fno-exceptions)
+        -fno-exceptions
+        -fno-unwind-tables
+        -fno-asynchronous-unwind-tables)
 
 set(KERNEL_ARCH_OPTIONS
         -m64
