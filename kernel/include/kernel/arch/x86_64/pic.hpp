@@ -8,6 +8,6 @@
 
 namespace kernel::pic {
 
-void remap();
+void disable();
 
 } // namespace kernel::pic
