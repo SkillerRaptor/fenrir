@@ -7,6 +7,7 @@
 set(SOURCES
         src/kernel/main.cpp
         src/kernel/acpi/acpi.cpp
+        src/kernel/acpi/hpet.cpp
         src/kernel/arch/x86_64/gdt.asm
         src/kernel/arch/x86_64/gdt.cpp
         src/kernel/arch/x86_64/idt.asm
@@ -25,6 +26,7 @@ set(SOURCES
 
 set(HEADERS
         include/kernel/acpi/acpi.hpp
+        include/kernel/acpi/hpet.hpp
         include/kernel/arch/x86_64/cpu.hpp
         include/kernel/arch/x86_64/gdt.hpp
         include/kernel/arch/x86_64/idt.hpp
@@ -41,6 +43,7 @@ set(HEADERS
         include/kernel/libc/string.hpp
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
+        include/kernel/memory/mmio.hpp
         include/kernel/memory/pmm.hpp
         include/kernel/memory/vmm.hpp
         include/kernel/misc/cxxabi.hpp

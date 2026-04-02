@@ -5,6 +5,7 @@
  */
 
 #include "kernel/acpi/acpi.hpp"
+#include "kernel/acpi/hpet.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/arch/x86_64/idt.hpp"
@@ -46,6 +47,7 @@ __attribute__((noreturn)) extern "C" void kmain()
     vmm::initialize();
 
     acpi::initialize();
+    hpet::initialize();
 
     cpu::enable_interrupts();
 
