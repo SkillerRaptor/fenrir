@@ -85,6 +85,37 @@ static Entry create_entry(void *handler, const Attribute attributes)
     __attribute__((noreturn)) void fn(const Registers &registers)                \
     {                                                                            \
         logger::err(exception " occured with error code %u\n", registers.error); \
+        logger::err("Register dump:\n");                                         \
+        logger::err(                                                             \
+            "  rax=0x%016x rbx=0x%016x rcx=0x%016x rdx=0x%016x\n",               \
+            registers.rax,                                                       \
+            registers.rbx,                                                       \
+            registers.rcx,                                                       \
+            registers.rdx);                                                      \
+        logger::err(                                                             \
+            "  rsi=0x%016x rdi=0x%016x rbp=0x%016x rsp=0x%016x\n",               \
+            registers.rsi,                                                       \
+            registers.rdi,                                                       \
+            registers.rbp,                                                       \
+            registers.rsp);                                                      \
+        logger::err(                                                             \
+            "   r8=0x%016x  r9=0x%016x r10=0x%016x r11=0x%016x\n",               \
+            registers.r8,                                                        \
+            registers.r9,                                                        \
+            registers.r10,                                                       \
+            registers.r11);                                                      \
+        logger::err(                                                             \
+            "  r12=0x%016x r13=0x%016x r14=0x%016x r15=0x%016x\n",               \
+            registers.r12,                                                       \
+            registers.r13,                                                       \
+            registers.r14,                                                       \
+            registers.r15);                                                      \
+        logger::err(                                                             \
+            "  rip=0x%016x  cs=0x%016x  ss=0x%016x flg=0x%016x\n",               \
+            registers.rip,                                                       \
+            registers.cs,                                                        \
+            registers.ss,                                                        \
+            registers.flags);                                                    \
                                                                                  \
         while (true) {                                                           \
             cpu::disable_interrupts();                                           \
@@ -161,8 +192,6 @@ extern "C" void interrupt_raise(const Registers *registers)
 {
     if (s_interrupt_handlers[registers->isr]) {
         s_interrupt_handlers[registers->isr](*registers);
-    } else {
-        logger::warn("Unhandled interrupt called! (0x%x)\n", registers->isr);
     }
 
     apic::send_eoi();
