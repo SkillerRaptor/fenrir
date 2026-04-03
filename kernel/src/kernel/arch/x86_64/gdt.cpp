@@ -115,10 +115,15 @@ void initialize()
     s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(s_entries);
 
-    load_gdt(&s_descriptor);
-    reload_segments();
+    load();
 
     logger::info("GDT: Initialized\n");
+}
+
+void load()
+{
+    load_gdt(&s_descriptor);
+    reload_segments();
 }
 
 } // namespace kernel::gdt

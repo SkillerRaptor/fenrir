@@ -162,7 +162,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     if (registers.error & 0b10000) {
         logger::err(" - Instruction fetch fault\n");
     }
-    
+
     stacktrace::print(50);
 
     while (true) {
@@ -186,10 +186,12 @@ void initialize()
     s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(s_entries);
 
-    load_idt(&s_descriptor);
+    load();
 
     logger::info("IDT: Initialized\n");
 }
+
+void load() { load_idt(&s_descriptor); }
 
 void set_handler(const u8 isr, const InterruptHandler handler) { s_interrupt_handlers[isr] = handler; }
 

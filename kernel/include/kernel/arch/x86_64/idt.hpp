@@ -13,6 +13,7 @@ namespace kernel::idt {
 using InterruptHandler = void (*)(const Registers &);
 
 void initialize();
+void load();
 
 void set_handler(u8 isr, InterruptHandler);
 

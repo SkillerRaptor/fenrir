@@ -9,5 +9,6 @@
 namespace kernel::gdt {
 
 void initialize();
+void load();
 
 } // namespace kernel::gdt
