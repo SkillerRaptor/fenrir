@@ -6,8 +6,8 @@
 
 #include "kernel/arch/x86_64/idt.hpp"
 
+#include "kernel/acpi/apic.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
-#include "kernel/arch/x86_64/registers.hpp"
 #include "kernel/core/bitflags.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/types.hpp"
@@ -21,8 +21,6 @@ enum class Attribute : u8 {
 };
 
 DECLARE_BITFLAG(Attribute);
-
-using InterruptHandler = void (*)(const Registers *);
 
 struct Entry {
     u16 offset_low { 0 };
@@ -83,51 +81,51 @@ static Entry create_entry(void *handler, const Attribute attributes)
     _ENUMERATE_EXCEPTION(20, virtualization_exception, "Virtualization Exception")           \
     _ENUMERATE_EXCEPTION(30, security_exception, "Security Exception")
 
-#define _ENUMERATE_EXCEPTION(i, fn, exception)                                    \
-    __attribute__((noreturn)) void fn(const Registers *registers)                 \
-    {                                                                             \
-        logger::err(exception " occured with error code %u\n", registers->error); \
-                                                                                  \
-        while (true) {                                                            \
-            cpu::disable_interrupts();                                            \
-            cpu::halt();                                                          \
-        }                                                                         \
+#define _ENUMERATE_EXCEPTION(i, fn, exception)                                   \
+    __attribute__((noreturn)) void fn(const Registers &registers)                \
+    {                                                                            \
+        logger::err(exception " occured with error code %u\n", registers.error); \
+                                                                                 \
+        while (true) {                                                           \
+            cpu::disable_interrupts();                                           \
+            cpu::halt();                                                         \
+        }                                                                        \
     }
 
 ENUMERATE_EXCEPTIONS
 
 #undef _ENUMERATE_EXCEPTION
 
-__attribute__((noreturn)) void page_fault(const Registers *registers)
+__attribute__((noreturn)) void page_fault(const Registers &registers)
 {
     u64 faulting_address = 0;
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
-    logger::err("Page Fault at address 0x%llx with error code %b\n", faulting_address, registers->error);
+    logger::err("Page Fault at address 0x%llx with error code %b\n", faulting_address, registers.error);
 
-    if (registers->error & 0b00001) {
+    if (registers.error & 0b00001) {
         logger::err(" - Page-level protection violation\n");
     } else {
         logger::err(" - Non-present page\n");
     }
 
-    if (registers->error & 0b00010) {
+    if (registers.error & 0b00010) {
         logger::err(" - Write access\n");
     } else {
         logger::err(" - Read access\n");
     }
 
-    if (registers->error & 0b00100) {
+    if (registers.error & 0b00100) {
         logger::err(" - User-mode\n");
     } else {
         logger::err(" - Kernel-mode\n");
     }
 
-    if (registers->error & 0b01000) {
+    if (registers.error & 0b01000) {
         logger::err(" - Reserved bit set\n");
     }
 
-    if (registers->error & 0b10000) {
+    if (registers.error & 0b10000) {
         logger::err(" - Instruction fetch fault\n");
     }
 
@@ -157,13 +155,17 @@ void initialize()
     logger::info("IDT: Initialized\n");
 }
 
+void set_handler(const u8 isr, const InterruptHandler handler) { s_interrupt_handlers[isr] = handler; }
+
 extern "C" void interrupt_raise(const Registers *registers)
 {
     if (s_interrupt_handlers[registers->isr]) {
-        s_interrupt_handlers[registers->isr](registers);
+        s_interrupt_handlers[registers->isr](*registers);
+    } else {
+        logger::warn("Unhandled interrupt called! (0x%x)\n", registers->isr);
     }
 
-    // NOTE: Send end of interrupt
+    apic::send_eoi();
 }
 
 } // namespace kernel::idt

@@ -7,6 +7,7 @@
 set(SOURCES
         src/kernel/main.cpp
         src/kernel/acpi/acpi.cpp
+        src/kernel/acpi/apic.cpp
         src/kernel/acpi/hpet.cpp
         src/kernel/arch/x86_64/gdt.asm
         src/kernel/arch/x86_64/gdt.cpp
@@ -26,6 +27,7 @@ set(SOURCES
 
 set(HEADERS
         include/kernel/acpi/acpi.hpp
+        include/kernel/acpi/apic.hpp
         include/kernel/acpi/hpet.hpp
         include/kernel/arch/x86_64/cpu.hpp
         include/kernel/arch/x86_64/gdt.hpp

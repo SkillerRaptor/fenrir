@@ -5,11 +5,11 @@
  */
 
 #include "kernel/acpi/acpi.hpp"
+#include "kernel/acpi/apic.hpp"
 #include "kernel/acpi/hpet.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/arch/x86_64/idt.hpp"
-#include "kernel/arch/x86_64/pic.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/drivers/serial.hpp"
@@ -41,20 +41,19 @@ __attribute__((noreturn)) extern "C" void kmain()
 
     gdt::initialize();
     idt::initialize();
-    pic::disable();
 
     pmm::initialize();
     vmm::initialize();
 
     acpi::initialize();
     hpet::initialize();
+    apic::initialize();
 
     cpu::enable_interrupts();
 
     cxxabi::construct();
 
     while (true) {
-        cpu::disable_interrupts();
         cpu::halt();
     }
 }

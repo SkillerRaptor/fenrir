@@ -58,6 +58,7 @@ void initialize()
     mmio::out<u64>(
         s_virtual_address + s_general_configuration_register,
         mmio::in<u64>(s_virtual_address + s_general_configuration_register) | 0b1);
+    logger::debug("HPET: Reset and enabled timer\n");
 
     logger::info("HPET: Initialized\n");
 }
