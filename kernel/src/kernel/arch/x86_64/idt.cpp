@@ -10,6 +10,7 @@
 #include "kernel/arch/x86_64/cpu.hpp"
 #include "kernel/core/bitflags.hpp"
 #include "kernel/core/logger.hpp"
+#include "kernel/core/stacktrace.hpp"
 #include "kernel/core/types.hpp"
 
 namespace kernel::idt {
@@ -117,6 +118,8 @@ static Entry create_entry(void *handler, const Attribute attributes)
             registers.ss,                                                        \
             registers.flags);                                                    \
                                                                                  \
+        stacktrace::print(50);                                                   \
+                                                                                 \
         while (true) {                                                           \
             cpu::disable_interrupts();                                           \
             cpu::halt();                                                         \
@@ -159,6 +162,8 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     if (registers.error & 0b10000) {
         logger::err(" - Instruction fetch fault\n");
     }
+    
+    stacktrace::print(50);
 
     while (true) {
         cpu::disable_interrupts();

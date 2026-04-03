@@ -12,10 +12,12 @@
 #include "kernel/arch/x86_64/idt.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
+#include "kernel/core/stacktrace.hpp"
 #include "kernel/drivers/serial.hpp"
 #include "kernel/memory/pmm.hpp"
 #include "kernel/memory/vmm.hpp"
 #include "kernel/misc/cxxabi.hpp"
+#include "kernel/scheduler/smp.hpp"
 
 namespace kernel {
 
@@ -44,6 +46,8 @@ __attribute__((noreturn)) extern "C" void kmain()
 
     pmm::initialize();
     vmm::initialize();
+
+    stacktrace::initialize();
 
     acpi::initialize();
     hpet::initialize();

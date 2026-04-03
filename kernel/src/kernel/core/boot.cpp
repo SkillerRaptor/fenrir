@@ -46,6 +46,24 @@ __attribute__((used, section(".limine_requests"))) volatile limine_memmap_reques
     .response = nullptr,
 };
 
+__attribute__((used, section(".limine_requests"))) limine_internal_module s_kernel_symbols_module {
+    .path = "kernel_symbols.map",
+    .string = "kernel_symbols",
+    .flags = LIMINE_INTERNAL_MODULE_REQUIRED,
+};
+
+__attribute__((used, section(".limine_requests"))) limine_internal_module *s_internal_modules[] {
+    &s_kernel_symbols_module,
+};
+
+__attribute__((used, section(".limine_requests"))) volatile limine_module_request s_module_request {
+    .id = LIMINE_MODULE_REQUEST_ID,
+    .revision = 1,
+    .response = nullptr,
+    .internal_module_count = 1,
+    .internal_modules = s_internal_modules,
+};
+
 __attribute__((used, section(".limine_requests"))) volatile limine_rsdp_request s_rsdp_request {
     .id = LIMINE_RSDP_REQUEST_ID,
     .revision = 0,
@@ -90,6 +108,8 @@ u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
 usize get_memory_map_entry_count() { return s_memmap_request.response->entry_count; }
 
 limine_memmap_entry *get_memory_map_entry(const usize index) { return s_memmap_request.response->entries[index]; }
+
+limine_module_response *get_module_response() { return s_module_request.response; }
 
 void *get_rsdp_address() { return s_rsdp_request.response->address; }
 

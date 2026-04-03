@@ -16,6 +16,7 @@ set(SOURCES
         src/kernel/arch/x86_64/pic.cpp
         src/kernel/core/boot.cpp
         src/kernel/core/logger.cpp
+        src/kernel/core/stacktrace.cpp
         src/kernel/drivers/serial.cpp
         src/kernel/libc/string.cpp
         src/kernel/memory/bitmap.cpp
@@ -39,6 +40,7 @@ set(HEADERS
         include/kernel/core/boot.hpp
         include/kernel/core/logger.hpp
         include/kernel/core/memory.hpp
+        include/kernel/core/stacktrace.hpp
         include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
         include/kernel/lib/type_traits.hpp
@@ -97,6 +99,8 @@ add_custom_command(
 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:kernel> ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/kernel
+
+        COMMAND nm -Cn $<TARGET_FILE:kernel> > ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/kernel_symbols.map
 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/limine
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/limine.conf ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/limine/limine.conf
