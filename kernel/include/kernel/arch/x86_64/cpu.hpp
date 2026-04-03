@@ -20,8 +20,8 @@ inline void disable_interrupts() { asm volatile("cli"); }
 
 inline void write_msr(const u32 msr, const u64 value)
 {
-    const u32 high = (value >> 32) & 0xffff;
-    const u32 low = (value >> 0) & 0xffff;
+    const u32 high = (value >> 32) & 0xffffffff;
+    const u32 low = (value >> 0) & 0xffffffff;
     asm volatile("wrmsr" : : "a"(low), "d"(high), "c"(msr) : "memory");
 }
 
