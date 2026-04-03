@@ -88,50 +88,55 @@ void log(const char *format, ...)
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
+
+    write_string("\033[0m");
 }
 
 void info(const char *format, ...)
 {
-    constexpr char level[] = "\033[38;2;0;128;0minfo\033[39m: ";
-    write_string(level);
+    write_string("\033[38;2;0;128;0minfo\033[39m: ");
 
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
+
+    write_string("\033[0m");
 }
 
 void debug(const char *format, ...)
 {
-    constexpr char level[] = "\033[38;2;0;0;255mdebug\033[39m: ";
-    write_string(level);
+    write_string("\033[38;2;0;0;255mdebug\033[39m: ");
 
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
+
+    write_string("\033[0m");
 }
 
 void warn(const char *format, ...)
 {
-    constexpr char level[] = "\033[38;2;255;215;0mwarn\033[39m: ";
-    write_string(level);
+    write_string("\033[38;2;255;215;0mwarn\033[39m: ");
 
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
+    write_string("\033[0m");
 }
 
 void err(const char *format, ...)
 {
-    constexpr char level[] = "\033[38;2;255;0;0merror\033[39m: ";
-    write_string(level);
+    write_string("\033[38;2;255;0;0merror\033[39m: ");
 
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
+
+    write_string("\033[0m");
 }
 
 } // namespace kernel::logger
