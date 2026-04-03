@@ -23,10 +23,12 @@
 #include "kernel/core/boot.hpp"
 #include "kernel/drivers/serial.hpp"
 #include "kernel/libc/string.hpp"
+#include "kernel/sync/spinlock.hpp"
 
 namespace kernel::logger {
 
 static flanterm_context *s_context { nullptr };
+static Spinlock s_spinlock { };
 
 void initialize()
 {
@@ -84,16 +86,22 @@ static void write_string(const char *str)
 
 void log(const char *format, ...)
 {
+    s_spinlock.lock();
+
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 
     write_string("\033[0m");
+
+    s_spinlock.unlock();
 }
 
 void info(const char *format, ...)
 {
+    s_spinlock.lock();
+
     write_string("\033[38;2;0;128;0minfo\033[39m: ");
 
     va_list args;
@@ -102,10 +110,14 @@ void info(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_spinlock.unlock();
 }
 
 void debug(const char *format, ...)
 {
+    s_spinlock.lock();
+
     write_string("\033[38;2;0;0;255mdebug\033[39m: ");
 
     va_list args;
@@ -114,21 +126,28 @@ void debug(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_spinlock.unlock();
 }
 
 void warn(const char *format, ...)
 {
-    write_string("\033[38;2;255;215;0mwarn\033[39m: ");
+    s_spinlock.lock();
+ write_string("\033[38;2;255;215;0mwarn\033[39m: ");
 
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
     write_string("\033[0m");
+
+    s_spinlock.unlock();
 }
 
 void err(const char *format, ...)
 {
+    s_spinlock.lock();
+
     write_string("\033[38;2;255;0;0merror\033[39m: ");
 
     va_list args;
@@ -137,6 +156,8 @@ void err(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_spinlock.unlock();
 }
 
 } // namespace kernel::logger
