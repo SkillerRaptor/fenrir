@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "kernel/scheduler/process.hpp"
-#include "kernel/scheduler/thread.hpp"
+#include "kernel/scheduler/types.hpp"
 
 namespace kernel::scheduler {
 

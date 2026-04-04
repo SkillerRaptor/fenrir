@@ -15,6 +15,8 @@
 #include "kernel/core/memory.hpp"
 #include "kernel/lib/vector.hpp"
 #include "kernel/memory/pmm.hpp"
+#include "kernel/scheduler/process.hpp"
+#include "kernel/scheduler/thread.hpp"
 #include "kernel/sync/spinlock.hpp"
 
 namespace kernel::scheduler {
