@@ -9,6 +9,7 @@
 namespace kernel::apic {
 
 void initialize();
+void enable_lapic();
 
 void send_eoi();
 

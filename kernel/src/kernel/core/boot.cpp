@@ -40,6 +40,13 @@ __attribute__((used, section(".limine_requests"))) volatile limine_hhdm_request 
     .response = nullptr,
 };
 
+__attribute__((used, section(".limine_requests"))) volatile limine_mp_request s_mp_request {
+    .id = LIMINE_MP_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+    .flags = 0,
+};
+
 __attribute__((used, section(".limine_requests"))) volatile limine_memmap_request s_memmap_request {
     .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 0,
@@ -104,6 +111,8 @@ usize get_framebuffer_count() { return s_framebuffer_request.response->framebuff
 limine_framebuffer *get_framebuffer(const usize index) { return s_framebuffer_request.response->framebuffers[index]; }
 
 u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
+
+limine_mp_response *get_mp_response() { return s_mp_request.response; }
 
 usize get_memory_map_entry_count() { return s_memmap_request.response->entry_count; }
 

@@ -17,11 +17,14 @@
 #include "kernel/memory/pmm.hpp"
 #include "kernel/memory/vmm.hpp"
 #include "kernel/misc/cxxabi.hpp"
+#include "kernel/scheduler/scheduler.hpp"
 #include "kernel/scheduler/smp.hpp"
 
 namespace kernel {
 
-__attribute__((noreturn)) extern "C" void kmain()
+static void kmain_thread(void *user_argument);
+
+extern "C" void kmain()
 {
     cpu::disable_interrupts();
 
@@ -47,19 +50,27 @@ __attribute__((noreturn)) extern "C" void kmain()
     pmm::initialize();
     vmm::initialize();
 
+    cxxabi::construct();
+
     stacktrace::initialize();
 
     acpi::initialize();
     hpet::initialize();
     apic::initialize();
 
-    cpu::enable_interrupts();
+    scheduler::initialize();
+    smp::initialize();
 
-    cxxabi::construct();
+    scheduler::create_thread(scheduler::get_kernel_process(), kmain_thread, nullptr);
 
-    while (true) {
-        cpu::halt();
-    }
+    scheduler::yield();
+}
+
+void kmain_thread(void *)
+{
+    logger::info("Leviathan successfully booted!\n");
+
+    scheduler::yield();
 }
 
 } // namespace kernel

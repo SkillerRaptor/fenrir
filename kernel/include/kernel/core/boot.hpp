@@ -26,6 +26,8 @@ limine_framebuffer *get_framebuffer(usize index);
 
 u64 get_hhdm_offset();
 
+limine_mp_response *get_mp_response();
+
 usize get_memory_map_entry_count();
 limine_memmap_entry *get_memory_map_entry(usize index);
 

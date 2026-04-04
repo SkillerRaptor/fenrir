@@ -24,6 +24,9 @@ set(SOURCES
         src/kernel/memory/pmm.cpp
         src/kernel/memory/vmm.cpp
         src/kernel/misc/cxxabi.cpp
+        src/kernel/scheduler/scheduler.asm
+        src/kernel/scheduler/scheduler.cpp
+        src/kernel/scheduler/smp.cpp
         src/kernel/sync/spinlock.cpp)
 
 set(HEADERS
@@ -43,7 +46,9 @@ set(HEADERS
         include/kernel/core/stacktrace.hpp
         include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
+        include/kernel/lib/queue.hpp
         include/kernel/lib/type_traits.hpp
+        include/kernel/lib/vector.hpp
         include/kernel/libc/string.hpp
         include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
@@ -51,6 +56,10 @@ set(HEADERS
         include/kernel/memory/pmm.hpp
         include/kernel/memory/vmm.hpp
         include/kernel/misc/cxxabi.hpp
+        include/kernel/scheduler/process.hpp
+        include/kernel/scheduler/scheduler.hpp
+        include/kernel/scheduler/smp.hpp
+        include/kernel/scheduler/thread.hpp
         include/kernel/sync/spinlock.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)

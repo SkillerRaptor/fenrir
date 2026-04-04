@@ -57,13 +57,21 @@ void initialize()
     constexpr u32 apic_global_enable = 1 << 11;
     cpu::write_msr(s_apic_base_msr, cpu::read_msr(s_base_lapic_address) | apic_global_enable);
 
+    enable_lapic();
+
+    logger::debug("APIC: Enabled LAPIC Timer\n");
+
+    logger::info("APIC: Initialized\n");
+}
+
+void enable_lapic()
+{
     constexpr u32 apic_software_enable = 1 << 8;
     constexpr u32 spurious_vector = 0xff;
     mmio::out<u32>(
         s_base_lapic_address + s_spurious_interrupt_vector_register,
         mmio::in<u32>(s_base_lapic_address + s_spurious_interrupt_vector_register) | apic_software_enable
             | spurious_vector);
-    logger::debug("APIC: Enabled LAPIC Timer\n");
 
     // NOTE: Calibrate timer
     mmio::out<u32>(s_base_lapic_address + s_timer_divide_configuration_register, s_timer_divide_value);
@@ -75,14 +83,11 @@ void initialize()
     hpet::sleep(10);
 
     mmio::out<u32>(s_base_lapic_address + s_timer_register, s_register_mask);
-    logger::debug("APIC: Calibrated LAPIC Timer\n");
 
     const u32 ticks = 0xffffffff - mmio::in<u32>(s_base_lapic_address + s_timer_current_count_register);
     mmio::out<u32>(s_base_lapic_address + s_timer_register, s_timer_periodic_mode | s_timer_isr);
     mmio::out<u32>(s_base_lapic_address + s_timer_divide_configuration_register, s_timer_divide_value);
     mmio::out<u32>(s_base_lapic_address + s_timer_initial_count_register, ticks);
-
-    logger::info("APIC: Initialized\n");
 }
 
 void send_eoi() { mmio::out<u32>(s_base_lapic_address + s_end_of_interrupt_register, 0); }
