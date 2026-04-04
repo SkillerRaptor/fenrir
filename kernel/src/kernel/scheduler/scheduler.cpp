@@ -54,7 +54,7 @@ __attribute__((noreturn)) void yield()
 
 Process::Id create_process()
 {
-    s_process_list_lock.lock();
+    SpinlockLocker _locker(s_process_list_lock);
 
     const Process::Id pid = s_current_process_id;
     ++s_current_process_id;
@@ -69,7 +69,6 @@ Process::Id create_process()
     };
 
     s_process_list.push_back(process);
-    s_process_list_lock.unlock();
 
     logger::debug("Scheduler: Created process #%u\n", process.pid);
 
@@ -80,10 +79,9 @@ Process::Id create_process()
 
 Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *user_argument)
 {
-    s_thread_list_lock.lock();
+    SpinlockLocker _locker(s_thread_list_lock);
 
     if (pid == -1) {
-        s_thread_list_lock.unlock();
         return -1;
     }
 
@@ -96,7 +94,6 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
     }
 
     if (!found) {
-        s_thread_list_lock.unlock();
         return -1;
     }
 
@@ -127,8 +124,6 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
 
     s_thread_list.push_back(thread);
 
-    s_thread_list_lock.unlock();
-
     // TODO: Don't hardcore 4 cpus
     cpu::Info *infos = smp::get_cpu_infos();
 
@@ -141,9 +136,11 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
         }
     }
 
-    infos[least_loaded_cpu].run_queue_lock.lock();
-    infos[least_loaded_cpu].run_queue.push_back(thread.tid);
-    infos[least_loaded_cpu].run_queue_lock.unlock();
+    {
+        cpu::Info *info = &infos[least_loaded_cpu];
+        SpinlockLocker _run_queue_locker(info->run_queue_lock);
+        info->run_queue.push_back(thread.tid);
+    }
 
     logger::debug("Scheduler: Created thread #%u for process #%u\n", thread.tid, thread.pid);
 
@@ -152,7 +149,7 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
 
 Thread::Id create_idle_thread()
 {
-    s_thread_list_lock.lock();
+    SpinlockLocker _locker(s_thread_list_lock);
 
     const Thread::Id tid = s_current_thread_id;
     ++s_current_thread_id;
@@ -180,8 +177,6 @@ Thread::Id create_idle_thread()
 
     s_thread_list.push_back(thread);
 
-    s_thread_list_lock.unlock();
-
     logger::debug("Scheduler: Created idle thread #%u for process #%u\n", thread.tid, thread.pid);
 
     return thread.tid;
@@ -194,55 +189,58 @@ Process::Id get_kernel_process() { return s_kernel_process; }
 
 void schedule(const Registers &registers)
 {
-    cpu::Info *current_cpu = cpu::get_local_cpu_info();
-    const Thread::Id current_thread_id = current_cpu->current_thread;
+    cpu::Info &current_cpu = cpu::get_local_cpu_info();
+    const Thread::Id current_thread_id = current_cpu.current_thread;
 
     // TODO: Check if thread is not a ghost and exists
-    if (current_thread_id != -1 && current_thread_id != current_cpu->idle_thread) {
-        s_thread_list_lock.lock();
-        Thread *current_thread = &s_thread_list[current_thread_id];
-        current_thread->registers = registers;
-        if (current_thread->state == Thread::State::Busy) {
-            current_thread->state = Thread::State::Idle;
+    if (current_thread_id != -1 && current_thread_id != current_cpu.idle_thread) {
+        SpinlockLocker _thread_list_locker(s_thread_list_lock);
 
-            current_cpu->run_queue_lock.lock();
-            current_cpu->run_queue.push_back(current_thread->tid);
-            current_cpu->run_queue_lock.unlock();
+        Thread &current_thread = s_thread_list[current_thread_id];
+        current_thread.registers = registers;
+        if (current_thread.state == Thread::State::Busy) {
+            current_thread.state = Thread::State::Idle;
+
+            SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
+            current_cpu.run_queue.push_back(current_thread.tid);
         }
-        s_thread_list_lock.unlock();
     }
 
     Thread::Id next_thread_id = -1;
 
-    current_cpu->run_queue_lock.lock();
-    if (!current_cpu->run_queue.is_empty()) {
-        next_thread_id = current_cpu->run_queue.pop_front();
+    {
+        SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
+        if (!current_cpu.run_queue.is_empty()) {
+            next_thread_id = current_cpu.run_queue.pop_front();
+        }
     }
-    current_cpu->run_queue_lock.unlock();
 
     // TODO: Add work stealing
     if (next_thread_id == -1) {
-        next_thread_id = current_cpu->idle_thread;
+        next_thread_id = current_cpu.idle_thread;
     }
 
-    current_cpu->current_thread = next_thread_id;
+    current_cpu.current_thread = next_thread_id;
 
-    s_thread_list_lock.lock();
-    const Thread *current_thread = &s_thread_list[current_thread_id];
-    Thread *next_thread = &s_thread_list[next_thread_id];
-    next_thread->state = Thread::State::Busy;
-    s_thread_list_lock.unlock();
+    Registers regs { };
+    {
+        SpinlockLocker _thread_list_locker(s_thread_list_lock);
+        const Thread &current_thread = s_thread_list[current_thread_id];
+        Thread &next_thread = s_thread_list[next_thread_id];
+        next_thread.state = Thread::State::Busy;
+        regs = next_thread.registers;
 
-    if (next_thread->pid != current_thread->pid) {
-        s_process_list_lock.lock();
-        const Process *next_process = &s_process_list[next_thread->pid];
-        s_process_list_lock.unlock();
-        vmm::switch_to_page_map(next_process->page_map);
+        if (next_thread.pid != current_thread.pid) {
+            SpinlockLocker _process_list_locker(s_process_list_lock);
+
+            const Process *next_process = &s_process_list[next_thread.pid];
+            vmm::switch_to_page_map(next_process->page_map);
+        }
     }
 
     apic::send_eoi();
 
-    switch_process(&next_thread->registers);
+    switch_process(&regs);
 }
 
 } // namespace kernel::scheduler

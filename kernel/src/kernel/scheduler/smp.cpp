@@ -79,9 +79,10 @@ static void cpu_init(limine_mp_info *info)
 
     logger::debug("SMP: Started CPU #%u\n", cpu_info->id);
 
-    s_spinlock.lock();
-    ++s_online_cpu_count;
-    s_spinlock.unlock();
+    {
+        SpinlockLocker _locker(s_spinlock);
+        ++s_online_cpu_count;
+    }
 
     if (info->lapic_id == s_bsp_lapic_id) {
         return;

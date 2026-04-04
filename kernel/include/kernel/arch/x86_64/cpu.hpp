@@ -50,11 +50,11 @@ inline void set_fs_base(const void *address) { write_msr(0xc0000100, reinterpret
 inline void set_gs_base(const void *address) { write_msr(0xc0000101, reinterpret_cast<u64>(address)); }
 inline void set_kernel_gs_base(const void *address) { write_msr(0xc0000102, reinterpret_cast<u64>(address)); }
 
-inline Info *get_local_cpu_info()
+inline Info &get_local_cpu_info()
 {
     u64 cpu_id = 0;
     asm volatile("mov %%gs:0x0, %0" : "=r"(cpu_id));
-    return &smp::get_cpu_infos()[cpu_id];
+    return smp::get_cpu_infos()[cpu_id];
 }
 
 } // namespace kernel::cpu
