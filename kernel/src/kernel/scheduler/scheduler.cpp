@@ -69,8 +69,6 @@ ProcessId create_process()
 
     s_process_list.push_back(process);
 
-    logger::debug("Scheduler: Created process #%u\n", process.pid);
-
     return process.pid;
 }
 
@@ -155,8 +153,6 @@ ThreadId create_thread(const ProcessId pid, void (*entry)(void *), void *user_ar
         info->run_queue.push_back(thread.tid);
     }
 
-    logger::debug("Scheduler: Created thread #%u for process #%u\n", thread.tid, thread.pid);
-
     return thread.tid;
 }
 
@@ -188,8 +184,6 @@ ThreadId create_idle_thread()
     };
 
     s_thread_list.push_back(thread);
-
-    logger::debug("Scheduler: Created idle thread #%u for process #%u\n", thread.tid, thread.pid);
 
     return thread.tid;
 }

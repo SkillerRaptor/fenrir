@@ -57,6 +57,8 @@ void initialize()
         asm volatile("");
     }
 
+    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count);
+
     logger::info("SMP: Initialized\n");
 }
 
@@ -76,8 +78,6 @@ static void cpu_init(limine_mp_info *info)
     cpu_info->idle_thread = scheduler::create_idle_thread();
 
     apic::enable_lapic();
-
-    logger::debug("SMP: Started CPU #%u\n", cpu_info->id);
 
     {
         SpinlockLocker _locker(s_spinlock);
