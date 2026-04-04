@@ -76,7 +76,21 @@ ProcessId create_process()
 
 // TODO: Add destroy_process
 
-ThreadId create_thread(const ProcessId pid, void (*function)(void *), void *user_argument)
+static void thread_wrapper(void (*entry)(void *), void *user_argument)
+{
+    entry(user_argument);
+
+    const cpu::Info &current_cpu = cpu::get_local_cpu_info();
+    const ThreadId current_thread_id = current_cpu.current_thread;
+
+    SpinlockLocker _thread_list_locker(s_thread_list_lock);
+    Thread &current_thread = s_thread_list[current_thread_id.get()];
+    current_thread.state = Thread::State::Dead;
+
+    yield();
+}
+
+ThreadId create_thread(const ProcessId pid, void (*entry)(void *), void *user_argument)
 {
     SpinlockLocker _locker(s_thread_list_lock);
 
@@ -107,10 +121,11 @@ ThreadId create_thread(const ProcessId pid, void (*function)(void *), void *user
         .tid = tid,
         .state = Thread::State::Idle,
         .registers = {
-            .rdi = reinterpret_cast<u64>(user_argument),
+            .rsi = reinterpret_cast<u64>(user_argument),
+            .rdi = reinterpret_cast<u64>(entry),
             .rbp = 0,
             // NOTE: Iret Frame
-            .rip = reinterpret_cast<u64>(function),
+            .rip = reinterpret_cast<u64>(thread_wrapper),
             .cs = cs,
             .flags = 1 << 9 | 1 << 1,
             .rsp = stack + boot::get_hhdm_offset(),

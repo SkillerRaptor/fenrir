@@ -16,7 +16,7 @@ void initialize();
 void yield();
 
 ProcessId create_process();
-ThreadId create_thread(ProcessId pid, void (*function)(void *), void *user_argument);
+ThreadId create_thread(ProcessId pid, void (*entry)(void *), void *user_argument);
 ThreadId create_idle_thread();
 
 ProcessId get_kernel_process();
