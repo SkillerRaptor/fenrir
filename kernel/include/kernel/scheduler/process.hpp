@@ -8,19 +8,18 @@
 
 #include "kernel/core/types.hpp"
 #include "kernel/memory/vmm.hpp"
+#include "kernel/scheduler/types.hpp"
 
 namespace kernel {
 
 struct Process {
-    using Id = i32;
-
     enum class State {
         Idle = 0,
         Busy,
         Dead,
     };
 
-    Id pid { -1 };
+    ProcessId pid { -1 };
     State state { State::Idle };
 
     vmm::PageMap *page_map { nullptr };

@@ -46,6 +46,7 @@ set(HEADERS
         include/kernel/core/stacktrace.hpp
         include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
+        include/kernel/lib/identifier.hpp
         include/kernel/lib/queue.hpp
         include/kernel/lib/type_traits.hpp
         include/kernel/lib/vector.hpp
@@ -60,6 +61,7 @@ set(HEADERS
         include/kernel/scheduler/scheduler.hpp
         include/kernel/scheduler/smp.hpp
         include/kernel/scheduler/thread.hpp
+        include/kernel/scheduler/types.hpp
         include/kernel/sync/spinlock.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)

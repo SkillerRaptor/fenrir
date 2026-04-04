@@ -15,10 +15,10 @@ void initialize();
 
 void yield();
 
-Process::Id create_process();
-Thread::Id create_thread(Process::Id pid, void (*function)(void *), void *user_argument);
-Thread::Id create_idle_thread();
+ProcessId create_process();
+ThreadId create_thread(ProcessId pid, void (*function)(void *), void *user_argument);
+ThreadId create_idle_thread();
 
-Process::Id get_kernel_process();
+ProcessId get_kernel_process();
 
 } // namespace kernel::scheduler

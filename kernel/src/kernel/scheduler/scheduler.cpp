@@ -21,8 +21,8 @@ namespace kernel::scheduler {
 
 extern "C" void switch_process(const Registers *registers);
 
-static Process::Id s_current_process_id = 0;
-static Thread::Id s_current_thread_id = 0;
+static i32 s_current_process_id { 0 };
+static i32 s_current_thread_id { 0 };
 
 static Vector<Process> s_process_list { };
 static Spinlock s_process_list_lock { };
@@ -30,7 +30,7 @@ static Spinlock s_process_list_lock { };
 static Vector<Thread> s_thread_list { };
 static Spinlock s_thread_list_lock { };
 
-static Process::Id s_kernel_process = -1;
+static ProcessId s_kernel_process { -1 };
 
 static void schedule(const Registers &registers);
 
@@ -52,12 +52,11 @@ __attribute__((noreturn)) void yield()
     }
 }
 
-Process::Id create_process()
+ProcessId create_process()
 {
     SpinlockLocker _locker(s_process_list_lock);
 
-    const Process::Id pid = s_current_process_id;
-    ++s_current_process_id;
+    const ProcessId pid = ProcessId { s_current_process_id++ };
 
     // TODO: Add option to create page map for isolated processes
     vmm::PageMap *page_map = vmm::get_kernel_page_map();
@@ -77,12 +76,12 @@ Process::Id create_process()
 
 // TODO: Add destroy_process
 
-Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *user_argument)
+ThreadId create_thread(const ProcessId pid, void (*function)(void *), void *user_argument)
 {
     SpinlockLocker _locker(s_thread_list_lock);
 
-    if (pid == -1) {
-        return -1;
+    if (pid == ProcessId { -1 }) {
+        return ThreadId { -1 };
     }
 
     bool found = false;
@@ -94,11 +93,10 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
     }
 
     if (!found) {
-        return -1;
+        return ThreadId { -1 };
     }
 
-    const Thread::Id tid = s_current_thread_id;
-    ++s_current_thread_id;
+    const ThreadId tid = ThreadId { s_current_thread_id++ };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
@@ -147,12 +145,11 @@ Thread::Id create_thread(const Process::Id pid, void (*function)(void *), void *
     return thread.tid;
 }
 
-Thread::Id create_idle_thread()
+ThreadId create_idle_thread()
 {
     SpinlockLocker _locker(s_thread_list_lock);
 
-    const Thread::Id tid = s_current_thread_id;
-    ++s_current_thread_id;
+    const ThreadId tid = ThreadId { s_current_thread_id++ };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
@@ -185,18 +182,18 @@ Thread::Id create_idle_thread()
 // TODO: Add create thread from current process
 // TODO: Add destroy thread
 
-Process::Id get_kernel_process() { return s_kernel_process; }
+ProcessId get_kernel_process() { return s_kernel_process; }
 
 void schedule(const Registers &registers)
 {
     cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    const Thread::Id current_thread_id = current_cpu.current_thread;
+    const ThreadId current_thread_id = current_cpu.current_thread;
 
     // TODO: Check if thread is not a ghost and exists
-    if (current_thread_id != -1 && current_thread_id != current_cpu.idle_thread) {
+    if (current_thread_id != ThreadId { -1 } && current_thread_id != current_cpu.idle_thread) {
         SpinlockLocker _thread_list_locker(s_thread_list_lock);
 
-        Thread &current_thread = s_thread_list[current_thread_id];
+        Thread &current_thread = s_thread_list[current_thread_id.get()];
         current_thread.registers = registers;
         if (current_thread.state == Thread::State::Busy) {
             current_thread.state = Thread::State::Idle;
@@ -206,7 +203,7 @@ void schedule(const Registers &registers)
         }
     }
 
-    Thread::Id next_thread_id = -1;
+    ThreadId next_thread_id { -1 };
 
     {
         SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
@@ -216,7 +213,7 @@ void schedule(const Registers &registers)
     }
 
     // TODO: Add work stealing
-    if (next_thread_id == -1) {
+    if (next_thread_id == ThreadId { -1 }) {
         next_thread_id = current_cpu.idle_thread;
     }
 
@@ -225,15 +222,15 @@ void schedule(const Registers &registers)
     Registers regs { };
     {
         SpinlockLocker _thread_list_locker(s_thread_list_lock);
-        const Thread &current_thread = s_thread_list[current_thread_id];
-        Thread &next_thread = s_thread_list[next_thread_id];
+        const Thread &current_thread = s_thread_list[current_thread_id.get()];
+        Thread &next_thread = s_thread_list[next_thread_id.get()];
         next_thread.state = Thread::State::Busy;
         regs = next_thread.registers;
 
         if (next_thread.pid != current_thread.pid) {
             SpinlockLocker _process_list_locker(s_process_list_lock);
 
-            const Process *next_process = &s_process_list[next_thread.pid];
+            const Process *next_process = &s_process_list[next_thread.pid.get()];
             vmm::switch_to_page_map(next_process->page_map);
         }
     }

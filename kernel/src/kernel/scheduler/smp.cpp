@@ -38,8 +38,8 @@ void initialize()
 
         s_cpu_infos[i].id = i;
         s_cpu_infos[i].lapic_id = info->lapic_id;
-        s_cpu_infos[i].current_thread = -1;
-        s_cpu_infos[i].idle_thread = -1;
+        s_cpu_infos[i].current_thread = ThreadId { -1 };
+        s_cpu_infos[i].idle_thread = ThreadId { -1 };
         s_cpu_infos[i].run_queue = { };
         s_cpu_infos[i].run_queue_lock = { };
 

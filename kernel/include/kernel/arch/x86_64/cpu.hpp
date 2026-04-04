@@ -17,9 +17,9 @@ namespace kernel::cpu {
 struct Info {
     u64 id { 0 };
     u32 lapic_id { 0 };
-    Thread::Id current_thread { -1 };
-    Thread::Id idle_thread { -1 };
-    Queue<Thread::Id> run_queue { };
+    ThreadId current_thread { -1 };
+    ThreadId idle_thread { -1 };
+    Queue<ThreadId> run_queue { };
     Spinlock run_queue_lock { };
 };
 
