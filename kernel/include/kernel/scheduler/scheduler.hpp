@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "kernel/memory/vmm.hpp"
 #include "kernel/scheduler/types.hpp"
 
 namespace kernel::scheduler {
@@ -14,8 +15,8 @@ void initialize();
 
 void yield();
 
-ProcessId create_process();
-ThreadId create_thread(ProcessId pid, void (*entry)(void *), void *user_argument);
+ProcessId create_process(vmm::PageMap *page_map);
+ThreadId create_thread(ProcessId pid, u64 cs, void (*entry)(void *), void *user_argument);
 ThreadId create_idle_thread();
 
 ProcessId get_kernel_process();

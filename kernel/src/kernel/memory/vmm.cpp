@@ -95,6 +95,18 @@ PageMap *create_page_map()
     PageMap *page_map = new PageMap();
     page_map->top_level = reinterpret_cast<u64>(pmm::allocate(1, true));
 
+    // NOTE: This copies the higher half of the kernel page map to every page map
+    // FIXME: Find a good way to sync the kernel map if it changes to every other page map, a good way could be to do it
+    // everytime a page map switch happens
+    if (s_kernel_page_map) {
+        u64 *new_pml4 = reinterpret_cast<u64 *>(page_map->top_level + boot::get_hhdm_offset());
+        const u64 *kernel_pml4 = reinterpret_cast<u64 *>(s_kernel_page_map->top_level + boot::get_hhdm_offset());
+
+        for (usize i = 256; i < 512; ++i) {
+            new_pml4[i] = kernel_pml4[i];
+        }
+    }
+
     return page_map;
 }
 

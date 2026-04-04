@@ -53,7 +53,7 @@ struct Descriptor {
 extern "C" void load_gdt(const Descriptor *descriptor);
 extern "C" void reload_segments();
 
-static Entry s_entries[7] = { };
+static Entry s_entries[9] = { };
 static Descriptor s_descriptor = { };
 
 static Entry create_entry(const u32 base, const u32 limit, const AccessAttribute access, const FlagAttribute flags)
@@ -109,6 +109,19 @@ void initialize()
         0x00000000,
         0xffffffff,
         AccessAttribute::Present | AccessAttribute::KernelPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::PageGranularity | FlagAttribute::LongMode);
+
+    s_entries[7] = create_entry(
+        0x00000000,
+        0xffffffff,
+        AccessAttribute::Present | AccessAttribute::UserPrivilege | AccessAttribute::CodeDate
+            | AccessAttribute::Executable | AccessAttribute::ReadWrite | AccessAttribute::Access,
+        FlagAttribute::PageGranularity | FlagAttribute::LongMode);
+    s_entries[8] = create_entry(
+        0x00000000,
+        0xffffffff,
+        AccessAttribute::Present | AccessAttribute::UserPrivilege | AccessAttribute::CodeDate
             | AccessAttribute::ReadWrite | AccessAttribute::Access,
         FlagAttribute::PageGranularity | FlagAttribute::LongMode);
 

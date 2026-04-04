@@ -61,7 +61,7 @@ extern "C" void kmain()
     scheduler::initialize();
     smp::initialize();
 
-    scheduler::create_thread(scheduler::get_kernel_process(), kmain_thread, nullptr);
+    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
 
     scheduler::yield();
 }

@@ -40,7 +40,7 @@ void initialize()
 {
     idt::set_handler(0x20, schedule);
 
-    s_kernel_process = create_process();
+    s_kernel_process = create_process(nullptr);
     logger::debug("Scheduler: Created kernel process with id #%u\n", s_kernel_process);
 
     logger::info("Scheduler: Initialized\n");
@@ -54,19 +54,19 @@ __attribute__((noreturn)) void yield()
     }
 }
 
-ProcessId create_process()
+ProcessId create_process(vmm::PageMap *page_map)
 {
     SpinlockLocker _locker(s_process_list_lock);
 
     const ProcessId pid = ProcessId { s_current_process_id++ };
 
     // TODO: Add option to create page map for isolated processes
-    vmm::PageMap *page_map = vmm::get_kernel_page_map();
+    // TODO: Copy higher half of page map to always have the kernel mapped
 
     const Process process {
         .pid = pid,
         .state = Process::State::Idle,
-        .page_map = page_map,
+        .page_map = page_map == nullptr ? vmm::get_kernel_page_map() : page_map,
     };
 
     s_process_list.push_back(process);
@@ -90,7 +90,7 @@ static void thread_wrapper(void (*entry)(void *), void *user_argument)
     yield();
 }
 
-ThreadId create_thread(const ProcessId pid, void (*entry)(void *), void *user_argument)
+ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *), void *user_argument)
 {
     SpinlockLocker _locker(s_thread_list_lock);
 
@@ -113,8 +113,6 @@ ThreadId create_thread(const ProcessId pid, void (*entry)(void *), void *user_ar
     const ThreadId tid = ThreadId { s_current_thread_id++ };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
-
-    constexpr u64 cs = 0x28;
 
     const Thread thread {
         .pid = pid,
