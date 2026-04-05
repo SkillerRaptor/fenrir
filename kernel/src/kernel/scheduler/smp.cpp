@@ -12,6 +12,8 @@
 #include "kernel/arch/x86_64/idt.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
+#include "kernel/core/memory.hpp"
+#include "kernel/memory/pmm.hpp"
 #include "kernel/memory/vmm.hpp"
 #include "kernel/scheduler/scheduler.hpp"
 #include "kernel/sync/spinlock.hpp"
@@ -21,7 +23,7 @@ namespace kernel::smp {
 static u32 s_bsp_lapic_id = 0;
 static u8 s_online_cpu_count = 0;
 static cpu::Info *s_cpu_infos = nullptr;
-static Spinlock s_spinlock {};
+static Spinlock s_spinlock { };
 
 static void cpu_init(limine_mp_info *info);
 
@@ -36,12 +38,18 @@ void initialize()
     for (usize i = 0; i < response->cpu_count; ++i) {
         limine_mp_info *info = response->cpus[i];
 
+        const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size + boot::get_hhdm_offset();
+
         s_cpu_infos[i].id = i;
         s_cpu_infos[i].lapic_id = info->lapic_id;
         s_cpu_infos[i].current_thread = ThreadId { -1 };
         s_cpu_infos[i].idle_thread = ThreadId { -1 };
-        s_cpu_infos[i].run_queue = {};
-        s_cpu_infos[i].run_queue_lock = {};
+        s_cpu_infos[i].run_queue = { };
+        s_cpu_infos[i].run_queue_lock = { };
+        s_cpu_infos[i].tss = { };
+        s_cpu_infos[i].tss.rsp_0 = stack;
+        s_cpu_infos[i].gdt.table = gdt::create_table();
+        s_cpu_infos[i].gdt.descriptor = { };
 
         info->extra_argument = reinterpret_cast<u64>(&s_cpu_infos[i]);
 
@@ -68,11 +76,11 @@ static void cpu_init(limine_mp_info *info)
 {
     cpu::disable_interrupts();
 
-    gdt::load();
     idt::load();
     vmm::switch_to_page_map(vmm::get_kernel_page_map());
 
     cpu::Info *cpu_info = reinterpret_cast<cpu::Info *>(info->extra_argument);
+    gdt::load(cpu_info->gdt, cpu_info->tss);
     cpu::set_gs_base(cpu_info);
 
     cpu_info->idle_thread = scheduler::create_idle_thread();

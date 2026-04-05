@@ -9,10 +9,16 @@ bits 64
 section .text
 
 global load_gdt
+global load_tss
 global reload_segments
 
 load_gdt:
     lgdt [rdi]
+    ret
+
+load_tss:
+    mov ax, 0x48
+    ltr ax
     ret
 
 reload_segments:

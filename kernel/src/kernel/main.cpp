@@ -44,7 +44,6 @@ extern "C" void kmain()
     logger::log("   Firmware: %s\n", boot::get_firmware_type());
     logger::log("\n");
 
-    gdt::initialize();
     idt::initialize();
 
     pmm::initialize();

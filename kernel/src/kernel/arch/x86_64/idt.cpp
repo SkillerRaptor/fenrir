@@ -42,9 +42,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] {};
-static Descriptor s_descriptor {};
-static InterruptHandler s_interrupt_handlers[256] {};
+static Entry s_entries[256] { };
+static Descriptor s_descriptor { };
+static InterruptHandler s_interrupt_handlers[256] { };
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {
@@ -135,7 +135,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     u64 faulting_address = 0;
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
-    logger::err("Page Fault at address 0x%llx with error code %b\n", faulting_address, registers.error);
+    logger::err("Page Fault at address 0x%016llx with error code %b\n", faulting_address, registers.error);
 
     if (registers.error & 0b00001) {
         logger::err(" - Page-level protection violation\n");

@@ -27,11 +27,11 @@ extern "C" void switch_process(const Registers *registers);
 static i32 s_current_process_id { 0 };
 static i32 s_current_thread_id { 0 };
 
-static lib::Vector<Process> s_process_list {};
-static Spinlock s_process_list_lock {};
+static lib::Vector<Process> s_process_list { };
+static Spinlock s_process_list_lock { };
 
-static lib::Vector<Thread> s_thread_list {};
-static Spinlock s_thread_list_lock {};
+static lib::Vector<Thread> s_thread_list { };
+static Spinlock s_thread_list_lock { };
 
 static ProcessId s_kernel_process { -1 };
 
@@ -229,7 +229,7 @@ void schedule(const Registers &registers)
 
     current_cpu.current_thread = next_thread_id;
 
-    Registers regs {};
+    Registers regs { };
     {
         SpinlockLocker _thread_list_locker(s_thread_list_lock);
         const Thread &current_thread = s_thread_list[current_thread_id.get()];
