@@ -23,7 +23,10 @@ namespace kernel {
 
 static void kmain_thread(void *user_argument);
 
-static void syscall_handler(const Registers &registers) { logger::info("Syscall handler called!\n"); }
+static void syscall_handler(const Registers &registers)
+{
+    logger::info("Syscall handler called with syscall #%u!\n", registers.rdi);
+}
 
 extern "C" void kmain()
 {
@@ -65,19 +68,27 @@ extern "C" void kmain()
     void *code_page_phys = pmm::allocate(1, true);
     const u64 code_phys = reinterpret_cast<u64>(code_page_phys);
 
-    // copy user_code bytes into it via HHDM
     u8 *code_virt = reinterpret_cast<u8 *>(code_phys + boot::get_hhdm_offset());
-    code_virt[0] = 0xcd; // int
-    code_virt[1] = 0x80; // 0x80
-    code_virt[2] = 0xeb; // jmp
-    code_virt[3] = 0xfe; // -2 (infinite loop)
+    code_virt[0] = 0xbf;
+    code_virt[1] = 0x45;
+    code_virt[2] = 0x00;
+    code_virt[3] = 0x00;
+    code_virt[4] = 0x00;
+    code_virt[5] = 0xcd;
+    code_virt[6] = 0x80;
 
-    // now map the fresh low-physical-address page
-    vmm::map(
-        user_page_map,
-        code_phys, // this will be a low address like 0x100000
-        0x1000,
-        vmm::Attribute::User | vmm::Attribute::Write);
+    code_virt[7] = 0xbf;
+    code_virt[8] = 0x43;
+    code_virt[9] = 0x00;
+    code_virt[10] = 0x00;
+    code_virt[11] = 0x00;
+    code_virt[12] = 0xcd;
+    code_virt[13] = 0x80;
+
+    code_virt[14] = 0xeb;
+    code_virt[15] = 0xfe;
+
+    vmm::map(user_page_map, code_phys, 0x1000, vmm::Attribute::User | vmm::Attribute::Write);
 
     vmm::map(user_page_map, code_phys, 0x1000, vmm::Attribute::User | vmm::Attribute::Write);
 
@@ -87,7 +98,7 @@ extern "C" void kmain()
     ThreadId user_thread
         = scheduler::create_thread(user_process, 0x38 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
 
-    //  scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
+    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
 
     scheduler::yield();
 }
