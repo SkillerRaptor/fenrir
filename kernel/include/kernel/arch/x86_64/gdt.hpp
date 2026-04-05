@@ -63,7 +63,7 @@ struct Descriptor {
 struct CpuGdt {
     Table table { };
     Descriptor descriptor { };
-};
+} __attribute__((packed));
 
 Table create_table();
 void load(CpuGdt &, const Tss &);

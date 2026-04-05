@@ -8,7 +8,7 @@
 
 #include <lib/queue.hpp>
 
-#include "gdt.hpp"
+#include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/scheduler/smp.hpp"
 #include "kernel/scheduler/thread.hpp"
 #include "kernel/sync/spinlock.hpp"
@@ -19,13 +19,13 @@ struct Info {
     u64 id { 0 };
     u32 lapic_id { 0 };
 
+    gdt::CpuGdt gdt { };
+    gdt::Tss tss { };
+
     ThreadId current_thread { -1 };
     ThreadId idle_thread { -1 };
     lib::Queue<ThreadId> run_queue { };
     Spinlock run_queue_lock { };
-
-    gdt::Tss tss { };
-    gdt::CpuGdt gdt { };
 };
 
 inline void halt() { asm volatile("hlt"); }

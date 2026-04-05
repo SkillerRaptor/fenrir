@@ -18,6 +18,8 @@ namespace kernel::idt {
 enum class Attribute : u8 {
     TrapGate = 1 << 3 | 1 << 2 | 1 << 1 | 1 << 0,
     InterruptGate = 1 << 3 | 1 << 2 | 1 << 1 | 0 << 0,
+    KernelPrivilege = 0 << 6 | 0 << 5,
+    UserPrivilege = 1 << 6 | 1 << 5,
     Present = 1 << 7
 };
 
@@ -174,8 +176,14 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 void initialize()
 {
     for (usize i = 0; i < 256; ++i) {
-        s_entries[i] = create_entry(interrupt_handlers[i], Attribute::Present | Attribute::InterruptGate);
+        s_entries[i] = create_entry(
+            interrupt_handlers[i],
+            Attribute::KernelPrivilege | Attribute::Present | Attribute::InterruptGate);
     }
+
+    s_entries[0x80] = create_entry(
+        interrupt_handlers[0x80],
+        Attribute::UserPrivilege | Attribute::Present | Attribute::InterruptGate);
 
 #define _ENUMERATE_EXCEPTION(i, fn, err) s_interrupt_handlers[i] = fn;
     ENUMERATE_EXCEPTIONS

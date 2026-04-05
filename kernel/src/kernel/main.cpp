@@ -8,7 +8,6 @@
 #include "kernel/acpi/apic.hpp"
 #include "kernel/acpi/hpet.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
-#include "kernel/arch/x86_64/gdt.hpp"
 #include "kernel/arch/x86_64/idt.hpp"
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
@@ -23,6 +22,8 @@
 namespace kernel {
 
 static void kmain_thread(void *user_argument);
+
+static void syscall_handler(const Registers &registers) { logger::info("Syscall handler called!\n"); }
 
 extern "C" void kmain()
 {
@@ -60,7 +61,33 @@ extern "C" void kmain()
     scheduler::initialize();
     smp::initialize();
 
-    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
+    vmm::PageMap *user_page_map = vmm::create_page_map();
+    void *code_page_phys = pmm::allocate(1, true);
+    const u64 code_phys = reinterpret_cast<u64>(code_page_phys);
+
+    // copy user_code bytes into it via HHDM
+    u8 *code_virt = reinterpret_cast<u8 *>(code_phys + boot::get_hhdm_offset());
+    code_virt[0] = 0xcd; // int
+    code_virt[1] = 0x80; // 0x80
+    code_virt[2] = 0xeb; // jmp
+    code_virt[3] = 0xfe; // -2 (infinite loop)
+
+    // now map the fresh low-physical-address page
+    vmm::map(
+        user_page_map,
+        code_phys, // this will be a low address like 0x100000
+        0x1000,
+        vmm::Attribute::User | vmm::Attribute::Write);
+
+    vmm::map(user_page_map, code_phys, 0x1000, vmm::Attribute::User | vmm::Attribute::Write);
+
+    idt::set_handler(0x80, syscall_handler);
+
+    ProcessId user_process = scheduler::create_process(user_page_map);
+    ThreadId user_thread
+        = scheduler::create_thread(user_process, 0x38 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
+
+    //  scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
 
     scheduler::yield();
 }

@@ -67,7 +67,7 @@ static TssEntry create_tss_entry(const u64 address)
         .limit_high = static_cast<u8>((limit >> 16) & 0x0f),
         .flags = static_cast<u8>(FlagAttribute::PageGranularity) | 0b1,
         .base_middle_2 = static_cast<u8>((address >> 24) & 0xff),
-        .base_high = static_cast<u32>((address >> 32) & 0xffff),
+        .base_high = static_cast<u32>((address >> 32) & 0xffffffff),
         .reserved = static_cast<u32>(0),
     };
 }
