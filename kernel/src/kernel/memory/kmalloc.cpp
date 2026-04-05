@@ -6,6 +6,8 @@
 
 #include "kernel/memory/kmalloc.hpp"
 
+#include <lib/math.hpp>
+
 #include "kernel/core/boot.hpp"
 #include "kernel/core/memory.hpp"
 #include "kernel/memory/pmm.hpp"
@@ -19,7 +21,7 @@ struct AllocationHeader {
 
 void *kmalloc(const usize size)
 {
-    const usize page_count = div_round_up(size, s_page_size);
+    const usize page_count = lib::math::div_round_up(size, s_page_size);
 
     // NOTE: Allocate one extra page for the header
     u8 *ptr = static_cast<u8 *>(pmm::allocate(page_count + 1, false));

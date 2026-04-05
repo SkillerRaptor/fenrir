@@ -6,6 +6,7 @@
 
 #include "kernel/acpi/acpi.hpp"
 
+#include <lib/math.hpp>
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
 
@@ -82,9 +83,9 @@ uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
  */
 void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 {
-    const u64 aligned_address = kernel::memory::align_down(addr, kernel::memory::s_page_size);
+    const u64 aligned_address = lib::math::align_down(addr, kernel::memory::s_page_size);
     const u64 address_diff = addr - aligned_address;
-    const u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 aligned_length = lib::math::align_up(len + address_diff, kernel::memory::s_page_size);
 
     for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
         kernel::vmm::map(
@@ -108,9 +109,9 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 void uacpi_kernel_unmap(void *addr, const uacpi_size len)
 {
     const u64 virtual_address = reinterpret_cast<u64>(addr);
-    const u64 aligned_address = kernel::memory::align_down(virtual_address, kernel::memory::s_page_size);
+    const u64 aligned_address = lib::math::align_down(virtual_address, kernel::memory::s_page_size);
     const u64 address_diff = virtual_address - aligned_address;
-    const u64 aligned_length = kernel::memory::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 aligned_length = lib::math::align_up(len + address_diff, kernel::memory::s_page_size);
 
     for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
         kernel::vmm::unmap(kernel::vmm::get_kernel_page_map(), aligned_address + i);

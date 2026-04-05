@@ -7,6 +7,7 @@
 #include "kernel/core/boot.hpp"
 
 namespace kernel::boot {
+
 __attribute__((used, section(".limine_requests"))) volatile u64 s_base_revision[] = LIMINE_BASE_REVISION(6);
 
 __attribute__((used, section(".limine_requests"))) volatile limine_bootloader_info_request s_bootloader_info_request {

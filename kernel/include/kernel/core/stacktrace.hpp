@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
+#include <lib/types.hpp>
 
 namespace kernel::stacktrace {
 

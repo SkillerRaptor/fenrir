@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <lib/types.hpp>
+
 #include "kernel/arch/x86_64/registers.hpp"
-#include "kernel/core/types.hpp"
 #include "kernel/scheduler/types.hpp"
 
 namespace kernel {
@@ -23,7 +24,7 @@ struct Thread {
     ThreadId tid { -1 };
     State state { State::Idle };
 
-    Registers registers { };
+    Registers registers {};
     u8 *stack { nullptr };
     usize stack_size { 0 };
 };

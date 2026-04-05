@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <lib/types.hpp>
 #include <limine.h>
-
-#include "kernel/core/types.hpp"
 
 namespace kernel::boot {
 

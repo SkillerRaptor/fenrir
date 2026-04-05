@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "kernel/core/bitflags.hpp"
-#include "kernel/core/types.hpp"
+#include <lib/bitflags.hpp>
+#include <lib/types.hpp>
 
 namespace kernel::vmm {
 

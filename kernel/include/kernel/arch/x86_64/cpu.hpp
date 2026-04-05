@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
-#include "kernel/lib/queue.hpp"
+#include <lib/queue.hpp>
+
 #include "kernel/scheduler/smp.hpp"
 #include "kernel/scheduler/thread.hpp"
 #include "kernel/sync/spinlock.hpp"
@@ -19,8 +19,8 @@ struct Info {
     u32 lapic_id { 0 };
     ThreadId current_thread { -1 };
     ThreadId idle_thread { -1 };
-    Queue<ThreadId> run_queue { };
-    Spinlock run_queue_lock { };
+    lib::Queue<ThreadId> run_queue {};
+    Spinlock run_queue_lock {};
 };
 
 inline void halt() { asm volatile("hlt"); }

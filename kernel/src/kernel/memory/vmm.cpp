@@ -6,6 +6,8 @@
 
 #include "kernel/memory/vmm.hpp"
 
+#include <lib/math.hpp>
+
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/memory.hpp"
@@ -36,8 +38,8 @@ void initialize()
             continue;
         }
 
-        const usize entry_start = memory::align_down(entry->base, memory::s_page_size);
-        const usize entry_end = memory::align_up(entry->base + entry->length, memory::s_page_size);
+        const usize entry_start = lib::math::align_down(entry->base, memory::s_page_size);
+        const usize entry_end = lib::math::align_up(entry->base + entry->length, memory::s_page_size);
         const usize entry_pages = (entry_end - entry_start) / memory::s_page_size;
 
         logger::debug(
@@ -62,9 +64,8 @@ void initialize()
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024);
 
-    const usize kernel_virtual_start
-        = memory::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
-    const usize kernel_virtual_end = memory::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
+    const usize kernel_virtual_start = lib::math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
+    const usize kernel_virtual_end = lib::math::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
     const usize physical_base = boot::get_executable_physical_base();
     const usize virtual_base = boot::get_executable_virtual_base();
     const usize kernel_pages = (kernel_virtual_end - kernel_virtual_start) / memory::s_page_size;
@@ -152,8 +153,8 @@ static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
 
 void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attribute attributes)
 {
-    const usize aligned_physical_address = memory::align_down(paddr, memory::s_page_size);
-    const usize aligned_virtual_address = memory::align_down(vaddr, memory::s_page_size);
+    const usize aligned_physical_address = lib::math::align_down(paddr, memory::s_page_size);
+    const usize aligned_virtual_address = lib::math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
     *entry = aligned_physical_address | static_cast<u64>(attributes | Attribute::Present);
@@ -161,7 +162,7 @@ void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attrib
 
 void unmap(const PageMap *page_map, const u64 vaddr)
 {
-    const usize aligned_virtual_address = memory::align_down(vaddr, memory::s_page_size);
+    const usize aligned_virtual_address = lib::math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
     *entry = 0;

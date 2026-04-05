@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
+#include "lib/types.hpp"
 
-namespace kernel {
+namespace lib {
 
 class Bitmap {
 public:
@@ -32,4 +32,4 @@ private:
     usize m_size { 0 };
 };
 
-} // namespace kernel
+} // namespace lib

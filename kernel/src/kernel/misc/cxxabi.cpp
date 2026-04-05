@@ -6,8 +6,9 @@
 
 #include "kernel/misc/cxxabi.hpp"
 
+#include <lib/types.hpp>
+
 #include "kernel/arch/x86_64/cpu.hpp"
-#include "kernel/core/types.hpp"
 #include "kernel/memory/kmalloc.hpp"
 
 namespace kernel::cxxabi {
@@ -21,7 +22,7 @@ struct AtexitFunctionEntry {
 static constexpr usize s_atexit_max_functions { 128 };
 
 static usize s_atexit_function_count { 0 };
-static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
+static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] {};
 
 extern "C" void *__dso_handle { nullptr };
 

@@ -6,12 +6,12 @@
 
 #include "kernel/arch/x86_64/idt.hpp"
 
+#include <lib/bitflags.hpp>
+
 #include "kernel/acpi/apic.hpp"
 #include "kernel/arch/x86_64/cpu.hpp"
-#include "kernel/core/bitflags.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/stacktrace.hpp"
-#include "kernel/core/types.hpp"
 
 namespace kernel::idt {
 
@@ -42,9 +42,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] { };
-static Descriptor s_descriptor { };
-static InterruptHandler s_interrupt_handlers[256] { };
+static Entry s_entries[256] {};
+static Descriptor s_descriptor {};
+static InterruptHandler s_interrupt_handlers[256] {};
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {

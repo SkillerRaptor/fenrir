@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "kernel/memory/bitmap.hpp"
+#include "lib/bitmap.hpp"
 
-namespace kernel {
+namespace lib {
 
 void Bitmap::set(const usize index, const bool value)
 {
@@ -36,4 +36,4 @@ bool Bitmap::get(const usize index) const
     return m_data[byte] & (1 << bit);
 }
 
-} // namespace kernel
+} // namespace lib

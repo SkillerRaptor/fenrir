@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
+#include "lib/types.hpp"
 
-namespace kernel {
+namespace lib {
 
 template <typename T>
 class Vector {
@@ -76,4 +76,4 @@ private:
     usize m_capacity { 0 };
 };
 
-} // namespace kernel
+} // namespace lib

@@ -6,9 +6,10 @@
 
 #include "kernel/arch/x86_64/gdt.hpp"
 
-#include "kernel/core/bitflags.hpp"
+#include <lib/bitflags.hpp>
+#include <lib/types.hpp>
+
 #include "kernel/core/logger.hpp"
-#include "kernel/core/types.hpp"
 
 namespace kernel::gdt {
 
@@ -53,8 +54,8 @@ struct Descriptor {
 extern "C" void load_gdt(const Descriptor *descriptor);
 extern "C" void reload_segments();
 
-static Entry s_entries[9] = { };
-static Descriptor s_descriptor = { };
+static Entry s_entries[9] = {};
+static Descriptor s_descriptor = {};
 
 static Entry create_entry(const u32 base, const u32 limit, const AccessAttribute access, const FlagAttribute flags)
 {

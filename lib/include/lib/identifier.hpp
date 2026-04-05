@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
+#include "lib/types.hpp"
 
-namespace kernel {
+namespace lib {
 
 template <typename, typename T = u32>
 class Identifier {
@@ -35,4 +35,4 @@ private:
     T m_value { 0 };
 };
 
-} // namespace kernel
+} // namespace lib

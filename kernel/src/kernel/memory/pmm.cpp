@@ -6,17 +6,19 @@
 
 #include "kernel/memory/pmm.hpp"
 
+#include <lib/bitmap.hpp>
+#include <lib/math.hpp>
+
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/memory.hpp"
 #include "kernel/libc/string.hpp"
-#include "kernel/memory/bitmap.hpp"
 
 namespace kernel::pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static Bitmap s_bitmap { nullptr, 0 };
+static lib::Bitmap s_bitmap { nullptr, 0 };
 
 void initialize()
 {
@@ -77,7 +79,7 @@ void initialize()
 
     logger::debug("PMM: Found highest page address at 0x%llx\n", s_highest_page);
 
-    s_bitmap.set_size(memory::div_round_up(s_highest_page, memory::s_page_size) / 8);
+    s_bitmap.set_size(lib::math::div_round_up(s_highest_page, memory::s_page_size) / 8);
 
     for (usize i = 0; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);

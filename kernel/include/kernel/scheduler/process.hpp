@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
 #include "kernel/memory/vmm.hpp"
 #include "kernel/scheduler/types.hpp"
 

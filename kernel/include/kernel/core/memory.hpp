@@ -6,28 +6,10 @@
 
 #pragma once
 
-#include "kernel/core/types.hpp"
+#include <lib/types.hpp>
 
 namespace kernel::memory {
 
 static constexpr usize s_page_size { 4096 };
-
-template <typename T>
-constexpr T div_round_up(const T x, const T y)
-{
-    return (x + (y - 1)) / y;
-}
-
-template <typename T>
-constexpr T align_up(const T x, const T y)
-{
-    return div_round_up(x, y) * y;
-}
-
-template <typename T>
-constexpr T align_down(const T x, const T y)
-{
-    return (x / y) * y;
-}
 
 } // namespace kernel::memory

@@ -19,7 +19,6 @@ set(SOURCES
         src/kernel/core/stacktrace.cpp
         src/kernel/drivers/serial.cpp
         src/kernel/libc/string.cpp
-        src/kernel/memory/bitmap.cpp
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
         src/kernel/memory/vmm.cpp
@@ -39,19 +38,12 @@ set(HEADERS
         include/kernel/arch/x86_64/io.hpp
         include/kernel/arch/x86_64/pic.hpp
         include/kernel/arch/x86_64/registers.hpp
-        include/kernel/core/bitflags.hpp
         include/kernel/core/boot.hpp
         include/kernel/core/logger.hpp
         include/kernel/core/memory.hpp
         include/kernel/core/stacktrace.hpp
-        include/kernel/core/types.hpp
         include/kernel/drivers/serial.hpp
-        include/kernel/lib/identifier.hpp
-        include/kernel/lib/queue.hpp
-        include/kernel/lib/type_traits.hpp
-        include/kernel/lib/vector.hpp
         include/kernel/libc/string.hpp
-        include/kernel/memory/bitmap.hpp
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/mmio.hpp
         include/kernel/memory/pmm.hpp
@@ -68,7 +60,7 @@ set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE limine flanterm nanoprintf uacpi)
+target_link_libraries(kernel PRIVATE lib limine flanterm nanoprintf uacpi)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------
