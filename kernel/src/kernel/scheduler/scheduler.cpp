@@ -148,7 +148,7 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
 
     usize least_loaded_cpu = 0;
     usize least_load = 0xffffffffffffffff;
-    for (usize i = 0; i < 4; ++i) {
+    for (usize i = 0; i < boot::get_mp_response()->cpu_count; ++i) {
         if (infos[i].run_queue.size() < least_load) {
             least_load = infos[i].run_queue.size();
             least_loaded_cpu = i;
