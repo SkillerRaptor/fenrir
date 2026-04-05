@@ -8,11 +8,11 @@
 
 #include <lib/bitmap.hpp>
 #include <lib/math.hpp>
+#include <string.h>
 
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
 #include "kernel/core/memory.hpp"
-#include "kernel/libc/string.hpp"
 
 namespace kernel::pmm {
 

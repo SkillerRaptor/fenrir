@@ -58,4 +58,5 @@ add_subdirectory(third_party)
 # Kernel
 #-------------------------------------------------------------------------------------------
 add_subdirectory(lib)
+add_subdirectory(klibc)
 add_subdirectory(kernel)

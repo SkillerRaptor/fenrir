@@ -19,10 +19,10 @@
 #include <flanterm_backends/fb.h>
 #include <nanoprintf.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "kernel/core/boot.hpp"
 #include "kernel/drivers/serial.hpp"
-#include "kernel/libc/string.hpp"
 #include "kernel/sync/spinlock.hpp"
 
 namespace kernel::logger {

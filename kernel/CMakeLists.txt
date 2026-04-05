@@ -18,7 +18,6 @@ set(SOURCES
         src/kernel/core/logger.cpp
         src/kernel/core/stacktrace.cpp
         src/kernel/drivers/serial.cpp
-        src/kernel/libc/string.cpp
         src/kernel/memory/kmalloc.cpp
         src/kernel/memory/pmm.cpp
         src/kernel/memory/vmm.cpp
@@ -43,7 +42,6 @@ set(HEADERS
         include/kernel/core/memory.hpp
         include/kernel/core/stacktrace.hpp
         include/kernel/drivers/serial.hpp
-        include/kernel/libc/string.hpp
         include/kernel/memory/kmalloc.hpp
         include/kernel/memory/mmio.hpp
         include/kernel/memory/pmm.hpp
@@ -60,7 +58,7 @@ set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE lib limine flanterm nanoprintf uacpi)
+target_link_libraries(kernel PRIVATE lib klibc limine flanterm nanoprintf uacpi)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------

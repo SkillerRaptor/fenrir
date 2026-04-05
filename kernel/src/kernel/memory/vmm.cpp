@@ -64,7 +64,8 @@ void initialize()
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024);
 
-    const usize kernel_virtual_start = lib::math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
+    const usize kernel_virtual_start
+        = lib::math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
     const usize kernel_virtual_end = lib::math::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
     const usize physical_base = boot::get_executable_physical_base();
     const usize virtual_base = boot::get_executable_virtual_base();

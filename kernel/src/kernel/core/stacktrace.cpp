@@ -6,9 +6,10 @@
 
 #include "kernel/core/stacktrace.hpp"
 
+#include <string.h>
+
 #include "kernel/core/boot.hpp"
 #include "kernel/core/logger.hpp"
-#include "kernel/libc/string.hpp"
 
 namespace kernel::stacktrace {
 
