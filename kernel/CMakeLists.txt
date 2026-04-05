@@ -25,7 +25,9 @@ set(SOURCES
         src/kernel/scheduler/scheduler.asm
         src/kernel/scheduler/scheduler.cpp
         src/kernel/scheduler/smp.cpp
-        src/kernel/sync/spinlock.cpp)
+        src/kernel/sync/spinlock.cpp
+        src/kernel/syscalls/syscalls.asm
+        src/kernel/syscalls/syscalls.cpp)
 
 set(HEADERS
         include/kernel/acpi/acpi.hpp
@@ -52,7 +54,8 @@ set(HEADERS
         include/kernel/scheduler/smp.hpp
         include/kernel/scheduler/thread.hpp
         include/kernel/scheduler/types.hpp
-        include/kernel/sync/spinlock.hpp)
+        include/kernel/sync/spinlock.hpp
+        include/kernel/syscall/syscalls.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 

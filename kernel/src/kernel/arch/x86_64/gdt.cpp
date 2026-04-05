@@ -117,13 +117,13 @@ Table create_table()
             | AccessAttribute::ReadWrite | AccessAttribute::Access,
         FlagAttribute::PageGranularity | FlagAttribute::LongMode);
 
-    table.entries[7] = create_entry(
+    table.entries[8] = create_entry(
         0x00000000,
         0xffffffff,
         AccessAttribute::Present | AccessAttribute::UserPrivilege | AccessAttribute::CodeDate
             | AccessAttribute::Executable | AccessAttribute::ReadWrite | AccessAttribute::Access,
         FlagAttribute::PageGranularity | FlagAttribute::LongMode);
-    table.entries[8] = create_entry(
+    table.entries[7] = create_entry(
         0x00000000,
         0xffffffff,
         AccessAttribute::Present | AccessAttribute::UserPrivilege | AccessAttribute::CodeDate

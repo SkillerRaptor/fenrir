@@ -120,12 +120,9 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
         .tid = tid,
         .state = Thread::State::Idle,
         .registers = {
-            .rbp = 0,
-            // NOTE: Iret Frame
             .cs = cs,
             .flags = 1 << 9 | 1 << 1,
             .rsp = stack,
-            .ss = cs + 0x08,
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
@@ -136,9 +133,11 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
         thread.registers.rdi = reinterpret_cast<u64>(entry),
         thread.registers.rip = reinterpret_cast<u64>(thread_wrapper);
         thread.registers.rsp += boot::get_hhdm_offset();
+        thread.registers.ss = thread.registers.cs + 0x08;
     } else {
         thread.registers.rdi = reinterpret_cast<u64>(user_argument),
         thread.registers.rip = reinterpret_cast<u64>(entry);
+        thread.registers.ss = thread.registers.cs - 0x08;
     }
 
     s_thread_list.push_back(thread);

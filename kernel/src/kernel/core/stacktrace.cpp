@@ -166,20 +166,20 @@ void print(const u64 max_frames)
 
         const Symbol *symbol = find_symbol(rip);
         if (!symbol) {
-            logger::err("  #%02u \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
+            logger::err("  %02u. \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
             continue;
         }
 
         const u64 offset = rip - symbol->address;
         if (offset == 0) {
             logger::err(
-                "  #%02u \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m%s\n",
+                "  %02u. \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m%s\n",
                 i + 1,
                 rip,
                 symbol->name);
         } else {
             logger::err(
-                "  #%02u \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m%s \033[38;2;0;128;0m+0x%llx\n",
+                "  %02u. \033[38;2;0;0;255m0x%016llx \033[0min \033[38;2;255;215;0m%s \033[38;2;0;128;0m+0x%llx\n",
                 i + 1,
                 rip,
                 symbol->name,

@@ -17,6 +17,8 @@ namespace kernel::cpu {
 
 struct Info {
     u64 id { 0 };
+    u64 user_rsp { 0 };
+    u64 kernel_rsp { 0 };
     u32 lapic_id { 0 };
 
     gdt::CpuGdt gdt { };

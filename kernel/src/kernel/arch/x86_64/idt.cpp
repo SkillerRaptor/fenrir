@@ -181,10 +181,6 @@ void initialize()
             Attribute::KernelPrivilege | Attribute::Present | Attribute::InterruptGate);
     }
 
-    s_entries[0x80] = create_entry(
-        interrupt_handlers[0x80],
-        Attribute::UserPrivilege | Attribute::Present | Attribute::InterruptGate);
-
 #define _ENUMERATE_EXCEPTION(i, fn, err) s_interrupt_handlers[i] = fn;
     ENUMERATE_EXCEPTIONS
 #undef _ENUMERATE_EXCEPTION
