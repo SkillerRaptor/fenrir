@@ -14,11 +14,20 @@
 #include "core/logger.hpp"
 #include "core/memory.hpp"
 #include "lib/math.hpp"
+#include "lib/vector.hpp"
 #include "memory/kmalloc.hpp"
 #include "memory/vmm.hpp"
 #include "sync/spinlock.hpp"
 
 namespace acpi {
+
+struct MemoryMapping {
+    u64 physical_base { 0 };
+    usize page_count { 0 };
+    usize ref_count { 0 };
+};
+
+static Vector<MemoryMapping> s_mappings { };
 
 void initialize()
 {
@@ -86,6 +95,14 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
     const u64 address_diff = addr - aligned_address;
     const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
 
+    for (usize i = 0; i < acpi::s_mappings.size(); ++i) {
+        acpi::MemoryMapping &mapping = acpi::s_mappings[i];
+        if (mapping.physical_base == aligned_address && mapping.page_count == aligned_length) {
+            ++mapping.ref_count;
+            return reinterpret_cast<void *>(aligned_address + boot::get_hhdm_offset() + address_diff);
+        }
+    }
+
     for (usize i = 0; i < aligned_length; i += memory::s_page_size) {
         vmm::map(
             vmm::get_kernel_page_map(),
@@ -93,6 +110,13 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
             aligned_address + i + boot::get_hhdm_offset(),
             vmm::Attribute::Write);
     }
+
+    acpi::s_mappings.push_back(
+        acpi::MemoryMapping {
+            .physical_base = aligned_address,
+            .page_count = aligned_length,
+            .ref_count = 1,
+        });
 
     return reinterpret_cast<void *>(addr + boot::get_hhdm_offset());
 }
@@ -112,8 +136,25 @@ void uacpi_kernel_unmap(void *addr, const uacpi_size len)
     const u64 address_diff = virtual_address - aligned_address;
     const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
 
-    for (usize i = 0; i < aligned_length; i += memory::s_page_size) {
-        vmm::unmap(vmm::get_kernel_page_map(), aligned_address + i);
+    for (usize i = 0; i < acpi::s_mappings.size(); ++i) {
+        acpi::MemoryMapping &mapping = acpi::s_mappings[i];
+
+        if (mapping.physical_base != aligned_address || mapping.page_count != aligned_length) {
+            continue;
+        }
+
+        --mapping.ref_count;
+
+        if (mapping.ref_count == 0) {
+            for (usize j = 0; j < aligned_length; ++j) {
+                vmm::unmap(vmm::get_kernel_page_map(), aligned_address + j * memory::s_page_size);
+            }
+
+            acpi::s_mappings[i] = acpi::s_mappings[acpi::s_mappings.size() - 1];
+            acpi::s_mappings.pop_back();
+        }
+
+        return;
     }
 }
 

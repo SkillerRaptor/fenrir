@@ -11,10 +11,14 @@
 #include "core/memory.hpp"
 #include "lib/math.hpp"
 #include "memory/pmm.hpp"
+#include "sync/spinlock.hpp"
 
 namespace vmm {
 
+// NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
 static PageMap *s_kernel_page_map { nullptr };
+static u64 s_address_mask { ((1ull << 36) - 1) << 12 };
+static Spinlock s_lock { };
 
 extern "C" unsigned char __kernel_start[];
 extern "C" unsigned char __kernel_end[];
@@ -92,6 +96,8 @@ void initialize()
 
 PageMap *create_page_map()
 {
+    SpinlockLocker _locker(s_lock);
+
     PageMap *page_map = new PageMap();
     page_map->top_level = reinterpret_cast<u64>(pmm::allocate(1, true));
 
@@ -126,8 +132,7 @@ static u64 get_next_level(const u64 pml, const u16 entry)
         *pml_entry = new_level | static_cast<u64>(Attribute::User | Attribute::Write | Attribute::Present);
     }
 
-    // NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
-    return *pml_entry & (((1ull << 36) - 1) << 12);
+    return *pml_entry & s_address_mask;
 }
 
 static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
@@ -152,15 +157,19 @@ static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
 
 void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attribute attributes)
 {
+    SpinlockLocker _locker(s_lock);
+
     const usize aligned_physical_address = math::align_down(paddr, memory::s_page_size);
     const usize aligned_virtual_address = math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
-    *entry = aligned_physical_address | static_cast<u64>(attributes | Attribute::Present);
+    *entry = (aligned_physical_address & s_address_mask) | static_cast<u64>(attributes | Attribute::Present);
 }
 
 void unmap(const PageMap *page_map, const u64 vaddr)
 {
+    SpinlockLocker _locker(s_lock);
+
     const usize aligned_virtual_address = math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
