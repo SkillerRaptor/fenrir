@@ -13,6 +13,7 @@
 #include "core/logger.hpp"
 #include "core/stacktrace.hpp"
 #include "drivers/serial.hpp"
+#include "lib/string.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "misc/cxxabi.hpp"
@@ -73,24 +74,77 @@ void kmain_thread(void *)
     void *code_page_phys = pmm::allocate(1, true);
     const u64 code_phys = reinterpret_cast<u64>(code_page_phys);
 
-    u8 *code_virt = reinterpret_cast<u8 *>(code_phys + boot::get_hhdm_offset());
-    code_virt[0] = 0xb8; // mov eax, 0x45
-    code_virt[1] = 0x45;
-    code_virt[2] = 0x00;
-    code_virt[3] = 0x00;
-    code_virt[4] = 0x00;
-
-    code_virt[5] = 0x0f; // syscall
-    code_virt[6] = 0x05;
-
-    code_virt[7] = 0xeb; // jmp 7
-    code_virt[8] = 0xfe;
+    static constexpr u8 s_code[] = {
+        // mov eax, 0x646e61
+        0xb8,
+        0x61,
+        0x6e,
+        0x64,
+        0x00,
+        // push rax
+        0x50,
+        // movabs, rax, 0x6c72657355206d6f
+        0x48,
+        0xb8,
+        0x6f,
+        0x6d,
+        0x20,
+        0x55,
+        0x73,
+        0x65,
+        0x72,
+        0x6c,
+        // push rax
+        0x50,
+        // movabs rax, 0x7266206f6c6c6548
+        0x48,
+        0xb8,
+        0x48,
+        0x65,
+        0x6c,
+        0x6c,
+        0x6f,
+        0x20,
+        0x66,
+        0x72,
+        // push rax
+        0x50,
+        // mov eax, 0x1
+        0xb8,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        // mov edi, 0x1
+        0xbf,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        // mov rsi, rsp
+        0x48,
+        0x89,
+        0xe6,
+        // mov edx, 0x13
+        0xba,
+        0x13,
+        0x00,
+        0x00,
+        0x00,
+        // syscall
+        0x0f,
+        0x05,
+        // jmp 0x30
+        0xeb,
+        0xfe,
+    };
+    u8 *code = reinterpret_cast<u8 *>(code_phys + boot::get_hhdm_offset());
+    memcpy(code, s_code, sizeof(s_code));
 
     vmm::map(user_page_map, code_phys, 0x1000, vmm::Attribute::User | vmm::Attribute::Write);
 
-    ProcessId user_process = scheduler::create_process(user_page_map);
-    ThreadId user_thread
-        = scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
+    const ProcessId user_process = scheduler::create_process(user_page_map);
+    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
 
     scheduler::yield();
 }

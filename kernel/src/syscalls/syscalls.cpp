@@ -49,6 +49,29 @@ void initialize()
     cpu::write_msr(s_fmask_msr, (1 << 10) | (1 << 9));
 }
 
-extern "C" void syscall_handler(const SyscallRegisters *registers) { logger::info("Syscall: %u\n", registers->rax); }
+extern "C" void syscall_handler(const SyscallRegisters *registers)
+{
+    logger::debug("Syscall: %u\n", registers->rax);
+
+    switch (registers->rax) {
+    case 0x01:
+        if (registers->rdi == 0x01) {
+            char *string = new char[registers->rdx + 1];
+            for (usize i { 0 }; i < registers->rdx + 1; i++) {
+                string[i] = '\0';
+            }
+
+            u8 *buffer_start = reinterpret_cast<u8 *>(registers->rsi);
+            for (usize i { 0 }; i < registers->rdx; ++i) {
+                string[i] = buffer_start[i];
+            }
+
+            logger::info("Userland: %s\n", string);
+
+            delete[] string;
+        }
+        break;
+    }
+}
 
 } // namespace syscalls
