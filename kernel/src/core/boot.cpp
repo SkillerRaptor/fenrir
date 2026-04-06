@@ -6,7 +6,7 @@
 
 #include "core/boot.hpp"
 
-namespace kernel::boot {
+namespace boot {
 
 __attribute__((used, section(".limine_requests"))) volatile u64 s_base_revision[] = LIMINE_BASE_REVISION(6);
 
@@ -123,4 +123,4 @@ limine_module_response *get_module_response() { return s_module_request.response
 
 void *get_rsdp_address() { return s_rsdp_request.response->address; }
 
-} // namespace kernel::boot
+} // namespace boot

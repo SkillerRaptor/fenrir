@@ -9,7 +9,7 @@
 #include "memory/vmm.hpp"
 #include "scheduler/types.hpp"
 
-namespace kernel::scheduler {
+namespace scheduler {
 
 void initialize();
 
@@ -21,4 +21,4 @@ ThreadId create_idle_thread();
 
 ProcessId get_kernel_process();
 
-} // namespace kernel::scheduler
+} // namespace scheduler

@@ -8,9 +8,9 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::stacktrace {
+namespace stacktrace {
 
 void initialize();
 void print(u64 max_frames);
 
-} // namespace kernel::stacktrace
+} // namespace stacktrace

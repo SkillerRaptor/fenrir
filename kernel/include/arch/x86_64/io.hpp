@@ -8,7 +8,7 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::io {
+namespace io {
 
 inline u8 in8(const u16 port)
 {
@@ -39,4 +39,4 @@ inline void out32(const u16 port, const u32 value) { asm volatile("outl %0, %1" 
 
 inline void wait() { out8(0x80, 0x00); }
 
-} // namespace kernel::io
+} // namespace io

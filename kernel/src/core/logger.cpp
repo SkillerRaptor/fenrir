@@ -25,10 +25,10 @@
 #include "lib/string.hpp"
 #include "sync/spinlock.hpp"
 
-namespace kernel::logger {
+namespace logger {
 
 static flanterm_context *s_context { nullptr };
-static Spinlock s_lock { };
+static Spinlock s_lock {};
 
 void initialize()
 {
@@ -151,4 +151,4 @@ void err(const char *format, ...)
     write_string("\033[0m");
 }
 
-} // namespace kernel::logger
+} // namespace logger

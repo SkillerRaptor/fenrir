@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace kernel::logger {
+namespace logger {
 
 void initialize();
 
@@ -16,4 +16,4 @@ void debug(const char *format, ...);
 void warn(const char *format, ...);
 void err(const char *format, ...);
 
-} // namespace kernel::logger
+} // namespace logger

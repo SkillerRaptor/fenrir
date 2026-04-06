@@ -8,8 +8,6 @@
 
 #include <stdatomic.h>
 
-namespace kernel {
-
 class Spinlock {
 public:
     void lock();
@@ -38,5 +36,3 @@ public:
 private:
     Spinlock &m_lock;
 };
-
-} // namespace kernel

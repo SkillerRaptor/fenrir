@@ -18,7 +18,7 @@
 #include "memory/vmm.hpp"
 #include "sync/spinlock.hpp"
 
-namespace kernel::acpi {
+namespace acpi {
 
 void initialize()
 {
@@ -45,15 +45,14 @@ void initialize()
     logger::info("ACPI: Initialized\n");
 }
 
-} // namespace kernel::acpi
+} // namespace acpi
 
 extern "C" {
 
 // Returns the PHYSICAL address of the RSDP structure via *out_rsdp_address.
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
-    *out_rsdp_address
-        = reinterpret_cast<uacpi_phys_addr>(kernel::boot::get_rsdp_address()) - kernel::boot::get_hhdm_offset();
+    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(boot::get_rsdp_address()) - boot::get_hhdm_offset();
     return UACPI_STATUS_OK;
 }
 
@@ -83,19 +82,19 @@ uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
  */
 void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 {
-    const u64 aligned_address = lib::math::align_down(addr, kernel::memory::s_page_size);
+    const u64 aligned_address = math::align_down(addr, memory::s_page_size);
     const u64 address_diff = addr - aligned_address;
-    const u64 aligned_length = lib::math::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
 
-    for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
-        kernel::vmm::map(
-            kernel::vmm::get_kernel_page_map(),
+    for (usize i = 0; i < aligned_length; i += memory::s_page_size) {
+        vmm::map(
+            vmm::get_kernel_page_map(),
             aligned_address + i,
-            aligned_address + i + kernel::boot::get_hhdm_offset(),
-            kernel::vmm::Attribute::Write);
+            aligned_address + i + boot::get_hhdm_offset(),
+            vmm::Attribute::Write);
     }
 
-    return reinterpret_cast<void *>(addr + kernel::boot::get_hhdm_offset());
+    return reinterpret_cast<void *>(addr + boot::get_hhdm_offset());
 }
 
 /*
@@ -109,12 +108,12 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 void uacpi_kernel_unmap(void *addr, const uacpi_size len)
 {
     const u64 virtual_address = reinterpret_cast<u64>(addr);
-    const u64 aligned_address = lib::math::align_down(virtual_address, kernel::memory::s_page_size);
+    const u64 aligned_address = math::align_down(virtual_address, memory::s_page_size);
     const u64 address_diff = virtual_address - aligned_address;
-    const u64 aligned_length = lib::math::align_up(len + address_diff, kernel::memory::s_page_size);
+    const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
 
-    for (usize i = 0; i < aligned_length; i += kernel::memory::s_page_size) {
-        kernel::vmm::unmap(kernel::vmm::get_kernel_page_map(), aligned_address + i);
+    for (usize i = 0; i < aligned_length; i += memory::s_page_size) {
+        vmm::unmap(vmm::get_kernel_page_map(), aligned_address + i);
     }
 }
 
@@ -123,13 +122,13 @@ void uacpi_kernel_log(const uacpi_log_level level, const uacpi_char *str)
 {
     switch (level) {
     case UACPI_LOG_INFO:
-        kernel::logger::debug("UACPI: %s", str);
+        logger::debug("UACPI: %s", str);
         break;
     case UACPI_LOG_WARN:
-        kernel::logger::warn("UACPI: %s", str);
+        logger::warn("UACPI: %s", str);
         break;
     case UACPI_LOG_ERROR:
-        kernel::logger::err("UACPI: %s", str);
+        logger::err("UACPI: %s", str);
         break;
     default:
         break;
@@ -161,46 +160,43 @@ void uacpi_kernel_vlog(uacpi_log_level, const uacpi_char *, uacpi_va_list);
  */
 uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address, uacpi_handle *)
 {
-    kernel::logger::warn("uacpi_kernel_pci_device_open not implemented!\n");
+    logger::warn("uacpi_kernel_pci_device_open not implemented!\n");
     return UACPI_STATUS_OK;
 }
-void uacpi_kernel_pci_device_close(uacpi_handle)
-{
-    kernel::logger::warn("uacpi_kernel_pci_device_close not implemented!\n");
-}
+void uacpi_kernel_pci_device_close(uacpi_handle) { logger::warn("uacpi_kernel_pci_device_close not implemented!\n"); }
 
 /*
  * Read & write the configuration space of a previously open PCI device.
  */
 uacpi_status uacpi_kernel_pci_read8(uacpi_handle, uacpi_size, uacpi_u8 *)
 {
-    kernel::logger::warn("uacpi_kernel_pci_read8 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_read8 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 uacpi_status uacpi_kernel_pci_read16(uacpi_handle, uacpi_size, uacpi_u16 *)
 {
-    kernel::logger::warn("uacpi_kernel_pci_read16 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_read16 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 uacpi_status uacpi_kernel_pci_read32(uacpi_handle, uacpi_size, uacpi_u32 *)
 {
-    kernel::logger::warn("uacpi_kernel_pci_read32 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_read32 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_pci_write8(uacpi_handle, uacpi_size, uacpi_u8)
 {
-    kernel::logger::warn("uacpi_kernel_pci_write8 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_write8 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 uacpi_status uacpi_kernel_pci_write16(uacpi_handle, uacpi_size, uacpi_u16)
 {
-    kernel::logger::warn("uacpi_kernel_pci_write16 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_write16 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 uacpi_status uacpi_kernel_pci_write32(uacpi_handle, uacpi_size, uacpi_u32)
 {
-    kernel::logger::warn("uacpi_kernel_pci_write32 not implemented!\n");
+    logger::warn("uacpi_kernel_pci_write32 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
@@ -242,37 +238,37 @@ void uacpi_kernel_io_unmap(uacpi_handle handle) { delete static_cast<IOMap *>(ha
  */
 uacpi_status uacpi_kernel_io_read8(uacpi_handle handle, const uacpi_size offset, uacpi_u8 *out_value)
 {
-    *out_value = kernel::io::in8(*(static_cast<u16 *>(handle) + offset));
+    *out_value = io::in8(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_read16(uacpi_handle handle, uacpi_size offset, uacpi_u16 *out_value)
 {
-    *out_value = kernel::io::in16(*(static_cast<u16 *>(handle) + offset));
+    *out_value = io::in16(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_read32(uacpi_handle handle, uacpi_size offset, uacpi_u32 *out_value)
 {
-    *out_value = kernel::io::in32(*(static_cast<u16 *>(handle) + offset));
+    *out_value = io::in32(*(static_cast<u16 *>(handle) + offset));
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write8(uacpi_handle handle, const uacpi_size offset, const uacpi_u8 in_value)
 {
-    kernel::io::out8(*(static_cast<u16 *>(handle) + offset), in_value);
+    io::out8(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write16(uacpi_handle handle, const uacpi_size offset, const uacpi_u16 in_value)
 {
-    kernel::io::out16(*(static_cast<u16 *>(handle) + offset), in_value);
+    io::out16(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, const uacpi_size offset, const uacpi_u32 in_value)
 {
-    kernel::io::out32(*(static_cast<u16 *>(handle) + offset), in_value);
+    io::out32(*(static_cast<u16 *>(handle) + offset), in_value);
     return UACPI_STATUS_OK;
 }
 
@@ -280,7 +276,7 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, const uacpi_size offse
  * Allocate a block of memory of 'size' bytes.
  * The contents of the allocated memory are unspecified.
  */
-void *uacpi_kernel_alloc(const uacpi_size size) { return kernel::memory::kmalloc(size); }
+void *uacpi_kernel_alloc(const uacpi_size size) { return memory::kmalloc(size); }
 
 /*
  * Free a previously allocated memory block.
@@ -292,7 +288,7 @@ void *uacpi_kernel_alloc(const uacpi_size size) { return kernel::memory::kmalloc
  * allocation. Note that in some scenarios this incurs additional cost to
  * calculate the object size.
  */
-void uacpi_kernel_free(void *mem) { kernel::memory::kfree(mem); }
+void uacpi_kernel_free(void *mem) { memory::kfree(mem); }
 
 /*
  * Returns the number of nanosecond ticks elapsed since boot,
@@ -300,26 +296,26 @@ void uacpi_kernel_free(void *mem) { kernel::memory::kfree(mem); }
  */
 uacpi_u64 uacpi_kernel_get_nanoseconds_since_boot()
 {
-    kernel::logger::warn("uacpi_kernel_get_nanoseconds_since_boot not implemented!\n");
+    logger::warn("uacpi_kernel_get_nanoseconds_since_boot not implemented!\n");
     return 0;
 }
 
 /*
  * Spin for N microseconds.
  */
-void uacpi_kernel_stall(uacpi_u8) { kernel::logger::warn("uacpi_kernel_stall not implemented!\n"); }
+void uacpi_kernel_stall(uacpi_u8) { logger::warn("uacpi_kernel_stall not implemented!\n"); }
 
 /*
  * Sleep for N milliseconds.
  */
-void uacpi_kernel_sleep(uacpi_u64) { kernel::logger::warn("uacpi_kernel_sleep not implemented!\n"); }
+void uacpi_kernel_sleep(uacpi_u64) { logger::warn("uacpi_kernel_sleep not implemented!\n"); }
 
 /*
  * Create/free an opaque non-recursive kernel mutex object.
  */
-uacpi_handle uacpi_kernel_create_mutex() { return new kernel::Spinlock(); }
+uacpi_handle uacpi_kernel_create_mutex() { return new Spinlock(); }
 
-void uacpi_kernel_free_mutex(uacpi_handle handle) { delete static_cast<kernel::Spinlock *>(handle); }
+void uacpi_kernel_free_mutex(uacpi_handle handle) { delete static_cast<Spinlock *>(handle); }
 
 /*
  * Create/free an opaque kernel ( semaphore-like) event object.
@@ -350,7 +346,7 @@ uacpi_thread_id uacpi_kernel_get_thread_id()
  */
 uacpi_interrupt_state uacpi_kernel_disable_interrupts()
 {
-    kernel::logger::warn("uacpi_kernel_disable_interrupts not implemented!\n");
+    logger::warn("uacpi_kernel_disable_interrupts not implemented!\n");
     return 0;
 }
 
@@ -360,7 +356,7 @@ uacpi_interrupt_state uacpi_kernel_disable_interrupts()
  */
 void uacpi_kernel_restore_interrupts(uacpi_interrupt_state)
 {
-    kernel::logger::warn("uacpi_kernel_restore_interrupts not implemented!\n");
+    logger::warn("uacpi_kernel_restore_interrupts not implemented!\n");
 }
 
 /*
@@ -381,7 +377,7 @@ void uacpi_kernel_restore_interrupts(uacpi_interrupt_state)
  */
 uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 {
-    kernel::Spinlock *spinlock = static_cast<kernel::Spinlock *>(handle);
+    Spinlock *spinlock = static_cast<Spinlock *>(handle);
     spinlock->lock();
 
     return UACPI_STATUS_OK;
@@ -389,7 +385,7 @@ uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 
 void uacpi_kernel_release_mutex(uacpi_handle handle)
 {
-    kernel::Spinlock *spinlock = static_cast<kernel::Spinlock *>(handle);
+    Spinlock *spinlock = static_cast<Spinlock *>(handle);
     spinlock->unlock();
 }
 
@@ -403,7 +399,7 @@ void uacpi_kernel_release_mutex(uacpi_handle handle)
  */
 uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16)
 {
-    kernel::logger::warn("uacpi_kernel_wait_for_event not implemented!\n");
+    logger::warn("uacpi_kernel_wait_for_event not implemented!\n");
     return UACPI_FALSE;
 }
 
@@ -412,12 +408,12 @@ uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16)
  *
  * This function may be used in interrupt contexts.
  */
-void uacpi_kernel_signal_event(uacpi_handle) { kernel::logger::warn("uacpi_kernel_signal_event not implemented!\n"); }
+void uacpi_kernel_signal_event(uacpi_handle) { logger::warn("uacpi_kernel_signal_event not implemented!\n"); }
 
 /*
  * Reset the event counter to 0.
  */
-void uacpi_kernel_reset_event(uacpi_handle) { kernel::logger::warn("uacpi_kernel_reset_event not implemented!\n"); }
+void uacpi_kernel_reset_event(uacpi_handle) { logger::warn("uacpi_kernel_reset_event not implemented!\n"); }
 
 /*
  * Handle a firmware request.
@@ -426,7 +422,7 @@ void uacpi_kernel_reset_event(uacpi_handle) { kernel::logger::warn("uacpi_kernel
  */
 uacpi_status uacpi_kernel_handle_firmware_request(uacpi_firmware_request *)
 {
-    kernel::logger::warn("uacpi_kernel_handle_firmware_request not implemented!\n");
+    logger::warn("uacpi_kernel_handle_firmware_request not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
@@ -439,7 +435,7 @@ uacpi_status uacpi_kernel_handle_firmware_request(uacpi_firmware_request *)
  */
 uacpi_status uacpi_kernel_install_interrupt_handler(uacpi_u32, uacpi_interrupt_handler, uacpi_handle, uacpi_handle *)
 {
-    kernel::logger::warn("uacpi_kernel_install_interrupt_handler not implemented!\n");
+    logger::warn("uacpi_kernel_install_interrupt_handler not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
@@ -449,7 +445,7 @@ uacpi_status uacpi_kernel_install_interrupt_handler(uacpi_u32, uacpi_interrupt_h
  */
 uacpi_status uacpi_kernel_uninstall_interrupt_handler(uacpi_interrupt_handler, uacpi_handle)
 {
-    kernel::logger::warn("uacpi_kernel_uninstall_interrupt_handler not implemented!\n");
+    logger::warn("uacpi_kernel_uninstall_interrupt_handler not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
@@ -458,9 +454,9 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(uacpi_interrupt_handler, u
  *
  * Unlike other types of locks, spinlocks may be used in interrupt contexts.
  */
-uacpi_handle uacpi_kernel_create_spinlock() { return new kernel::Spinlock(); }
+uacpi_handle uacpi_kernel_create_spinlock() { return new Spinlock(); }
 
-void uacpi_kernel_free_spinlock(uacpi_handle handle) { delete static_cast<kernel::Spinlock *>(handle); }
+void uacpi_kernel_free_spinlock(uacpi_handle handle) { delete static_cast<Spinlock *>(handle); }
 
 /*
  * Lock/unlock helpers for spinlocks.
@@ -473,7 +469,7 @@ void uacpi_kernel_free_spinlock(uacpi_handle handle) { delete static_cast<kernel
  */
 uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
 {
-    kernel::Spinlock *spinlock = static_cast<kernel::Spinlock *>(handle);
+    Spinlock *spinlock = static_cast<Spinlock *>(handle);
     spinlock->lock();
 
     return 0;
@@ -481,7 +477,7 @@ uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
 
 void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 {
-    kernel::Spinlock *spinlock = static_cast<kernel::Spinlock *>(handle);
+    Spinlock *spinlock = static_cast<Spinlock *>(handle);
     spinlock->unlock();
 }
 
@@ -491,7 +487,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
  */
 uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle)
 {
-    kernel::logger::warn("uacpi_kernel_schedule_work not implemented!\n");
+    logger::warn("uacpi_kernel_schedule_work not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
@@ -504,7 +500,7 @@ uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uac
  */
 uacpi_status uacpi_kernel_wait_for_work_completion()
 {
-    kernel::logger::warn("uacpi_kernel_wait_for_work_completion not implemented!\n");
+    logger::warn("uacpi_kernel_wait_for_work_completion not implemented!\n");
     return UACPI_STATUS_OK;
 }
 

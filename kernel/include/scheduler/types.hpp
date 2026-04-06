@@ -8,12 +8,8 @@
 
 #include "lib/identifier.hpp"
 
-namespace kernel {
-
 struct ProcessIdTag;
-using ProcessId = lib::Identifier<ProcessIdTag, i32>;
+using ProcessId = Identifier<ProcessIdTag, i32>;
 
 struct ThreadIdTag;
-using ThreadId = lib::Identifier<ThreadIdTag, i32>;
-
-} // namespace kernel
+using ThreadId = Identifier<ThreadIdTag, i32>;

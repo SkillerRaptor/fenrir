@@ -15,7 +15,7 @@
 #include "memory/mmio.hpp"
 #include "memory/vmm.hpp"
 
-namespace kernel::apic {
+namespace apic {
 
 static constexpr u32 s_apic_base_msr = 0x1b;
 
@@ -92,4 +92,4 @@ void enable_lapic()
 
 void send_eoi() { mmio::out<u32>(s_base_lapic_address + s_end_of_interrupt_register, 0); }
 
-} // namespace kernel::apic
+} // namespace apic

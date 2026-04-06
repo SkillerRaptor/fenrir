@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace lib::math {
+namespace math {
 
 template <typename T>
 constexpr T div_round_up(const T x, const T y)
@@ -26,4 +26,4 @@ constexpr T align_down(const T x, const T y)
     return (x / y) * y;
 }
 
-} // namespace lib::math
+} // namespace math

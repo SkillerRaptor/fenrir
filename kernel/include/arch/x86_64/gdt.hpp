@@ -8,7 +8,7 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::gdt {
+namespace gdt {
 
 struct Tss {
     u32 reserved_0;
@@ -68,4 +68,4 @@ struct CpuGdt {
 Table create_table();
 void load(CpuGdt &, const Tss &);
 
-} // namespace kernel::gdt
+} // namespace gdt

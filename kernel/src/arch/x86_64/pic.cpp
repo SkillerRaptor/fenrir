@@ -9,7 +9,7 @@
 #include "arch/x86_64/io.hpp"
 #include "core/logger.hpp"
 
-namespace kernel::pic {
+namespace pic {
 
 static constexpr u16 s_master_command_selector = 0x20;
 static constexpr u16 s_master_data_selector = 0x21;
@@ -55,4 +55,4 @@ void disable()
     logger::info("PIC: Disabled\n");
 }
 
-} // namespace kernel::pic
+} // namespace pic

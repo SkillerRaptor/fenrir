@@ -6,10 +6,10 @@
 
 #pragma once
 
-namespace kernel::serial {
+namespace serial {
 
 void initialize();
 
 void write(char);
 
-} // namespace kernel::serial
+} // namespace serial

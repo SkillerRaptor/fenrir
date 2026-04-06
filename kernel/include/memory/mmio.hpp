@@ -8,7 +8,7 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::mmio {
+namespace mmio {
 
 template <typename T>
 T in(const u64 addr)
@@ -64,4 +64,4 @@ void out(const u64 addr, const T value)
     }
 }
 
-} // namespace kernel::mmio
+} // namespace mmio

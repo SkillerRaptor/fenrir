@@ -14,17 +14,17 @@
 extern "C" {
 #endif
 
-static kernel::Spinlock s_lock = { };
+static Spinlock s_lock = {};
 
 [[noreturn]] void __assertion_failed(const char *assertion, const char *file, const u32 line, const char *function)
 {
     s_lock.lock();
 
-    kernel::logger::err("\n");
-    kernel::logger::err("Assertion '%s' failed in %s at %s:%u\n", assertion, function, file, line);
-    kernel::logger::err("\n");
-    kernel::stacktrace::print(50);
-    kernel::logger::err("\n");
+    logger::err("\n");
+    logger::err("Assertion '%s' failed in %s at %s:%u\n", assertion, function, file, line);
+    logger::err("\n");
+    stacktrace::print(50);
+    logger::err("\n");
 
     s_lock.unlock();
 

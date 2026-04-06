@@ -8,8 +8,8 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::memory {
+namespace memory {
 
 static constexpr usize s_page_size { 4096 };
 
-} // namespace kernel::memory
+} // namespace memory

@@ -12,7 +12,7 @@
 #include "core/stacktrace.hpp"
 #include "lib/bitflags.hpp"
 
-namespace kernel::idt {
+namespace idt {
 
 enum class Attribute : u8 {
     TrapGate = 1 << 3 | 1 << 2 | 1 << 1 | 1 << 0,
@@ -43,9 +43,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] { };
-static Descriptor s_descriptor { };
-static InterruptHandler s_interrupt_handlers[256] { };
+static Entry s_entries[256] {};
+static Descriptor s_descriptor {};
+static InterruptHandler s_interrupt_handlers[256] {};
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {
@@ -211,4 +211,4 @@ extern "C" void interrupt_raise(const Registers *registers)
     apic::send_eoi();
 }
 
-} // namespace kernel::idt
+} // namespace idt

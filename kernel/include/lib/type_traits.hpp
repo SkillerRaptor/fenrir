@@ -6,7 +6,6 @@
 
 #pragma once
 
-namespace lib {
 
 template <class T>
 using UnderlyingType = __underlying_type(T);
@@ -17,4 +16,3 @@ constexpr UnderlyingType<Enum> to_underlying(const Enum e) noexcept
     return static_cast<UnderlyingType<Enum>>(e);
 }
 
-} // namespace lib

@@ -13,11 +13,11 @@
 #include "lib/math.hpp"
 #include "lib/string.hpp"
 
-namespace kernel::pmm {
+namespace pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static lib::Bitmap s_bitmap = { };
+static Bitmap s_bitmap = {};
 
 void initialize()
 {
@@ -78,7 +78,7 @@ void initialize()
 
     logger::debug("PMM: Found highest page address at 0x%llx\n", s_highest_page);
 
-    s_bitmap.set_size(lib::math::div_round_up(s_highest_page, memory::s_page_size));
+    s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
 
     for (usize i = 0; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
@@ -199,4 +199,4 @@ void free(void *ptr, const usize pages)
     }
 }
 
-} // namespace kernel::pmm
+} // namespace pmm

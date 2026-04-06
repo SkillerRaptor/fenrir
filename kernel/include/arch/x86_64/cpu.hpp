@@ -12,7 +12,7 @@
 #include "scheduler/thread.hpp"
 #include "sync/spinlock.hpp"
 
-namespace kernel::cpu {
+namespace cpu {
 
 struct Info {
     u64 id { 0 };
@@ -25,7 +25,7 @@ struct Info {
 
     ThreadId current_thread { -1 };
     ThreadId idle_thread { -1 };
-    lib::Queue<ThreadId> run_queue {};
+    Queue<ThreadId> run_queue {};
     Spinlock run_queue_lock {};
 };
 
@@ -63,4 +63,4 @@ inline Info &get_local_cpu_info()
     return smp::get_cpu_infos()[cpu_id];
 }
 
-} // namespace kernel::cpu
+} // namespace cpu

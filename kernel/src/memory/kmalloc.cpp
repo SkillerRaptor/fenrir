@@ -12,7 +12,7 @@
 #include "lib/math.hpp"
 #include "memory/pmm.hpp"
 
-namespace kernel::memory {
+namespace memory {
 
 struct AllocationHeader {
     usize page_count { 0 };
@@ -23,7 +23,7 @@ void *kmalloc(const usize size)
 {
     assert(size > 0);
 
-    const usize page_count = lib::math::div_round_up(size, s_page_size);
+    const usize page_count = math::div_round_up(size, s_page_size);
 
     // NOTE: Allocate one extra page for the header
     u8 *ptr = static_cast<u8 *>(pmm::allocate(page_count + 1, false));
@@ -53,4 +53,4 @@ void kfree(void *ptr)
     pmm::free(reinterpret_cast<void *>(reinterpret_cast<u64>(header_address) - boot::get_hhdm_offset()), page_count);
 }
 
-} // namespace kernel::memory
+} // namespace memory

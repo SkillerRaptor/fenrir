@@ -11,7 +11,7 @@
 #include "lib/types.hpp"
 #include "memory/kmalloc.hpp"
 
-namespace kernel::cxxabi {
+namespace cxxabi {
 
 struct AtexitFunctionEntry {
     void (*destructor)(void *);
@@ -22,7 +22,7 @@ struct AtexitFunctionEntry {
 static constexpr usize s_atexit_max_functions { 128 };
 
 static usize s_atexit_function_count { 0 };
-static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
+static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] {};
 
 extern "C" void *__dso_handle { nullptr };
 
@@ -59,13 +59,13 @@ void construct()
     }
 }
 
-} // namespace kernel::cxxabi
+} // namespace cxxabi
 
-[[nodiscard]] void *operator new(const usize size) { return kernel::memory::kmalloc(size); }
-[[nodiscard]] void *operator new[](const usize size) { return kernel::memory::kmalloc(size); }
+[[nodiscard]] void *operator new(const usize size) { return memory::kmalloc(size); }
+[[nodiscard]] void *operator new[](const usize size) { return memory::kmalloc(size); }
 
-void operator delete(void *ptr) noexcept { kernel::memory::kfree(ptr); }
-void operator delete(void *ptr, usize) noexcept { kernel::memory::kfree(ptr); }
+void operator delete(void *ptr) noexcept { memory::kfree(ptr); }
+void operator delete(void *ptr, usize) noexcept { memory::kfree(ptr); }
 
-void operator delete[](void *ptr) noexcept { kernel::memory::kfree(ptr); }
-void operator delete[](void *ptr, usize) noexcept { kernel::memory::kfree(ptr); }
+void operator delete[](void *ptr) noexcept { memory::kfree(ptr); }
+void operator delete[](void *ptr, usize) noexcept { memory::kfree(ptr); }

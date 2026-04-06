@@ -6,8 +6,8 @@
 
 #pragma once
 
-namespace kernel::pic {
+namespace pic {
 
 void disable();
 
-} // namespace kernel::pic
+} // namespace pic

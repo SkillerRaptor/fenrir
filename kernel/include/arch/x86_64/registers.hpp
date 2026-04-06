@@ -8,8 +8,6 @@
 
 #include "lib/types.hpp"
 
-namespace kernel {
-
 struct Registers {
     u64 r15 { 0 };
     u64 r14 { 0 };
@@ -37,5 +35,3 @@ struct Registers {
     u64 rsp { 0 };
     u64 ss { 0 };
 };
-
-} // namespace kernel

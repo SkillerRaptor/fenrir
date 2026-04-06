@@ -8,8 +8,6 @@
 
 #include "lib/assert.hpp"
 
-namespace lib {
-
 void Bitmap::set(const usize index, const bool value)
 {
     assert(index < m_size);
@@ -34,4 +32,3 @@ bool Bitmap::get(const usize index) const
     return m_data[byte] & (1 << bit);
 }
 
-} // namespace lib

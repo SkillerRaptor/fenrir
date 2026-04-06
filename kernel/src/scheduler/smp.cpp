@@ -18,7 +18,7 @@
 #include "scheduler/scheduler.hpp"
 #include "sync/spinlock.hpp"
 
-namespace kernel::smp {
+namespace smp {
 
 static u32 s_bsp_lapic_id = 0;
 static u8 s_online_cpu_count = 0;
@@ -102,4 +102,4 @@ static void cpu_init(limine_mp_info *info)
     scheduler::yield();
 }
 
-} // namespace kernel::smp
+} // namespace smp

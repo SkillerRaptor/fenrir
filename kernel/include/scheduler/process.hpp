@@ -9,8 +9,6 @@
 #include "memory/vmm.hpp"
 #include "scheduler/types.hpp"
 
-namespace kernel {
-
 struct Process {
     enum class State {
         Idle = 0,
@@ -23,5 +21,3 @@ struct Process {
 
     vmm::PageMap *page_map { nullptr };
 };
-
-} // namespace kernel

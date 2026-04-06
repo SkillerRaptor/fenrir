@@ -8,10 +8,10 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::hpet {
+namespace hpet {
 
 void initialize();
 
 void sleep(u64 ms);
 
-} // namespace kernel::hpet
+} // namespace hpet

@@ -8,9 +8,9 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::memory {
+namespace memory {
 
 void *kmalloc(usize size);
 void kfree(void *ptr);
 
-} // namespace kernel::memory
+} // namespace memory

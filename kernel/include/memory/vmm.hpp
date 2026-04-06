@@ -9,7 +9,7 @@
 #include "lib/bitflags.hpp"
 #include "lib/types.hpp"
 
-namespace kernel::vmm {
+namespace vmm {
 
 enum class Attribute : u16 {
     Present = 1 << 0,
@@ -33,4 +33,4 @@ void unmap(const PageMap *, u64 vaddr);
 
 PageMap *get_kernel_page_map();
 
-} // namespace kernel::vmm
+} // namespace vmm

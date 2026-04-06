@@ -8,7 +8,7 @@
 
 #include "arch/x86_64/registers.hpp"
 
-namespace kernel::idt {
+namespace idt {
 
 using InterruptHandler = void (*)(const Registers &);
 
@@ -17,4 +17,4 @@ void load();
 
 void set_handler(u8 isr, InterruptHandler);
 
-} // namespace kernel::idt
+} // namespace idt

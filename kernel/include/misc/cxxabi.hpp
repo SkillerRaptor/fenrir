@@ -6,8 +6,8 @@
 
 #pragma once
 
-namespace kernel::cxxabi {
+namespace cxxabi {
 
 void construct();
 
-} // namespace kernel::cxxabi
+} // namespace cxxabi

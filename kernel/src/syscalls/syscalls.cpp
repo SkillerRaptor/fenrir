@@ -9,7 +9,7 @@
 #include "arch/x86_64/cpu.hpp"
 #include "core/logger.hpp"
 
-namespace kernel::syscalls {
+namespace syscalls {
 
 static constexpr u32 s_star_msr = 0xc0000081;
 static constexpr u32 s_lstar_msr = 0xc0000082;
@@ -51,4 +51,4 @@ void initialize()
 
 extern "C" void syscall_handler(const SyscallRegisters *registers) { logger::info("Syscall: %u\n", registers->rax); }
 
-} // namespace kernel::syscalls
+} // namespace syscalls

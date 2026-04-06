@@ -10,8 +10,6 @@
 #include "lib/types.hpp"
 #include "scheduler/types.hpp"
 
-namespace kernel {
-
 struct Thread {
     enum class State {
         Idle = 0,
@@ -27,5 +25,3 @@ struct Thread {
     u8 *stack { nullptr };
     usize stack_size { 0 };
 };
-
-} // namespace kernel

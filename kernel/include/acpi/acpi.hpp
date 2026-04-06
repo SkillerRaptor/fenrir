@@ -6,8 +6,8 @@
 
 #pragma once
 
-namespace kernel::acpi {
+namespace acpi {
 
 void initialize();
 
-} // namespace kernel::acpi
+} // namespace acpi

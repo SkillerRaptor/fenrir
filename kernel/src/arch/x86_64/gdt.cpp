@@ -9,7 +9,7 @@
 #include "lib/bitflags.hpp"
 #include "lib/types.hpp"
 
-namespace kernel::gdt {
+namespace gdt {
 
 enum class AccessAttribute : u8 {
     None = 0,
@@ -146,4 +146,4 @@ void load(CpuGdt &cpu_gdt, const Tss &tss)
     load_tss();
 }
 
-} // namespace kernel::gdt
+} // namespace gdt

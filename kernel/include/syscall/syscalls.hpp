@@ -6,8 +6,8 @@
 
 #pragma once
 
-namespace kernel::syscalls {
+namespace syscalls {
 
 void initialize();
 
-} // namespace kernel::syscalls
+} // namespace syscalls

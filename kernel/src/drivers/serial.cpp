@@ -8,7 +8,7 @@
 
 #include "arch/x86_64/io.hpp"
 
-namespace kernel::serial {
+namespace serial {
 
 static constexpr u16 s_port_base = 0x3f8;
 
@@ -62,4 +62,4 @@ void write(const char c)
     io::out8(s_port_transmit_buffer, c);
 }
 
-} // namespace kernel::serial
+} // namespace serial

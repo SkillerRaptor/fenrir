@@ -11,7 +11,7 @@
 #include "lib/assert.hpp"
 #include "lib/string.hpp"
 
-namespace kernel::stacktrace {
+namespace stacktrace {
 
 struct StackFrame {
     StackFrame *rbp { nullptr };
@@ -190,4 +190,4 @@ void print(const u64 max_frames)
     }
 }
 
-} // namespace kernel::stacktrace
+} // namespace stacktrace

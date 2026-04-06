@@ -8,8 +8,6 @@
 
 #include "lib/types.hpp"
 
-namespace lib {
-
 class Bitmap {
 public:
     Bitmap() = default;
@@ -28,4 +26,3 @@ private:
     usize m_size { 0 };
 };
 
-} // namespace lib

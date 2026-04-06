@@ -20,8 +20,6 @@
 #include "scheduler/smp.hpp"
 #include "syscall/syscalls.hpp"
 
-namespace kernel {
-
 static void kmain_thread(void *user_argument);
 
 extern "C" void kmain()
@@ -96,5 +94,3 @@ void kmain_thread(void *)
 
     scheduler::yield();
 }
-
-} // namespace kernel

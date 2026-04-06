@@ -8,7 +8,6 @@
 
 #include "lib/types.hpp"
 
-namespace lib {
 
 template <typename, typename T = u32>
 class Identifier {
@@ -35,4 +34,3 @@ private:
     T m_value { 0 };
 };
 
-} // namespace lib

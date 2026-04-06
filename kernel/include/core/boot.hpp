@@ -10,7 +10,7 @@
 
 #include "lib/types.hpp"
 
-namespace kernel::boot {
+namespace boot {
 
 bool is_base_revision_supported();
 
@@ -35,4 +35,4 @@ limine_module_response *get_module_response();
 
 void *get_rsdp_address();
 
-} // namespace kernel::boot
+} // namespace boot

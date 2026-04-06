@@ -10,8 +10,6 @@
 #include "lib/types.hpp"
 #include "lib/vector.hpp"
 
-namespace lib {
-
 template <typename T>
 class Queue {
 public:
@@ -36,11 +34,10 @@ public:
     }
 
     bool is_empty() const { return size() == 0; }
-    
+
     usize size() const { return m_data.size(); }
 
 private:
-    Vector<T> m_data { };
+    Vector<T> m_data {};
 };
 
-} // namespace lib

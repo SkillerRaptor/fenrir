@@ -9,8 +9,6 @@
 #include "assert.hpp"
 #include "lib/types.hpp"
 
-namespace lib {
-
 template <typename T>
 class Vector {
 public:
@@ -78,4 +76,3 @@ private:
     usize m_capacity { 0 };
 };
 
-} // namespace lib
