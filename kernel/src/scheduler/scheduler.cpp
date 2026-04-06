@@ -54,6 +54,30 @@ __attribute__((noreturn)) void yield()
     }
 }
 
+static Process *get_process(const ProcessId pid)
+{
+    for (usize i { 0 }; i < s_process_list.size(); ++i) {
+        Process *process = &s_process_list[i];
+        if (process->pid == pid) {
+            return process;
+        }
+    }
+
+    return nullptr;
+}
+
+static Thread *get_thread(const ThreadId tid)
+{
+    for (usize i { 0 }; i < s_thread_list.size(); ++i) {
+        Thread *thread = &s_thread_list[i];
+        if (thread->tid == tid) {
+            return thread;
+        }
+    }
+
+    return nullptr;
+}
+
 ProcessId create_process(vmm::PageMap *page_map)
 {
     SpinlockLocker _locker(s_process_list_lock);
@@ -127,16 +151,30 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
         .stack_size = memory::s_page_size,
     };
 
+    // NOTE: Map stack
+    Process *process = get_process(thread.pid);
+    assert(process);
+
     if (cs == 0x28) {
         thread.registers.rsi = reinterpret_cast<u64>(user_argument);
         thread.registers.rdi = reinterpret_cast<u64>(entry),
         thread.registers.rip = reinterpret_cast<u64>(thread_wrapper);
         thread.registers.rsp += boot::get_hhdm_offset();
         thread.registers.ss = thread.registers.cs + 0x08;
+        vmm::map(
+            process->page_map,
+            stack - memory::s_page_size,
+            thread.registers.rsp - memory::s_page_size,
+            vmm::Attribute::Write);
     } else {
         thread.registers.rdi = reinterpret_cast<u64>(user_argument),
         thread.registers.rip = reinterpret_cast<u64>(entry);
         thread.registers.ss = thread.registers.cs - 0x08;
+        vmm::map(
+            process->page_map,
+            stack - memory::s_page_size,
+            thread.registers.rsp - memory::s_page_size,
+            vmm::Attribute::Write | vmm::Attribute::User);
     }
 
     s_thread_list.push_back(thread);
@@ -198,30 +236,6 @@ ThreadId create_idle_thread()
 // TODO: Add destroy thread
 
 ProcessId get_kernel_process() { return s_kernel_process; }
-
-static Process *get_process(const ProcessId pid)
-{
-    for (usize i { 0 }; i < s_process_list.size(); ++i) {
-        Process *process = &s_process_list[i];
-        if (process->pid == pid) {
-            return process;
-        }
-    }
-
-    return nullptr;
-}
-
-static Thread *get_thread(const ThreadId tid)
-{
-    for (usize i { 0 }; i < s_thread_list.size(); ++i) {
-        Thread *thread = &s_thread_list[i];
-        if (thread->tid == tid) {
-            return thread;
-        }
-    }
-
-    return nullptr;
-}
 
 void schedule(const Registers &registers)
 {
