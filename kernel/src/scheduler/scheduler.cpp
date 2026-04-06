@@ -199,6 +199,30 @@ ThreadId create_idle_thread()
 
 ProcessId get_kernel_process() { return s_kernel_process; }
 
+static Process *get_process(const ProcessId pid)
+{
+    for (usize i { 0 }; i < s_process_list.size(); ++i) {
+        Process *process = &s_process_list[i];
+        if (process->pid == pid) {
+            return process;
+        }
+    }
+
+    return nullptr;
+}
+
+static Thread *get_thread(const ThreadId tid)
+{
+    for (usize i { 0 }; i < s_thread_list.size(); ++i) {
+        Thread *thread = &s_thread_list[i];
+        if (thread->tid == tid) {
+            return thread;
+        }
+    }
+
+    return nullptr;
+}
+
 void schedule(const Registers &registers)
 {
     cpu::Info &current_cpu = cpu::get_local_cpu_info();
@@ -208,13 +232,14 @@ void schedule(const Registers &registers)
     if (current_thread_id != ThreadId { -1 } && current_thread_id != current_cpu.idle_thread) {
         SpinlockLocker _thread_list_locker(s_thread_list_lock);
 
-        Thread &current_thread = s_thread_list[current_thread_id.get()];
-        current_thread.registers = registers;
-        if (current_thread.state == Thread::State::Busy) {
-            current_thread.state = Thread::State::Idle;
+        Thread *current_thread = get_thread(current_thread_id);
+        assert(current_thread);
+        current_thread->registers = registers;
+        if (current_thread->state == Thread::State::Busy) {
+            current_thread->state = Thread::State::Idle;
 
             SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
-            current_cpu.run_queue.push_back(current_thread.tid);
+            current_cpu.run_queue.push_back(current_thread->tid);
         }
     }
 
@@ -237,16 +262,20 @@ void schedule(const Registers &registers)
     Registers regs { };
     {
         SpinlockLocker _thread_list_locker(s_thread_list_lock);
-        Thread &next_thread = s_thread_list[next_thread_id.get()];
-        next_thread.state = Thread::State::Busy;
-        regs = next_thread.registers;
+        Thread *next_thread = get_thread(next_thread_id);
+        assert(next_thread);
+        next_thread->state = Thread::State::Busy;
+        regs = next_thread->registers;
 
-        const Thread &current_thread = s_thread_list[current_thread_id.get()];
-        if (next_thread.pid != current_thread.pid) {
-            SpinlockLocker _process_list_locker(s_process_list_lock);
+        const Thread *current_thread = get_thread(current_thread_id);
+        if (current_thread) {
+            if (next_thread->pid != current_thread->pid) {
+                SpinlockLocker _process_list_locker(s_process_list_lock);
 
-            const Process *next_process = &s_process_list[next_thread.pid.get()];
-            vmm::switch_to_page_map(next_process->page_map);
+                const Process *next_process = get_process(next_thread->pid);
+                assert(next_process);
+                vmm::switch_to_page_map(next_process->page_map);
+            }
         }
     }
 
