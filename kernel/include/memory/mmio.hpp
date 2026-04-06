@@ -31,8 +31,7 @@ T in(const u64 addr)
         return *ptr;
     }
     default:
-        // TODO: Panic
-        return 0;
+        assert(false);
     }
 }
 
@@ -61,8 +60,7 @@ void out(const u64 addr, const T value)
         break;
     }
     default:
-        // TODO: Panic
-        break;
+        assert(false);
     }
 }
 

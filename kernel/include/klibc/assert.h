@@ -8,7 +8,9 @@
 
 #include "lib/types.hpp"
 
-namespace kernel {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef NDEBUG
 #    define assert(assertion) ((void) 0)
@@ -23,4 +25,6 @@ namespace kernel {
 
 [[noreturn]] void __assertion_failed(const char *assertion, const char *file, u32 line, const char *function);
 
-} // namespace kernel
+#ifdef __cplusplus
+}
+#endif

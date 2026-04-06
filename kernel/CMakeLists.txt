@@ -14,11 +14,11 @@ set(SOURCES
         src/arch/x86_64/idt.asm
         src/arch/x86_64/idt.cpp
         src/arch/x86_64/pic.cpp
-        src/core/assert.cpp
         src/core/boot.cpp
         src/core/logger.cpp
         src/core/stacktrace.cpp
         src/drivers/serial.cpp
+        src/klibc/assert.cpp
         src/klibc/string.cpp
         src/lib/bitmap.cpp
         src/memory/kmalloc.cpp
@@ -42,12 +42,12 @@ set(HEADERS
         include/arch/x86_64/io.hpp
         include/arch/x86_64/pic.hpp
         include/arch/x86_64/registers.hpp
-        include/core/assert.hpp
         include/core/boot.hpp
         include/core/logger.hpp
         include/core/memory.hpp
         include/core/stacktrace.hpp
         include/drivers/serial.hpp
+        include/klibc/assert.h
         include/klibc/string.h
         include/lib/bitflags.hpp
         include/lib/bitmap.hpp

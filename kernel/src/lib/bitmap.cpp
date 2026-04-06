@@ -6,13 +6,13 @@
 
 #include "lib/bitmap.hpp"
 
+#include "klibc/assert.h"
+
 namespace lib {
 
 void Bitmap::set(const usize index, const bool value)
 {
-    if (index >= m_size) {
-        return;
-    }
+    assert(index < m_size);
 
     const usize byte = index / 8;
     const usize bit = index % 8;
@@ -26,9 +26,7 @@ void Bitmap::set(const usize index, const bool value)
 
 bool Bitmap::get(const usize index) const
 {
-    if (index >= m_size) {
-        return false;
-    }
+    assert(index < m_size);
 
     const usize byte = index / 8;
     const usize bit = index % 8;

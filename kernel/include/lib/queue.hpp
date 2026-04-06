@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "klibc/assert.h"
 #include "lib/types.hpp"
 #include "lib/vector.hpp"
 
@@ -30,7 +31,8 @@ public:
 
     T pop_front()
     {
-        // TODO: Panic if empty
+        assert(!is_empty());
+
         T value = m_data[m_head];
         m_head = (m_head + 1) % m_data.capacity();
         --m_size;
@@ -47,9 +49,9 @@ private:
         const usize old_capacity = m_data.capacity();
         const usize new_capacity = old_capacity + old_capacity / 2;
 
-        Vector<T> new_data {};
+        Vector<T> new_data { };
         for (usize i = 0; i < new_capacity; ++i) {
-            new_data.push_back(T {});
+            new_data.push_back(T { });
         }
 
         for (usize i = 0; i < m_size; ++i) {
@@ -61,7 +63,7 @@ private:
     }
 
 private:
-    Vector<T> m_data {};
+    Vector<T> m_data { };
     usize m_head { 0 };
     usize m_size { 0 };
 };

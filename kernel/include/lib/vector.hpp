@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "klibc/assert.h"
 #include "lib/types.hpp"
 
 namespace lib {
@@ -32,19 +33,13 @@ public:
 
     T &operator[](const usize index)
     {
-        if (index >= m_size) {
-            // TODO: Panic
-        }
-
+        assert(index < m_size);
         return m_data[index];
     }
 
     const T &operator[](const usize index) const
     {
-        if (index >= m_size) {
-            // TODO: Panic
-        }
-
+        assert(index < m_size);
         return m_data[index];
     }
 
