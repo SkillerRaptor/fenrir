@@ -43,9 +43,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] {};
-static Descriptor s_descriptor {};
-static InterruptHandler s_interrupt_handlers[256] {};
+static Entry s_entries[256] { };
+static Descriptor s_descriptor { };
+static InterruptHandler s_interrupt_handlers[256] { };
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {
@@ -133,7 +133,7 @@ ENUMERATE_EXCEPTIONS
 
 __attribute__((noreturn)) void page_fault(const Registers &registers)
 {
-    u64 faulting_address = 0;
+    u64 faulting_address { 0 };
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
     logger::err("Page Fault at address 0x%016llx with error code %b\n", faulting_address, registers.error);
@@ -174,7 +174,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 
 void initialize()
 {
-    for (usize i = 0; i < 256; ++i) {
+    for (usize i { 0 }; i < 256; ++i) {
         s_entries[i] = create_entry(
             interrupt_handlers[i],
             Attribute::KernelPrivilege | Attribute::Present | Attribute::InterruptGate);

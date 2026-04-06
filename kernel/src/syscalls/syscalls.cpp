@@ -11,9 +11,9 @@
 
 namespace syscalls {
 
-static constexpr u32 s_star_msr = 0xc0000081;
-static constexpr u32 s_lstar_msr = 0xc0000082;
-static constexpr u32 s_fmask_msr = 0xc0000084;
+static constexpr u32 s_star_msr { 0xc0000081 };
+static constexpr u32 s_lstar_msr { 0xc0000082 };
+static constexpr u32 s_fmask_msr { 0xc0000084 };
 
 struct SyscallRegisters {
     u64 r15 { 0 };

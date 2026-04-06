@@ -26,9 +26,9 @@ void initialize()
     const usize memory_map_entry_count = boot::get_memory_map_entry_count();
     logger::debug("VMM: Mapping memory map entries...\n");
 
-    usize mapped_entry_count = 0;
-    usize mapped_bytes = 0;
-    for (usize i = 0; i < memory_map_entry_count; ++i) {
+    usize mapped_entry_count { 0 };
+    usize mapped_bytes { 0 };
+    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
 
         if (entry->type != LIMINE_MEMMAP_USABLE && entry->type != LIMINE_MEMMAP_ACPI_RECLAIMABLE
@@ -63,8 +63,7 @@ void initialize()
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024);
 
-    const usize kernel_virtual_start
-        = math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
+    const usize kernel_virtual_start = math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
     const usize kernel_virtual_end = math::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
     const usize physical_base = boot::get_executable_physical_base();
     const usize virtual_base = boot::get_executable_virtual_base();
@@ -103,7 +102,7 @@ PageMap *create_page_map()
         u64 *new_pml4 = reinterpret_cast<u64 *>(page_map->top_level + boot::get_hhdm_offset());
         const u64 *kernel_pml4 = reinterpret_cast<u64 *>(s_kernel_page_map->top_level + boot::get_hhdm_offset());
 
-        for (usize i = 256; i < 512; ++i) {
+        for (usize i { 256 }; i < 512; ++i) {
             new_pml4[i] = kernel_pml4[i];
         }
     }

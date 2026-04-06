@@ -22,7 +22,7 @@ namespace acpi {
 
 void initialize()
 {
-    uacpi_status ret = uacpi_initialize(0);
+    const uacpi_status ret = uacpi_initialize(0);
     if (uacpi_unlikely_error(ret)) {
         logger::err("uacpi_initialize error: %s\n", uacpi_status_to_string(ret));
     }

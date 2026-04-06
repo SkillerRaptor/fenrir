@@ -17,7 +17,7 @@ namespace pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static Bitmap s_bitmap = {};
+static Bitmap s_bitmap { };
 
 void initialize()
 {
@@ -25,7 +25,7 @@ void initialize()
 
     logger::debug("PMM: Scanning %zu memory map entries\n", memory_map_entry_count);
 
-    for (usize i = 0; i < memory_map_entry_count; ++i) {
+    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
         limine_memmap_entry *entry = boot::get_memory_map_entry(i);
 
         const char *type = [&entry]() {
@@ -80,7 +80,7 @@ void initialize()
 
     s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
 
-    for (usize i = 0; i < memory_map_entry_count; ++i) {
+    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
@@ -100,8 +100,8 @@ void initialize()
         s_bitmap.size() / 8,
         s_bitmap.size() / 8 / 1024);
 
-    usize free_pages = 0;
-    for (usize i = 0; i < memory_map_entry_count; ++i) {
+    usize free_pages { 0 };
+    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
@@ -110,7 +110,7 @@ void initialize()
 
         if (reinterpret_cast<u8 *>(entry->base + boot::get_hhdm_offset()) == s_bitmap.data()) {
             const usize remaining_bytes = entry->length - s_bitmap.size();
-            for (usize j = 0; j < remaining_bytes; j += memory::s_page_size) {
+            for (usize j { 0 }; j < remaining_bytes; j += memory::s_page_size) {
                 const usize address = (entry->base + s_bitmap.size()) + j;
                 const usize page_index = address / memory::s_page_size;
                 s_bitmap.set(page_index, false);
@@ -121,7 +121,7 @@ void initialize()
             continue;
         }
 
-        for (usize j = 0; j < entry->length; j += memory::s_page_size) {
+        for (usize j { 0 }; j < entry->length; j += memory::s_page_size) {
             const usize address = entry->base + j;
             const usize page_index = address / memory::s_page_size;
             s_bitmap.set(page_index, false); // Here
@@ -181,7 +181,7 @@ void *allocate(const usize pages, const bool clear)
     } else if (clear) {
         u64 *address = reinterpret_cast<u64 *>(reinterpret_cast<u64>(ptr) + boot::get_hhdm_offset());
 
-        for (usize i = 0; i < pages * (memory::s_page_size / sizeof(u64)); ++i) {
+        for (usize i { 0 }; i < pages * (memory::s_page_size / sizeof(u64)); ++i) {
             address[i] = 0;
         }
     }
@@ -194,7 +194,7 @@ void free(void *ptr, const usize pages)
     const usize address = reinterpret_cast<usize>(ptr);
     const usize page = address / memory::s_page_size;
 
-    for (usize i = 0; i < pages; ++i) {
+    for (usize i { 0 }; i < pages; ++i) {
         s_bitmap.set(page + i, false);
     }
 }
