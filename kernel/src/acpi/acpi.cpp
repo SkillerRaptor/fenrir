@@ -159,7 +159,7 @@ void uacpi_kernel_vlog(uacpi_log_level, const uacpi_char *, uacpi_va_list);
  * The handle returned via 'out_handle' is used to perform IO on the
  * configuration space of the device.
  */
-uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address address, uacpi_handle *out_handle)
+uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address, uacpi_handle *)
 {
     kernel::logger::warn("uacpi_kernel_pci_device_open not implemented!\n");
     return UACPI_STATUS_OK;
@@ -172,33 +172,33 @@ void uacpi_kernel_pci_device_close(uacpi_handle)
 /*
  * Read & write the configuration space of a previously open PCI device.
  */
-uacpi_status uacpi_kernel_pci_read8(uacpi_handle device, uacpi_size offset, uacpi_u8 *value)
+uacpi_status uacpi_kernel_pci_read8(uacpi_handle, uacpi_size, uacpi_u8 *)
 {
     kernel::logger::warn("uacpi_kernel_pci_read8 not implemented!\n");
     return UACPI_STATUS_OK;
 }
-uacpi_status uacpi_kernel_pci_read16(uacpi_handle device, uacpi_size offset, uacpi_u16 *value)
+uacpi_status uacpi_kernel_pci_read16(uacpi_handle, uacpi_size, uacpi_u16 *)
 {
     kernel::logger::warn("uacpi_kernel_pci_read16 not implemented!\n");
     return UACPI_STATUS_OK;
 }
-uacpi_status uacpi_kernel_pci_read32(uacpi_handle device, uacpi_size offset, uacpi_u32 *value)
+uacpi_status uacpi_kernel_pci_read32(uacpi_handle, uacpi_size, uacpi_u32 *)
 {
     kernel::logger::warn("uacpi_kernel_pci_read32 not implemented!\n");
     return UACPI_STATUS_OK;
 }
 
-uacpi_status uacpi_kernel_pci_write8(uacpi_handle device, uacpi_size offset, uacpi_u8 value)
+uacpi_status uacpi_kernel_pci_write8(uacpi_handle, uacpi_size, uacpi_u8)
 {
     kernel::logger::warn("uacpi_kernel_pci_write8 not implemented!\n");
     return UACPI_STATUS_OK;
 }
-uacpi_status uacpi_kernel_pci_write16(uacpi_handle device, uacpi_size offset, uacpi_u16 value)
+uacpi_status uacpi_kernel_pci_write16(uacpi_handle, uacpi_size, uacpi_u16)
 {
     kernel::logger::warn("uacpi_kernel_pci_write16 not implemented!\n");
     return UACPI_STATUS_OK;
 }
-uacpi_status uacpi_kernel_pci_write32(uacpi_handle device, uacpi_size offset, uacpi_u32 value)
+uacpi_status uacpi_kernel_pci_write32(uacpi_handle, uacpi_size, uacpi_u32)
 {
     kernel::logger::warn("uacpi_kernel_pci_write32 not implemented!\n");
     return UACPI_STATUS_OK;
@@ -307,12 +307,12 @@ uacpi_u64 uacpi_kernel_get_nanoseconds_since_boot()
 /*
  * Spin for N microseconds.
  */
-void uacpi_kernel_stall(uacpi_u8 usec) { kernel::logger::warn("uacpi_kernel_stall not implemented!\n"); }
+void uacpi_kernel_stall(uacpi_u8) { kernel::logger::warn("uacpi_kernel_stall not implemented!\n"); }
 
 /*
  * Sleep for N milliseconds.
  */
-void uacpi_kernel_sleep(uacpi_u64 msec) { kernel::logger::warn("uacpi_kernel_sleep not implemented!\n"); }
+void uacpi_kernel_sleep(uacpi_u64) { kernel::logger::warn("uacpi_kernel_sleep not implemented!\n"); }
 
 /*
  * Create/free an opaque non-recursive kernel mutex object.
@@ -358,7 +358,7 @@ uacpi_interrupt_state uacpi_kernel_disable_interrupts()
  * Restore the state of the interrupt flags to the kernel-defined value provided
  * in 'state'.
  */
-void uacpi_kernel_restore_interrupts(uacpi_interrupt_state state)
+void uacpi_kernel_restore_interrupts(uacpi_interrupt_state)
 {
     kernel::logger::warn("uacpi_kernel_restore_interrupts not implemented!\n");
 }
@@ -437,8 +437,7 @@ uacpi_status uacpi_kernel_handle_firmware_request(uacpi_firmware_request *)
  * 'out_irq_handle' is set to a kernel-implemented value that can be used to
  * refer to this handler from other API.
  */
-uacpi_status uacpi_kernel_install_interrupt_handler(
-    uacpi_u32 irq, uacpi_interrupt_handler, uacpi_handle ctx, uacpi_handle *out_irq_handle)
+uacpi_status uacpi_kernel_install_interrupt_handler(uacpi_u32, uacpi_interrupt_handler, uacpi_handle, uacpi_handle *)
 {
     kernel::logger::warn("uacpi_kernel_install_interrupt_handler not implemented!\n");
     return UACPI_STATUS_OK;
@@ -448,7 +447,7 @@ uacpi_status uacpi_kernel_install_interrupt_handler(
  * Uninstall an interrupt handler. 'irq_handle' is the value returned via
  * 'out_irq_handle' during installation.
  */
-uacpi_status uacpi_kernel_uninstall_interrupt_handler(uacpi_interrupt_handler, uacpi_handle irq_handle)
+uacpi_status uacpi_kernel_uninstall_interrupt_handler(uacpi_interrupt_handler, uacpi_handle)
 {
     kernel::logger::warn("uacpi_kernel_uninstall_interrupt_handler not implemented!\n");
     return UACPI_STATUS_OK;
@@ -490,7 +489,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
  * Schedules deferred work for execution.
  * Might be invoked from an interrupt context.
  */
-uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)
+uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle)
 {
     kernel::logger::warn("uacpi_kernel_schedule_work not implemented!\n");
     return UACPI_STATUS_OK;

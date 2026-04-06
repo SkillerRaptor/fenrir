@@ -7,6 +7,7 @@
 #include "misc/cxxabi.hpp"
 
 #include "arch/x86_64/cpu.hpp"
+#include "core/logger.hpp"
 #include "lib/types.hpp"
 #include "memory/kmalloc.hpp"
 
@@ -21,7 +22,7 @@ struct AtexitFunctionEntry {
 static constexpr usize s_atexit_max_functions { 128 };
 
 static usize s_atexit_function_count { 0 };
-static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] {};
+static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
 
 extern "C" void *__dso_handle { nullptr };
 

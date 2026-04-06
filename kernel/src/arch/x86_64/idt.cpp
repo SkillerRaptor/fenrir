@@ -43,9 +43,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] {};
-static Descriptor s_descriptor {};
-static InterruptHandler s_interrupt_handlers[256] {};
+static Entry s_entries[256] { };
+static Descriptor s_descriptor { };
+static InterruptHandler s_interrupt_handlers[256] { };
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {
@@ -196,7 +196,11 @@ void initialize()
 
 void load() { load_idt(&s_descriptor); }
 
-void set_handler(const u8 isr, const InterruptHandler handler) { s_interrupt_handlers[isr] = handler; }
+void set_handler(const u8 isr, const InterruptHandler handler)
+{
+    assert(handler);
+    s_interrupt_handlers[isr] = handler;
+}
 
 extern "C" void interrupt_raise(const Registers *registers)
 {

@@ -9,15 +9,15 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "klibc/string.h"
 #include "lib/bitmap.hpp"
 #include "lib/math.hpp"
+#include "lib/string.hpp"
 
 namespace kernel::pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static lib::Bitmap s_bitmap { nullptr, 0 };
+static lib::Bitmap s_bitmap = { };
 
 void initialize()
 {
@@ -78,7 +78,7 @@ void initialize()
 
     logger::debug("PMM: Found highest page address at 0x%llx\n", s_highest_page);
 
-    s_bitmap.set_size(lib::math::div_round_up(s_highest_page, memory::s_page_size) / 8);
+    s_bitmap.set_size(lib::math::div_round_up(s_highest_page, memory::s_page_size));
 
     for (usize i = 0; i < memory_map_entry_count; ++i) {
         const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
@@ -89,7 +89,7 @@ void initialize()
 
         if (entry->length >= s_bitmap.size()) {
             s_bitmap.set_data(reinterpret_cast<u8 *>(entry->base + boot::get_hhdm_offset()));
-            memset(s_bitmap.data(), 0xff, s_bitmap.size());
+            memset(s_bitmap.data(), 0xff, s_bitmap.size() / 8);
             break;
         }
     }
@@ -97,8 +97,8 @@ void initialize()
     logger::debug(
         "PMM: Placed bitmap at 0x%p with a size of %zu bytes (%zu KiB)\n",
         s_bitmap.data(),
-        s_bitmap.size(),
-        s_bitmap.size() / 1024);
+        s_bitmap.size() / 8,
+        s_bitmap.size() / 8 / 1024);
 
     usize free_pages = 0;
     for (usize i = 0; i < memory_map_entry_count; ++i) {
@@ -124,11 +124,12 @@ void initialize()
         for (usize j = 0; j < entry->length; j += memory::s_page_size) {
             const usize address = entry->base + j;
             const usize page_index = address / memory::s_page_size;
-            s_bitmap.set(page_index, false);
+            s_bitmap.set(page_index, false); // Here
         }
 
         free_pages += entry->length / memory::s_page_size;
     }
+
     logger::debug(
         "PMM: Detected %zu free pages (%zu KiB, %zu MiB)\n",
         free_pages,
@@ -146,7 +147,7 @@ static void *internal_allocate(const usize pages, const usize limit)
 
     usize current_pages = 0;
     while (s_last_used_index < limit) {
-        if (s_bitmap.get(s_last_used_index++)) {
+        if (s_bitmap.get(s_last_used_index++)) { // Here
             current_pages = 0;
             continue;
         }
@@ -157,7 +158,7 @@ static void *internal_allocate(const usize pages, const usize limit)
 
         const usize page = s_last_used_index - pages;
         for (usize i = page; i < s_last_used_index; ++i) {
-            s_bitmap.set(i, true);
+            s_bitmap.set(i, true); // Here
         }
 
         return reinterpret_cast<void *>(page * memory::s_page_size);

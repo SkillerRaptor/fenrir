@@ -8,7 +8,8 @@
 
 #include "core/boot.hpp"
 #include "core/logger.hpp"
-#include "klibc/string.h"
+#include "lib/assert.hpp"
+#include "lib/string.hpp"
 
 namespace kernel::stacktrace {
 
@@ -150,6 +151,8 @@ static const Symbol *find_symbol(const u64 rip)
 
 void print(const u64 max_frames)
 {
+    assert(max_frames > 0);
+
     volatile StackFrame *stack_frame = nullptr;
     asm volatile("mov %%rbp, %0" : "=r"(stack_frame) : : "memory");
 

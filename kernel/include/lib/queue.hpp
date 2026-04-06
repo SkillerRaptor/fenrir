@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "klibc/assert.h"
+#include "assert.hpp"
 #include "lib/types.hpp"
 #include "lib/vector.hpp"
 
@@ -18,54 +18,29 @@ public:
     Queue() = default;
     ~Queue() = default;
 
-    void push_back(const T &value)
-    {
-        if (m_size >= m_data.capacity()) {
-            grow();
-        }
-
-        const usize index = (m_head + m_size) % m_data.capacity();
-        m_data[index] = value;
-        ++m_size;
-    }
+    void push_back(const T &value) { m_data.push_back(value); }
 
     T pop_front()
     {
         assert(!is_empty());
 
-        T value = m_data[m_head];
-        m_head = (m_head + 1) % m_data.capacity();
-        --m_size;
-        return value;
+        const T front = m_data[0];
+
+        for (usize i = 1; i < m_data.size(); ++i) {
+            m_data[i - 1] = m_data[i];
+        }
+
+        m_data.pop_back();
+
+        return front;
     }
 
     bool is_empty() const { return size() == 0; }
-
-    usize size() const { return m_size; }
-
-private:
-    void grow()
-    {
-        const usize old_capacity = m_data.capacity();
-        const usize new_capacity = old_capacity + old_capacity / 2;
-
-        Vector<T> new_data { };
-        for (usize i = 0; i < new_capacity; ++i) {
-            new_data.push_back(T { });
-        }
-
-        for (usize i = 0; i < m_size; ++i) {
-            new_data[i] = m_data[(m_head + i) % old_capacity];
-        }
-
-        m_data = new_data;
-        m_head = 0;
-    }
+    
+    usize size() const { return m_data.size(); }
 
 private:
     Vector<T> m_data { };
-    usize m_head { 0 };
-    usize m_size { 0 };
 };
 
 } // namespace lib

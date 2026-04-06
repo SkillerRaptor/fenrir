@@ -44,12 +44,12 @@ extern "C" void kmain()
     logger::log("   Firmware: %s\n", boot::get_firmware_type());
     logger::log("\n");
 
+    cxxabi::construct();
+
     idt::initialize();
 
     pmm::initialize();
     vmm::initialize();
-
-    cxxabi::construct();
 
     stacktrace::initialize();
 

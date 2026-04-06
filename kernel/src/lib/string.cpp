@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "klibc/string.h"
+#include "lib/string.hpp"
 
 #include <stdint.h>
 

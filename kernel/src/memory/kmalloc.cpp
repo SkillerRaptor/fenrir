@@ -8,6 +8,7 @@
 
 #include "core/boot.hpp"
 #include "core/memory.hpp"
+#include "lib/assert.hpp"
 #include "lib/math.hpp"
 #include "memory/pmm.hpp"
 
@@ -20,6 +21,8 @@ struct AllocationHeader {
 
 void *kmalloc(const usize size)
 {
+    assert(size > 0);
+
     const usize page_count = lib::math::div_round_up(size, s_page_size);
 
     // NOTE: Allocate one extra page for the header
@@ -41,9 +44,7 @@ void *kmalloc(const usize size)
 
 void kfree(void *ptr)
 {
-    if (!ptr) {
-        return;
-    }
+    assert(ptr);
 
     const u8 *header_address = static_cast<const u8 *>(ptr) - s_page_size;
     const AllocationHeader *header = reinterpret_cast<const AllocationHeader *>(header_address);

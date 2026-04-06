@@ -22,7 +22,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Build Options
 #-------------------------------------------------------------------------------------------
 set(KERNEL_BASE_OPTIONS
-        -O1
+        -O0
         -g
         -Wall
         -Wextra

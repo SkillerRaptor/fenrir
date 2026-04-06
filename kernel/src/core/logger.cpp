@@ -22,13 +22,13 @@
 
 #include "core/boot.hpp"
 #include "drivers/serial.hpp"
-#include "klibc/string.h"
+#include "lib/string.hpp"
 #include "sync/spinlock.hpp"
 
 namespace kernel::logger {
 
 static flanterm_context *s_context { nullptr };
-static Spinlock s_lock {};
+static Spinlock s_lock { };
 
 void initialize()
 {

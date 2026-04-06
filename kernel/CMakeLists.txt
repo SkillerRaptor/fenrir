@@ -18,9 +18,9 @@ set(SOURCES
         src/core/logger.cpp
         src/core/stacktrace.cpp
         src/drivers/serial.cpp
-        src/klibc/assert.cpp
-        src/klibc/string.cpp
+        src/lib/assert.cpp
         src/lib/bitmap.cpp
+        src/lib/string.cpp
         src/memory/kmalloc.cpp
         src/memory/pmm.cpp
         src/memory/vmm.cpp
@@ -47,13 +47,13 @@ set(HEADERS
         include/core/memory.hpp
         include/core/stacktrace.hpp
         include/drivers/serial.hpp
-        include/klibc/assert.h
-        include/klibc/string.h
+        include/lib/assert.hpp
         include/lib/bitflags.hpp
         include/lib/bitmap.hpp
         include/lib/identifier.hpp
         include/lib/math.hpp
         include/lib/queue.hpp
+        include/lib/string.hpp
         include/lib/type_traits.hpp
         include/lib/types.hpp
         include/lib/vector.hpp

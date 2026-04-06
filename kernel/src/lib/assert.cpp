@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "klibc/assert.h"
+#include "lib/assert.hpp"
 
 #include "core/logger.hpp"
 #include "core/stacktrace.hpp"
@@ -20,11 +20,11 @@ static kernel::Spinlock s_lock = { };
 {
     s_lock.lock();
 
-    kernel::logger::err("");
-    kernel::logger::err("Assertion '%s' failed in %s at %s:%u", assertion, function, file, line);
-    kernel::logger::err("");
+    kernel::logger::err("\n");
+    kernel::logger::err("Assertion '%s' failed in %s at %s:%u\n", assertion, function, file, line);
+    kernel::logger::err("\n");
     kernel::stacktrace::print(50);
-    kernel::logger::err("");
+    kernel::logger::err("\n");
 
     s_lock.unlock();
 

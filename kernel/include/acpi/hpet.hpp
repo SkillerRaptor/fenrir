@@ -11,6 +11,7 @@
 namespace kernel::hpet {
 
 void initialize();
+
 void sleep(u64 ms);
 
 } // namespace kernel::hpet

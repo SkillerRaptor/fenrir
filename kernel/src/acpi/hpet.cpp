@@ -11,7 +11,7 @@
 
 #include "core/boot.hpp"
 #include "core/logger.hpp"
-#include "klibc/assert.h"
+#include "lib/assert.hpp"
 #include "lib/types.hpp"
 #include "memory/mmio.hpp"
 #include "memory/vmm.hpp"

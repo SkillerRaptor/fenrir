@@ -12,11 +12,7 @@ namespace lib {
 
 class Bitmap {
 public:
-    Bitmap(u8 *data, const usize size)
-        : m_data(data)
-        , m_size(size)
-    {
-    }
+    Bitmap() = default;
 
     void set(usize index, bool);
     bool get(usize index) const;

@@ -6,7 +6,7 @@
 
 #include "lib/bitmap.hpp"
 
-#include "klibc/assert.h"
+#include "lib/assert.hpp"
 
 namespace lib {
 
