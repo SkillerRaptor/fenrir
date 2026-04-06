@@ -5,63 +5,76 @@
 #-------------------------------------------------------------------------------------------
 
 set(SOURCES
-        src/kernel/main.cpp
-        src/kernel/acpi/acpi.cpp
-        src/kernel/acpi/apic.cpp
-        src/kernel/acpi/hpet.cpp
-        src/kernel/arch/x86_64/gdt.asm
-        src/kernel/arch/x86_64/gdt.cpp
-        src/kernel/arch/x86_64/idt.asm
-        src/kernel/arch/x86_64/idt.cpp
-        src/kernel/arch/x86_64/pic.cpp
-        src/kernel/core/boot.cpp
-        src/kernel/core/logger.cpp
-        src/kernel/core/stacktrace.cpp
-        src/kernel/drivers/serial.cpp
-        src/kernel/memory/kmalloc.cpp
-        src/kernel/memory/pmm.cpp
-        src/kernel/memory/vmm.cpp
-        src/kernel/misc/cxxabi.cpp
-        src/kernel/scheduler/scheduler.asm
-        src/kernel/scheduler/scheduler.cpp
-        src/kernel/scheduler/smp.cpp
-        src/kernel/sync/spinlock.cpp
-        src/kernel/syscalls/syscalls.asm
-        src/kernel/syscalls/syscalls.cpp)
+        src/main.cpp
+        src/acpi/acpi.cpp
+        src/acpi/apic.cpp
+        src/acpi/hpet.cpp
+        src/arch/x86_64/gdt.asm
+        src/arch/x86_64/gdt.cpp
+        src/arch/x86_64/idt.asm
+        src/arch/x86_64/idt.cpp
+        src/arch/x86_64/pic.cpp
+        src/core/assert.cpp
+        src/core/boot.cpp
+        src/core/logger.cpp
+        src/core/stacktrace.cpp
+        src/drivers/serial.cpp
+        src/klibc/string.cpp
+        src/lib/bitmap.cpp
+        src/memory/kmalloc.cpp
+        src/memory/pmm.cpp
+        src/memory/vmm.cpp
+        src/misc/cxxabi.cpp
+        src/scheduler/scheduler.asm
+        src/scheduler/scheduler.cpp
+        src/scheduler/smp.cpp
+        src/sync/spinlock.cpp
+        src/syscalls/syscalls.asm
+        src/syscalls/syscalls.cpp)
 
 set(HEADERS
-        include/kernel/acpi/acpi.hpp
-        include/kernel/acpi/apic.hpp
-        include/kernel/acpi/hpet.hpp
-        include/kernel/arch/x86_64/cpu.hpp
-        include/kernel/arch/x86_64/gdt.hpp
-        include/kernel/arch/x86_64/idt.hpp
-        include/kernel/arch/x86_64/io.hpp
-        include/kernel/arch/x86_64/pic.hpp
-        include/kernel/arch/x86_64/registers.hpp
-        include/kernel/core/boot.hpp
-        include/kernel/core/logger.hpp
-        include/kernel/core/memory.hpp
-        include/kernel/core/stacktrace.hpp
-        include/kernel/drivers/serial.hpp
-        include/kernel/memory/kmalloc.hpp
-        include/kernel/memory/mmio.hpp
-        include/kernel/memory/pmm.hpp
-        include/kernel/memory/vmm.hpp
-        include/kernel/misc/cxxabi.hpp
-        include/kernel/scheduler/process.hpp
-        include/kernel/scheduler/scheduler.hpp
-        include/kernel/scheduler/smp.hpp
-        include/kernel/scheduler/thread.hpp
-        include/kernel/scheduler/types.hpp
-        include/kernel/sync/spinlock.hpp
-        include/kernel/syscall/syscalls.hpp)
+        include/acpi/acpi.hpp
+        include/acpi/apic.hpp
+        include/acpi/hpet.hpp
+        include/arch/x86_64/cpu.hpp
+        include/arch/x86_64/gdt.hpp
+        include/arch/x86_64/idt.hpp
+        include/arch/x86_64/io.hpp
+        include/arch/x86_64/pic.hpp
+        include/arch/x86_64/registers.hpp
+        include/core/assert.hpp
+        include/core/boot.hpp
+        include/core/logger.hpp
+        include/core/memory.hpp
+        include/core/stacktrace.hpp
+        include/drivers/serial.hpp
+        include/klibc/string.h
+        include/lib/bitflags.hpp
+        include/lib/bitmap.hpp
+        include/lib/identifier.hpp
+        include/lib/math.hpp
+        include/lib/queue.hpp
+        include/lib/type_traits.hpp
+        include/lib/types.hpp
+        include/lib/vector.hpp
+        include/memory/kmalloc.hpp
+        include/memory/mmio.hpp
+        include/memory/pmm.hpp
+        include/memory/vmm.hpp
+        include/misc/cxxabi.hpp
+        include/scheduler/process.hpp
+        include/scheduler/scheduler.hpp
+        include/scheduler/smp.hpp
+        include/scheduler/thread.hpp
+        include/scheduler/types.hpp
+        include/sync/spinlock.hpp
+        include/syscall/syscalls.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE lib klibc limine flanterm nanoprintf uacpi)
+target_link_libraries(kernel PRIVATE limine flanterm nanoprintf uacpi)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------
