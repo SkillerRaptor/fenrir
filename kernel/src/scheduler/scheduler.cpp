@@ -268,14 +268,12 @@ void schedule(const Registers &registers)
         regs = next_thread->registers;
 
         const Thread *current_thread = get_thread(current_thread_id);
-        if (current_thread) {
-            if (next_thread->pid != current_thread->pid) {
-                SpinlockLocker _process_list_locker(s_process_list_lock);
+        if (current_thread && next_thread->pid != current_thread->pid) {
+            SpinlockLocker _process_list_locker(s_process_list_lock);
 
-                const Process *next_process = get_process(next_thread->pid);
-                assert(next_process);
-                vmm::switch_to_page_map(next_process->page_map);
-            }
+            const Process *next_process = get_process(next_thread->pid);
+            assert(next_process);
+            vmm::switch_to_page_map(next_process->page_map);
         }
     }
 

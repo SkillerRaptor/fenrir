@@ -60,6 +60,15 @@ extern "C" void kmain()
 
     syscalls::initialize();
 
+    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
+
+    scheduler::yield();
+}
+
+void kmain_thread(void *)
+{
+    logger::info("Leviathan successfully booted!\n");
+
     vmm::PageMap *user_page_map = vmm::create_page_map();
     void *code_page_phys = pmm::allocate(1, true);
     const u64 code_phys = reinterpret_cast<u64>(code_page_phys);
@@ -82,15 +91,6 @@ extern "C" void kmain()
     ProcessId user_process = scheduler::create_process(user_page_map);
     ThreadId user_thread
         = scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
-
-    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
-
-    scheduler::yield();
-}
-
-void kmain_thread(void *)
-{
-    logger::info("Leviathan successfully booted!\n");
 
     scheduler::yield();
 }
