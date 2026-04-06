@@ -26,6 +26,7 @@ struct PageMap {
 void initialize();
 
 PageMap *create_page_map();
+void destroy_page_map(const PageMap *);
 void switch_to_page_map(const PageMap *);
 
 void map(const PageMap *, u64 paddr, u64 vaddr, Attribute attributes);

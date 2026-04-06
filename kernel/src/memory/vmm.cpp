@@ -9,6 +9,7 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
+#include "lib/assert.hpp"
 #include "lib/math.hpp"
 #include "memory/pmm.hpp"
 #include "sync/spinlock.hpp"
@@ -114,6 +115,53 @@ PageMap *create_page_map()
     }
 
     return page_map;
+}
+
+static void destroy_page_level(const u64 pml, const u8 level)
+{
+    const u64 *top_level = reinterpret_cast<u64 *>(pml + boot::get_hhdm_offset());
+    for (usize i { 0 }; i < 512; ++i) {
+        const u64 entry = top_level[i];
+
+        const Attribute attributes = static_cast<Attribute>(entry & 0xfff);
+        if ((attributes & Attribute::Present) != Attribute::Present) {
+            continue;
+        }
+
+        if (level > 1) {
+            destroy_page_level(entry & s_address_mask, level - 1);
+            continue;
+        }
+
+        pmm::free(reinterpret_cast<void *>(entry), 1);
+    }
+
+    pmm::free(reinterpret_cast<void *>(pml), 1);
+}
+
+void destroy_page_map(const PageMap *page_map)
+{
+    assert(page_map);
+
+    SpinlockLocker _locker(s_lock);
+
+    const u64 *top_level = reinterpret_cast<u64 *>(page_map->top_level + boot::get_hhdm_offset());
+    for (usize i { 0 }; i < 256; ++i) {
+        const u64 entry = top_level[i];
+
+        const Attribute attributes = static_cast<Attribute>(entry & 0xfff);
+        if ((attributes & Attribute::Present) != Attribute::Present) {
+            continue;
+        }
+
+        destroy_page_level(entry & s_address_mask, 3);
+    }
+
+    // NOTE: Only destroy lower half of the page map to avoid destroying kernel memory
+
+    pmm::free(reinterpret_cast<void *>(page_map->top_level), 1);
+
+    delete page_map;
 }
 
 void switch_to_page_map(const PageMap *page_map)
