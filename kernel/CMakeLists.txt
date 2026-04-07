@@ -48,6 +48,7 @@ set(HEADERS
         include/core/stacktrace.hpp
         include/drivers/serial.hpp
         include/lib/assert.hpp
+        include/lib/atomic.hpp
         include/lib/bitflags.hpp
         include/lib/bitmap.hpp
         include/lib/hash.hpp

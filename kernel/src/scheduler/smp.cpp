@@ -13,6 +13,7 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
+#include "lib/atomic.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "scheduler/scheduler.hpp"
@@ -21,9 +22,8 @@
 namespace smp {
 
 static u32 s_bsp_lapic_id { 0 };
-static u8 s_online_cpu_count { 0 };
+static Atomic<u8> s_online_cpu_count { 0 };
 static cpu::Info *s_cpu_infos { nullptr };
-static Spinlock s_spinlock {};
 
 static void cpu_init(limine_mp_info *info);
 
@@ -61,11 +61,11 @@ void initialize()
         info->goto_address = cpu_init;
     }
 
-    while (s_online_cpu_count != response->cpu_count) {
+    while (s_online_cpu_count.fetch_load() != response->cpu_count) {
         asm volatile("");
     }
 
-    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count);
+    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count.fetch_load());
 
     logger::info("SMP: Initialized\n");
 }
@@ -88,10 +88,7 @@ static void cpu_init(limine_mp_info *info)
 
     apic::enable_lapic();
 
-    {
-        SpinlockLocker _locker(s_spinlock);
-        ++s_online_cpu_count;
-    }
+    s_online_cpu_count.fetch_add(1);
 
     if (info->lapic_id == s_bsp_lapic_id) {
         return;
