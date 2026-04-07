@@ -21,7 +21,7 @@
 #include "scheduler/smp.hpp"
 #include "syscall/syscalls.hpp"
 
-static void kmain_thread(void *user_argument);
+static void kmain_thread();
 
 extern "C" void kmain()
 {
@@ -61,12 +61,12 @@ extern "C" void kmain()
 
     syscalls::initialize();
 
-    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread, nullptr);
+    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread);
 
     scheduler::yield();
 }
 
-void kmain_thread(void *)
+void kmain_thread()
 {
     logger::info("Leviathan successfully booted!\n");
 
@@ -144,7 +144,7 @@ void kmain_thread(void *)
     vmm::map(user_page_map, code_phys, 0x1000, vmm::Attribute::User | vmm::Attribute::Write);
 
     const ProcessId user_process = scheduler::create_process(user_page_map);
-    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
+    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)()>(0x1000));
 
     scheduler::yield();
 }

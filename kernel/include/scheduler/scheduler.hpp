@@ -17,7 +17,7 @@ void initialize();
 
 ProcessId create_process(vmm::PageMap *);
 
-ThreadId create_thread(ProcessId, u64 cs, void (*entry)(void *), void *user_argument);
+ThreadId create_thread(ProcessId, u64 cs, void (*entry)());
 ThreadId create_idle_thread();
 
 ProcessId get_kernel_process();

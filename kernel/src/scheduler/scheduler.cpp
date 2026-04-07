@@ -27,8 +27,8 @@ extern "C" void switch_process(const Registers *registers);
 static i32 s_current_process_id { 0 };
 static i32 s_current_thread_id { 0 };
 
-static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list {};
-static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list {};
+static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list { };
+static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list { };
 
 static ProcessId s_kernel_process_id { -1 };
 
@@ -71,9 +71,9 @@ ProcessId create_process(vmm::PageMap *page_map)
     return process.pid;
 }
 
-static void thread_wrapper(void (*entry)(void *), void *user_argument)
+static void thread_wrapper(void (*entry)())
 {
-    entry(user_argument);
+    entry();
 
     const cpu::Info &current_cpu = cpu::get_local_cpu_info();
     const ThreadId current_thread_id = current_cpu.current_thread;
@@ -88,7 +88,7 @@ static void thread_wrapper(void (*entry)(void *), void *user_argument)
     yield();
 }
 
-ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *), void *user_argument)
+ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
 {
     assert(pid != ProcessId { -1 });
     assert(entry);
@@ -113,13 +113,11 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
     };
 
     if (cs == 0x28) {
-        thread.registers.rsi = reinterpret_cast<u64>(user_argument);
         thread.registers.rdi = reinterpret_cast<u64>(entry),
         thread.registers.rip = reinterpret_cast<u64>(thread_wrapper);
         thread.registers.rsp += boot::get_hhdm_offset();
         thread.registers.ss = thread.registers.cs + 0x08;
     } else {
-        thread.registers.rdi = reinterpret_cast<u64>(user_argument),
         thread.registers.rip = reinterpret_cast<u64>(entry);
         thread.registers.ss = thread.registers.cs - 0x08;
     }
