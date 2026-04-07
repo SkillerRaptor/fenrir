@@ -20,6 +20,11 @@
 #include "scheduler/thread.hpp"
 #include "sync/spinlock.hpp"
 
+// TODO: Add reaper thread
+// It should find every thread in a dead state, free the stack and remove it from the global list
+// It should find every process, that has no thread anymore that is alive, free the lower half of the page map and
+// remove it from the global list
+
 namespace scheduler {
 
 extern "C" void switch_process(const Registers *registers);
