@@ -11,8 +11,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 #-------------------------------------------------------------------------------------------
 CPMAddPackage(
         NAME Limine
-        GIT_REPOSITORY https://codeberg.org/Limine/Limine.git
-        GIT_TAG v11.1.0-binary
+        GIT_REPOSITORY https://github.com/Limine-Bootloader/Limine.git
+        GIT_TAG v11.2.1-binary
         DOWNLOAD_ONLY YES)
 
 #-------------------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ CPMAddPackage(
 #-------------------------------------------------------------------------------------------
 CPMAddPackage(
         NAME Limine-Protocol
-        GIT_REPOSITORY https://codeberg.org/Limine/limine-protocol.git
+        GIT_REPOSITORY https://github.com/Limine-Bootloader/limine-protocol.git
         GIT_TAG trunk
         DOWNLOAD_ONLY YES)
 
