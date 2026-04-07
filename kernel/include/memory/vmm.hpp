@@ -33,6 +33,8 @@ void switch_to_page_map(const PageMap *);
 void map(const PageMap *, u64 paddr, u64 vaddr, Attribute attributes);
 void unmap(const PageMap *, u64 vaddr);
 
+u64 virtual_to_physical(const PageMap *, u64 vaddr);
+
 PageMap *get_kernel_page_map();
 
 } // namespace vmm

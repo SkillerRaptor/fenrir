@@ -132,16 +132,18 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy ${LIMINE_DIR}/BOOTX64.EFI ${CMAKE_CURRENT_BINARY_DIR}/iso_root/EFI/BOOT/BOOTX64.EFI
         COMMAND ${CMAKE_COMMAND} -E copy ${LIMINE_DIR}/BOOTIA32.EFI ${CMAKE_CURRENT_BINARY_DIR}/iso_root/EFI/BOOT/BOOTIA32.EFI
 
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:hello_world> ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/hello_world
+
         COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
 
-        DEPENDS kernel ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
+        DEPENDS kernel hello_world ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(
         iso
         ALL
-        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel)
+        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel hello_world)
 
 #-------------------------------------------------------------------------------------------
 # Run

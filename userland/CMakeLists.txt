@@ -4,9 +4,4 @@
 # SPDX-License-Identifier: MIT
 #-------------------------------------------------------------------------------------------
 
-timeout: 0
-
-/Leviathan
-    protocol: limine
-    path: boot():/boot/kernel
-    module_path: boot():/modules/hello_world
+add_subdirectory(hello_world)

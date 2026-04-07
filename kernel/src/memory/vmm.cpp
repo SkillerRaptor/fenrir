@@ -19,7 +19,7 @@ namespace vmm {
 // NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
 static PageMap *s_kernel_page_map { nullptr };
 static u64 s_address_mask { ((1ull << 36) - 1) << 12 };
-static Spinlock s_lock {};
+static Spinlock s_lock { };
 
 extern "C" unsigned char __kernel_start[];
 extern "C" unsigned char __kernel_end[];
@@ -222,6 +222,12 @@ void unmap(const PageMap *page_map, const u64 vaddr)
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
     *entry = 0;
+}
+
+u64 virtual_to_physical(const PageMap *page_map, const u64 vaddr)
+{
+    const u64 *entry = get_pte(page_map, vaddr);
+    return (*entry & s_address_mask) + (vaddr & 0xfff);
 }
 
 PageMap *get_kernel_page_map() { return s_kernel_page_map; }

@@ -51,8 +51,6 @@ void initialize()
 
 extern "C" void syscall_handler(const SyscallRegisters *registers)
 {
-    logger::debug("Syscall: %u\n", registers->rax);
-
     switch (registers->rax) {
     case 0x01:
         if (registers->rdi == 0x01) {
@@ -66,10 +64,13 @@ extern "C" void syscall_handler(const SyscallRegisters *registers)
                 string[i] = buffer_start[i];
             }
 
-            logger::info("Userland: %s\n", string);
+            logger::info("%s\n", string);
 
             delete[] string;
         }
+        break;
+    default:
+        logger::debug("Unhandled syscall %u\n", registers->rax);
         break;
     }
 }
