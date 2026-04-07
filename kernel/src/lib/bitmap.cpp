@@ -31,4 +31,3 @@ bool Bitmap::get(const usize index) const
 
     return m_data[byte] & (1 << bit);
 }
-

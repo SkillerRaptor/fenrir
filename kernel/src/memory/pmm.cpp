@@ -17,7 +17,7 @@ namespace pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static Bitmap s_bitmap { };
+static Bitmap s_bitmap {};
 
 void initialize()
 {

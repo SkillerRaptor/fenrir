@@ -25,4 +25,3 @@ private:
     u8 *m_data { nullptr };
     usize m_size { 0 };
 };
-

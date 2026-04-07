@@ -27,7 +27,7 @@ static u32 s_clock_period { 0 };
 
 void initialize()
 {
-    uacpi_table table { };
+    uacpi_table table {};
     const uacpi_status ret = uacpi_table_find_by_signature(ACPI_HPET_SIGNATURE, &table);
     if (uacpi_unlikely_error(ret)) {
         logger::err("uacpi_table_find_by_signature error: %s\n", uacpi_status_to_string(ret));

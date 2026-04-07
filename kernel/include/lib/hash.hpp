@@ -28,5 +28,5 @@ struct Hash<u64> {
 
 template <>
 struct Hash<u32> {
-    usize operator()(const u32 &key) const { return Hash<u64> { }(key); }
+    usize operator()(const u32 &key) const { return Hash<u64> {}(key); }
 };

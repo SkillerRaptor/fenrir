@@ -19,7 +19,7 @@ namespace vmm {
 // NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
 static PageMap *s_kernel_page_map { nullptr };
 static u64 s_address_mask { ((1ull << 36) - 1) << 12 };
-static Spinlock s_lock { };
+static Spinlock s_lock {};
 
 extern "C" unsigned char __kernel_start[];
 extern "C" unsigned char __kernel_end[];

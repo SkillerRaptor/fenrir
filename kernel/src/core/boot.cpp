@@ -17,11 +17,12 @@ __attribute__((used, section(".limine_requests"))) volatile limine_bootloader_in
 };
 
 __attribute__((
-    used, section(".limine_requests"))) volatile limine_executable_address_request s_executable_address_request = {
-    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
-    .revision = 0,
-    .response = nullptr,
-};
+    used, section(".limine_requests"))) volatile limine_executable_address_request s_executable_address_request
+    = {
+          .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
+          .revision = 0,
+          .response = nullptr,
+      };
 
 __attribute__((used, section(".limine_requests"))) volatile limine_firmware_type_request s_firmware_type_request = {
     .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID,

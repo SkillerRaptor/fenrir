@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-static Spinlock s_lock { };
+static Spinlock s_lock {};
 
 [[noreturn]] void __assertion_failed(const char *assertion, const char *file, const u32 line, const char *function)
 {

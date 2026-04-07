@@ -27,7 +27,7 @@ struct MemoryMapping {
     usize ref_count { 0 };
 };
 
-static Vector<MemoryMapping> s_mappings { };
+static Vector<MemoryMapping> s_mappings {};
 
 void initialize()
 {

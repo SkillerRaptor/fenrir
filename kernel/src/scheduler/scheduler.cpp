@@ -27,8 +27,8 @@ extern "C" void switch_process(const Registers *registers);
 static i32 s_current_process_id { 0 };
 static i32 s_current_thread_id { 0 };
 
-static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list { };
-static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list { };
+static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list {};
+static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list {};
 
 static ProcessId s_kernel_process_id { -1 };
 

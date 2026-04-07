@@ -40,4 +40,3 @@ public:
 private:
     Vector<T> m_data {};
 };
-
