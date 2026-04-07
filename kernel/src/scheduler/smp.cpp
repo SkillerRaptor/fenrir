@@ -23,7 +23,7 @@ namespace smp {
 static u32 s_bsp_lapic_id { 0 };
 static u8 s_online_cpu_count { 0 };
 static cpu::Info *s_cpu_infos { nullptr };
-static Spinlock s_spinlock { };
+static Spinlock s_spinlock {};
 
 static void cpu_init(limine_mp_info *info);
 
@@ -46,12 +46,10 @@ void initialize()
         s_cpu_infos[i].lapic_id = info->lapic_id;
         s_cpu_infos[i].current_thread = ThreadId { -1 };
         s_cpu_infos[i].idle_thread = ThreadId { -1 };
-        s_cpu_infos[i].run_queue = { };
-        s_cpu_infos[i].run_queue_lock = { };
-        s_cpu_infos[i].tss = { };
+        s_cpu_infos[i].tss = {};
         s_cpu_infos[i].tss.rsp_0 = stack;
         s_cpu_infos[i].gdt.table = gdt::create_table();
-        s_cpu_infos[i].gdt.descriptor = { };
+        s_cpu_infos[i].gdt.descriptor = {};
 
         info->extra_argument = reinterpret_cast<u64>(&s_cpu_infos[i]);
 

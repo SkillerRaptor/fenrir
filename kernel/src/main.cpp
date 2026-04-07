@@ -146,7 +146,5 @@ void kmain_thread(void *)
     const ProcessId user_process = scheduler::create_process(user_page_map);
     scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)(void *)>(0x1000), nullptr);
 
-    scheduler::destroy_process(user_process);
-
     scheduler::yield();
 }

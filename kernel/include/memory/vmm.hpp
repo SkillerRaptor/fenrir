@@ -12,6 +12,7 @@
 namespace vmm {
 
 enum class Attribute : u16 {
+    None = 0 << 0,
     Present = 1 << 0,
     Write = 1 << 1,
     User = 1 << 2,

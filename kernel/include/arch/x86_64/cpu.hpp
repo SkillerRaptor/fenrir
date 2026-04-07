@@ -25,8 +25,7 @@ struct Info {
 
     ThreadId current_thread { -1 };
     ThreadId idle_thread { -1 };
-    Queue<ThreadId> run_queue {};
-    Spinlock run_queue_lock {};
+    SpinlockProtected<Queue<ThreadId>> run_queue {};
 };
 
 inline void halt() { asm volatile("hlt"); }

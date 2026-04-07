@@ -27,11 +27,8 @@ extern "C" void switch_process(const Registers *registers);
 static i32 s_current_process_id { 0 };
 static i32 s_current_thread_id { 0 };
 
-static HashMap<ProcessId, Process> s_process_list { };
-static Spinlock s_process_list_lock { };
-
-static HashMap<ThreadId, Thread> s_thread_list { };
-static Spinlock s_thread_list_lock { };
+static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list { };
+static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list { };
 
 static ProcessId s_kernel_process_id { -1 };
 
@@ -69,8 +66,7 @@ ProcessId create_process(vmm::PageMap *page_map)
         .page_map = page_map,
     };
 
-    SpinlockLocker _locker(s_process_list_lock);
-    s_process_list.insert(pid, process);
+    s_process_list.with([&](HashMap<ProcessId, Process> &process_list) { process_list.insert(pid, process); });
 
     return process.pid;
 }
@@ -82,10 +78,12 @@ static void thread_wrapper(void (*entry)(void *), void *user_argument)
     const cpu::Info &current_cpu = cpu::get_local_cpu_info();
     const ThreadId current_thread_id = current_cpu.current_thread;
 
-    SpinlockLocker _thread_list_locker(s_thread_list_lock);
-    Thread *current_thread = s_thread_list.get(current_thread_id);
-    assert(current_thread);
-    current_thread->state = Thread::State::Dead;
+    s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
+        Thread *current_thread = thread_list.get(current_thread_id);
+        assert(current_thread);
+
+        current_thread->state = Thread::State::Dead;
+    });
 
     yield();
 }
@@ -95,10 +93,7 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
     assert(pid != ProcessId { -1 });
     assert(entry);
 
-    {
-        SpinlockLocker _locker(s_process_list_lock);
-        assert(s_process_list.contains(pid));
-    }
+    s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) { assert(process_list.contains(pid)); });
 
     const ThreadId tid = ThreadId { s_current_thread_id++ };
 
@@ -117,59 +112,51 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)(void *),
         .stack_size = memory::s_page_size,
     };
 
-    // NOTE: Map stack
-    SpinlockLocker _locker(s_process_list_lock);
-    Process *process = s_process_list.get(thread.pid);
-    assert(process);
-
     if (cs == 0x28) {
         thread.registers.rsi = reinterpret_cast<u64>(user_argument);
         thread.registers.rdi = reinterpret_cast<u64>(entry),
         thread.registers.rip = reinterpret_cast<u64>(thread_wrapper);
         thread.registers.rsp += boot::get_hhdm_offset();
         thread.registers.ss = thread.registers.cs + 0x08;
-        vmm::map(
-            process->page_map,
-            stack - memory::s_page_size,
-            thread.registers.rsp - memory::s_page_size,
-            vmm::Attribute::Write);
     } else {
         thread.registers.rdi = reinterpret_cast<u64>(user_argument),
         thread.registers.rip = reinterpret_cast<u64>(entry);
         thread.registers.ss = thread.registers.cs - 0x08;
+    }
+
+    // NOTE: Map stack
+    s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
+        const Process *process = process_list.get(thread.pid);
+        assert(process);
+
         vmm::map(
             process->page_map,
             stack - memory::s_page_size,
             thread.registers.rsp - memory::s_page_size,
-            vmm::Attribute::Write | vmm::Attribute::User);
-    }
+            vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
+    });
 
-    s_thread_list.insert(thread.tid, thread);
-
-    cpu::Info *infos = smp::get_cpu_infos();
+    s_thread_list.with([&](HashMap<ThreadId, Thread> &thread_list) { thread_list.insert(thread.tid, thread); });
 
     usize least_loaded_cpu = 0;
     usize least_load = 0xffffffffffffffff;
+    cpu::Info *infos = smp::get_cpu_infos();
     for (usize i = 0; i < boot::get_mp_response()->cpu_count; ++i) {
-        if (infos[i].run_queue.size() < least_load) {
-            least_load = infos[i].run_queue.size();
+        const usize load = infos[i].run_queue.with([&](Queue<ThreadId> &run_queue) { return run_queue.size(); });
+
+        if (load < least_load) {
+            least_load = load;
             least_loaded_cpu = i;
         }
     }
 
-    {
-        cpu::Info *info = &infos[least_loaded_cpu];
-        SpinlockLocker _run_queue_locker(info->run_queue_lock);
-        info->run_queue.push_back(thread.tid);
-    }
+    infos[least_loaded_cpu].run_queue.with([&](Queue<ThreadId> &run_queue) { run_queue.push_back(thread.tid); });
 
     return thread.tid;
 }
 
 ThreadId create_idle_thread()
 {
-    SpinlockLocker _locker(s_thread_list_lock);
-
     const ThreadId tid = ThreadId { s_current_thread_id++ };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
@@ -193,7 +180,7 @@ ThreadId create_idle_thread()
         .stack_size = memory::s_page_size,
     };
 
-    s_thread_list.insert(thread.tid, thread);
+    s_thread_list.with([&](HashMap<ThreadId, Thread> &thread_list) { thread_list.insert(thread.tid, thread); });
 
     return thread.tid;
 }
@@ -211,52 +198,55 @@ void schedule(const Registers &registers)
 
     // TODO: Check if thread is not a ghost and exists
     if (current_thread_id != ThreadId { -1 } && current_thread_id != current_cpu.idle_thread) {
-        SpinlockLocker _thread_list_locker(s_thread_list_lock);
+        const bool is_busy = s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
+            Thread *current_thread = thread_list.get(current_thread_id);
+            assert(current_thread);
 
-        Thread *current_thread = s_thread_list.get(current_thread_id);
-        assert(current_thread);
-        current_thread->registers = registers;
-        if (current_thread->state == Thread::State::Busy) {
+            current_thread->registers = registers;
+
+            if (current_thread->state != Thread::State::Busy) {
+                return false;
+            }
+
             current_thread->state = Thread::State::Idle;
+            return true;
+        });
 
-            SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
-            current_cpu.run_queue.push_back(current_thread->tid);
+        if (is_busy) {
+            current_cpu.run_queue.with([&](Queue<ThreadId> &run_queue) { run_queue.push_back(current_thread_id); });
         }
     }
 
-    ThreadId next_thread_id { -1 };
-
-    {
-        SpinlockLocker _run_queue_locker(current_cpu.run_queue_lock);
-        if (!current_cpu.run_queue.is_empty()) {
-            next_thread_id = current_cpu.run_queue.pop_front();
+    const ThreadId next_thread_id = current_cpu.run_queue.with([&](Queue<ThreadId> &run_queue) {
+        if (run_queue.is_empty()) {
+            return current_cpu.idle_thread;
         }
-    }
+
+        return run_queue.pop_front();
+    });
 
     // TODO: Add work stealing
-    if (next_thread_id == ThreadId { -1 }) {
-        next_thread_id = current_cpu.idle_thread;
-    }
 
     current_cpu.current_thread = next_thread_id;
 
-    Registers regs { };
-    {
-        SpinlockLocker _thread_list_locker(s_thread_list_lock);
-        Thread *next_thread = s_thread_list.get(next_thread_id);
+    const Registers regs = s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
+        Thread *next_thread = thread_list.get(next_thread_id);
         assert(next_thread);
+
         next_thread->state = Thread::State::Busy;
-        regs = next_thread->registers;
 
-        const Thread *current_thread = s_thread_list.get(current_thread_id);
+        const Thread *current_thread = thread_list.get(current_thread_id);
         if (current_thread && next_thread->pid != current_thread->pid) {
-            SpinlockLocker _process_list_locker(s_process_list_lock);
+            s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
+                const Process *next_process = process_list.get(next_thread->pid);
+                assert(next_process);
 
-            const Process *next_process = s_process_list.get(next_thread->pid);
-            assert(next_process);
-            vmm::switch_to_page_map(next_process->page_map);
+                vmm::switch_to_page_map(next_process->page_map);
+            });
         }
-    }
+
+        return next_thread->registers;
+    });
 
     apic::send_eoi();
 

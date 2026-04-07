@@ -36,3 +36,28 @@ public:
 private:
     Spinlock &m_lock;
 };
+
+template <typename T>
+class SpinlockProtected {
+public:
+    // TODO: Add constructor to pass arguments
+    SpinlockProtected() = default;
+    ~SpinlockProtected() = default;
+
+    SpinlockProtected(const SpinlockProtected &) = delete;
+    SpinlockProtected &operator=(const SpinlockProtected &) = delete;
+
+    SpinlockProtected(SpinlockProtected &&) noexcept = delete;
+    SpinlockProtected &operator=(SpinlockProtected &&) noexcept = delete;
+
+    template <typename Fn>
+    auto with(const Fn &callback)
+    {
+        SpinlockLocker _locker(m_lock);
+        return callback(m_value);
+    }
+
+private:
+    T m_value {};
+    Spinlock m_lock {};
+};
