@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "lib/hash.hpp"
 #include "lib/types.hpp"
 
 template <typename K, typename V>
