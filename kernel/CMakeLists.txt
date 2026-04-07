@@ -50,6 +50,8 @@ set(HEADERS
         include/lib/assert.hpp
         include/lib/bitflags.hpp
         include/lib/bitmap.hpp
+        include/lib/hash.hpp
+        include/lib/hash_map.hpp
         include/lib/identifier.hpp
         include/lib/math.hpp
         include/lib/queue.hpp

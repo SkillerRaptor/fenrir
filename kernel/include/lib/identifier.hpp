@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "lib/hash.hpp"
 #include "lib/types.hpp"
-
 
 template <typename, typename T = u32>
 class Identifier {
@@ -34,3 +34,7 @@ private:
     T m_value { 0 };
 };
 
+template <typename U, typename T>
+struct Hash<Identifier<U, T>> {
+    usize operator()(const Identifier<U, T> &key) const { return Hash<u64> { }(key.get()); }
+};

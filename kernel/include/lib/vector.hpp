@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "assert.hpp"
+#include "lib/assert.hpp"
 #include "lib/types.hpp"
 
 template <typename T>
@@ -75,4 +75,3 @@ private:
     usize m_size { 0 };
     usize m_capacity { 0 };
 };
-
