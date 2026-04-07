@@ -18,6 +18,7 @@ set(SOURCES
         src/core/logger.cpp
         src/core/stacktrace.cpp
         src/drivers/serial.cpp
+        src/elf/elf.cpp
         src/lib/assert.cpp
         src/lib/bitmap.cpp
         src/lib/string.cpp
@@ -47,6 +48,7 @@ set(HEADERS
         include/core/memory.hpp
         include/core/stacktrace.hpp
         include/drivers/serial.hpp
+        include/elf/elf.hpp
         include/lib/assert.hpp
         include/lib/atomic.hpp
         include/lib/bitflags.hpp

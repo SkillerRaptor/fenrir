@@ -14,6 +14,7 @@
 #include "core/memory.hpp"
 #include "core/stacktrace.hpp"
 #include "drivers/serial.hpp"
+#include "elf/elf.hpp"
 #include "lib/math.hpp"
 #include "lib/string.hpp"
 #include "memory/pmm.hpp"
@@ -68,40 +69,6 @@ extern "C" void kmain()
     scheduler::yield();
 }
 
-struct Header {
-    u8 magic[4];
-    u8 cls;
-    u8 data;
-    u8 version1;
-    u8 os_abi;
-    u8 abi_version;
-    u8 padding[7];
-    u16 type;
-    u16 machine;
-    u32 version2;
-    u64 entry;
-    u64 program_header_offset;
-    u64 section_header_offset;
-    u32 flags;
-    u16 header_size;
-    u16 physical_header_entry_size;
-    u16 physical_header_entries;
-    u16 section_header_size;
-    u16 section_header_entries;
-    u16 section_name_index;
-} __attribute__((packed));
-
-struct ProgramHeader {
-    u32 type;
-    u32 flags;
-    u64 offset;
-    u64 virtual_address;
-    u64 physical_address;
-    u64 file_size;
-    u64 memory_size;
-    u64 align;
-} __attribute__((packed));
-
 void kmain_thread()
 {
     logger::info("Leviathan successfully booted!\n");
@@ -109,48 +76,48 @@ void kmain_thread()
     const limine_module_response *response = boot::get_module_response();
     const limine_file *hello_world = response->modules[1];
 
-    u8 *data = static_cast<u8 *>(hello_world->address);
-    const Header *header = reinterpret_cast<Header *>(data);
+    const u8 *data = static_cast<const u8 *>(hello_world->address);
+    const elf::Elf elf(data);
 
     vmm::PageMap *user_page_map = vmm::create_page_map();
-    for (u16 i { 0 }; i < header->physical_header_entries; ++i) {
-        const ProgramHeader *program_header = reinterpret_cast<const ProgramHeader *>(
-            data + header->program_header_offset + i * header->physical_header_entry_size);
 
-        if (program_header->memory_size == 0) {
+    for (usize i { 0 }; i < elf.program_headers().size(); ++i) {
+        const elf::ProgramHeader &program_header = elf.program_headers()[i];
+
+        if (program_header.memory_size == 0) {
             continue;
         }
 
-        if (program_header->type != 0x00000001) {
+        if (program_header.type != elf::ProgramHeader::Type::Load) {
             continue;
         }
 
-        const u64 virtual_start = math::align_down(program_header->virtual_address, memory::s_page_size);
+        const u64 virtual_start = math::align_down(program_header.virtual_address, memory::s_page_size);
         const u64 virtual_end
-            = math::align_up(program_header->virtual_address + program_header->memory_size, memory::s_page_size);
+            = math::align_up(program_header.virtual_address + program_header.memory_size, memory::s_page_size);
         const usize page_count = (virtual_end - virtual_start) / memory::s_page_size;
 
-        for (usize j = 0; j < page_count; ++j) {
+        for (usize j { 0 }; j < page_count; ++j) {
             const u64 physical_address = reinterpret_cast<u64>(pmm::allocate(1, true));
             const u64 virtual_address = virtual_start + j * memory::s_page_size;
 
             vmm::Attribute attr = vmm::Attribute::User;
-            if (program_header->flags & 0x2) {
+            if ((program_header.flags & elf::ProgramHeader::Flags::Writeable) == elf::ProgramHeader::Flags::Writeable) {
                 attr = attr | vmm::Attribute::Write;
             }
 
             vmm::map(user_page_map, physical_address, virtual_address, attr);
         }
 
-        const u8 *src = data + program_header->offset;
+        const u8 *src = data + program_header.offset;
         u8 *dst = reinterpret_cast<u8 *>(
-            vmm::virtual_to_physical(user_page_map, program_header->virtual_address) + boot::get_hhdm_offset());
+            vmm::virtual_to_physical(user_page_map, program_header.virtual_address) + boot::get_hhdm_offset());
 
-        memcpy(dst, src, program_header->file_size);
+        memcpy(dst, src, program_header.file_size);
     }
 
     const ProcessId user_process = scheduler::create_process(user_page_map);
-    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)()>(header->entry));
+    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)()>(elf.header().entry));
 
     scheduler::yield();
 }
