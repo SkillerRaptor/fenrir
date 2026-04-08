@@ -12,6 +12,97 @@
 template <typename T>
 class Vector {
 public:
+    class Iterator {
+    public:
+        explicit Iterator(T *ptr)
+            : m_ptr(ptr)
+        {
+        }
+
+        Iterator &operator++()
+        {
+            ++m_ptr;
+            return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator iterator(*this);
+            ++(*this);
+            return iterator;
+        }
+
+        Iterator &operator--()
+        {
+            --m_ptr;
+            return *this;
+        }
+
+        Iterator operator--(int)
+        {
+            Iterator iterator(*this);
+            --(*this);
+            return iterator;
+        }
+
+        T &operator[](const usize index) const { return *(m_ptr + index); }
+
+        T *operator->() { return m_ptr; }
+        T &operator*() { return *m_ptr; }
+
+        bool operator==(const Iterator &other) const { return m_ptr == other.m_ptr; }
+        bool operator!=(const Iterator &other) const { return m_ptr != other.m_ptr; }
+
+    private:
+        T *m_ptr { nullptr };
+    };
+
+    class ConstIterator {
+    public:
+        explicit ConstIterator(const T *ptr)
+            : m_ptr(ptr)
+        {
+        }
+
+        ConstIterator &operator++()
+        {
+            ++m_ptr;
+            return *this;
+        }
+
+        ConstIterator operator++(int)
+        {
+            Iterator iterator(*this);
+            ++(*this);
+            return iterator;
+        }
+
+        ConstIterator &operator--()
+        {
+            --m_ptr;
+            return *this;
+        }
+
+        ConstIterator operator--(int)
+        {
+            ConstIterator iterator(*this);
+            --(*this);
+            return iterator;
+        }
+
+        const T &operator[](const usize index) const { return *(m_ptr + index); }
+
+        const T *operator->() { return m_ptr; }
+        const T &operator*() { return *m_ptr; }
+
+        bool operator==(const ConstIterator &other) const { return m_ptr == other.m_ptr; }
+        bool operator!=(const ConstIterator &other) const { return m_ptr != other.m_ptr; }
+
+    private:
+        const T *m_ptr { nullptr };
+    };
+
+public:
     Vector() = default;
     ~Vector() { delete[] m_data; }
 
@@ -48,6 +139,12 @@ public:
         assert(index < m_size);
         return m_data[index];
     }
+
+    Iterator begin() { return Iterator(m_data); }
+    Iterator end() { return Iterator(m_data + m_size); }
+
+    ConstIterator begin() const { return ConstIterator(m_data); }
+    ConstIterator end() const { return ConstIterator(m_data + m_size); }
 
 private:
     void reallocate(const usize new_capacity)

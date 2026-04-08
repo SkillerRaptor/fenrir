@@ -27,7 +27,7 @@ struct MemoryMapping {
     usize ref_count { 0 };
 };
 
-static Vector<MemoryMapping> s_mappings {};
+static Vector<MemoryMapping> s_mappings { };
 
 void initialize()
 {
@@ -95,8 +95,7 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
     const u64 address_diff = addr - aligned_address;
     const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
 
-    for (usize i = 0; i < acpi::s_mappings.size(); ++i) {
-        acpi::MemoryMapping &mapping = acpi::s_mappings[i];
+    for (acpi::MemoryMapping &mapping : acpi::s_mappings) {
         if (mapping.physical_base == aligned_address && mapping.page_count == aligned_length) {
             ++mapping.ref_count;
             return reinterpret_cast<void *>(aligned_address + boot::get_hhdm_offset() + address_diff);

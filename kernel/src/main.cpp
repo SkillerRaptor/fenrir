@@ -81,9 +81,7 @@ void kmain_thread()
 
     vmm::PageMap *user_page_map = vmm::create_page_map();
 
-    for (usize i { 0 }; i < elf.program_headers().size(); ++i) {
-        const elf::ProgramHeader &program_header = elf.program_headers()[i];
-
+    for (const elf::ProgramHeader &program_header : elf.program_headers()) {
         if (program_header.memory_size == 0) {
             continue;
         }
