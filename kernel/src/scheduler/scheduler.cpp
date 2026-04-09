@@ -13,6 +13,7 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
+#include "lib/atomic.hpp"
 #include "lib/hash_map.hpp"
 #include "lib/vector.hpp"
 #include "memory/pmm.hpp"
@@ -27,17 +28,35 @@
 
 namespace scheduler {
 
-extern "C" void switch_process(const Registers *registers);
+extern "C" [[noreturn]] void switch_process(const Registers *registers);
 
-static i32 s_current_process_id { 0 };
-static i32 s_current_thread_id { 0 };
+static Atomic<i32> s_current_process_id { 0 };
+static Atomic<i32> s_current_thread_id { 0 };
 
-static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list {};
-static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list {};
+static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list { };
+static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list { };
 
 static ProcessId s_kernel_process_id { -1 };
 
 static void schedule(const Registers &registers);
+
+static Process *get_process(const ProcessId pid)
+{
+    return s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
+        Process *process = process_list.get(pid);
+        assert(process);
+        return process;
+    });
+}
+
+static Thread *get_thread(const ThreadId tid)
+{
+    return s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
+        Thread *thread = thread_list.get(tid);
+        assert(thread);
+        return thread;
+    });
+}
 
 void initialize()
 {
@@ -61,7 +80,7 @@ ProcessId create_process(vmm::PageMap *page_map)
 {
     assert(page_map);
 
-    const ProcessId pid = ProcessId { s_current_process_id++ };
+    const ProcessId pid = ProcessId { s_current_process_id.fetch_add(1) };
 
     // TODO: Copy higher half of page map to always have the kernel mapped
 
@@ -80,15 +99,13 @@ static void thread_wrapper(void (*entry)())
 {
     entry();
 
+    // TODO: Find a better way to get the current thread id
+    // NOTE: Maybe pass the thread id as argument or make the thread blocking at the time
+    // NOTE: The current thread id could change mid way and give the wrong result, resulting in a race condition
+
     const cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    const ThreadId current_thread_id = current_cpu.current_thread;
-
-    s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
-        Thread *current_thread = thread_list.get(current_thread_id);
-        assert(current_thread);
-
-        current_thread->state = Thread::State::Dead;
-    });
+    Thread *current_thread = get_thread(current_cpu.current_tid);
+    current_thread->state = Thread::State::Dead;
 
     yield();
 }
@@ -100,7 +117,7 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
 
     s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) { assert(process_list.contains(pid)); });
 
-    const ThreadId tid = ThreadId { s_current_thread_id++ };
+    const ThreadId tid = ThreadId { s_current_thread_id.fetch_add(1) };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
@@ -145,7 +162,7 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
     usize least_load = 0xffffffffffffffff;
     cpu::Info *infos = smp::get_cpu_infos();
     for (usize i = 0; i < boot::get_mp_response()->cpu_count; ++i) {
-        const usize load = infos[i].run_queue.with([&](Queue<ThreadId> &run_queue) { return run_queue.size(); });
+        const usize load = infos[i].run_queue.size();
 
         if (load < least_load) {
             least_load = load;
@@ -153,14 +170,14 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
         }
     }
 
-    infos[least_loaded_cpu].run_queue.with([&](Queue<ThreadId> &run_queue) { run_queue.push_back(thread.tid); });
+    infos[least_loaded_cpu].run_queue.push_back(thread.tid);
 
     return thread.tid;
 }
 
 ThreadId create_idle_thread()
 {
-    const ThreadId tid = ThreadId { s_current_thread_id++ };
+    const ThreadId tid = ThreadId { s_current_thread_id.fetch_add(1) };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
@@ -196,64 +213,56 @@ ProcessId get_kernel_process() { return s_kernel_process_id; }
 
 void schedule(const Registers &registers)
 {
-    cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    const ThreadId current_thread_id = current_cpu.current_thread;
+    cpu::Info &cpu = cpu::get_local_cpu_info();
 
-    // TODO: Check if thread is not a ghost and exists
-    if (current_thread_id != ThreadId { -1 } && current_thread_id != current_cpu.idle_thread) {
-        const bool is_busy = s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
-            Thread *current_thread = thread_list.get(current_thread_id);
-            assert(current_thread);
+    if (cpu.run_queue.is_empty()) {
+        if (cpu.current_tid != ThreadId { -1 }) {
+            apic::send_eoi();
+            switch_process(&registers);
+        }
 
-            current_thread->registers = registers;
+        const Thread *idle_thread = get_thread(cpu.idle_tid);
 
-            if (current_thread->state != Thread::State::Busy) {
-                return false;
-            }
+        apic::send_eoi();
+        switch_process(&idle_thread->registers);
+    }
 
-            current_thread->state = Thread::State::Idle;
-            return true;
-        });
+    if (cpu.current_tid != ThreadId { -1 }) {
+        Thread *current_thread = get_thread(cpu.current_tid);
 
-        if (is_busy) {
-            current_cpu.run_queue.with([&](Queue<ThreadId> &run_queue) { run_queue.push_back(current_thread_id); });
+        // FIXME: Make this work with reaper thread
+        if (current_thread->state == Thread::State::Dead) {
+            return;
+        }
+
+        current_thread->registers = registers;
+        current_thread->state = Thread::State::Idle;
+
+        cpu.run_queue.push_back(current_thread->tid);
+    }
+
+    const ThreadId next_tid = cpu.run_queue.pop_front();
+
+    Thread *next_thread = get_thread(next_tid);
+
+    const vmm::PageMap *page_map { nullptr };
+    if (cpu.current_tid != ThreadId { -1 }) {
+        const Thread *current_thread = get_thread(cpu.current_tid);
+        if (current_thread->pid != next_thread->pid) {
+            const Process *next_process = get_process(next_thread->pid);
+            page_map = next_process->page_map;
         }
     }
 
-    const ThreadId next_thread_id = current_cpu.run_queue.with([&](Queue<ThreadId> &run_queue) {
-        if (run_queue.is_empty()) {
-            return current_cpu.idle_thread;
-        }
+    cpu.current_tid = next_tid;
+    next_thread->state = Thread::State::Busy;
 
-        return run_queue.pop_front();
-    });
-
-    // TODO: Add work stealing
-
-    current_cpu.current_thread = next_thread_id;
-
-    const Registers regs = s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
-        Thread *next_thread = thread_list.get(next_thread_id);
-        assert(next_thread);
-
-        next_thread->state = Thread::State::Busy;
-
-        const Thread *current_thread = thread_list.get(current_thread_id);
-        if (current_thread && next_thread->pid != current_thread->pid) {
-            s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
-                const Process *next_process = process_list.get(next_thread->pid);
-                assert(next_process);
-
-                vmm::switch_to_page_map(next_process->page_map);
-            });
-        }
-
-        return next_thread->registers;
-    });
+    if (page_map) {
+        vmm::switch_to_page_map(page_map);
+    }
 
     apic::send_eoi();
-
-    switch_process(&regs);
+    switch_process(&next_thread->registers);
 }
 
 } // namespace scheduler

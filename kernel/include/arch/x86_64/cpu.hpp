@@ -10,7 +10,6 @@
 #include "lib/queue.hpp"
 #include "scheduler/smp.hpp"
 #include "scheduler/thread.hpp"
-#include "sync/spinlock.hpp"
 
 namespace cpu {
 
@@ -20,12 +19,12 @@ struct Info {
     u64 kernel_rsp { 0 };
     u32 lapic_id { 0 };
 
-    gdt::CpuGdt gdt {};
-    gdt::Tss tss {};
+    gdt::CpuGdt gdt { };
+    gdt::Tss tss { };
 
-    ThreadId current_thread { -1 };
-    ThreadId idle_thread { -1 };
-    SpinlockProtected<Queue<ThreadId>> run_queue {};
+    ThreadId current_tid { -1 };
+    ThreadId idle_tid { -1 };
+    Queue<ThreadId> run_queue { };
 };
 
 inline void halt() { asm volatile("hlt"); }

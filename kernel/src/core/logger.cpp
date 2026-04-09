@@ -28,7 +28,7 @@
 namespace logger {
 
 static flanterm_context *s_context { nullptr };
-static Spinlock s_lock {};
+static Spinlock s_lock { };
 
 void initialize()
 {
@@ -68,12 +68,13 @@ static void write_character(const int c, void *)
 {
     const char character = static_cast<char>(c);
     if (character == '\n') {
-        constexpr char end_of_line = '\r';
-        flanterm_write(s_context, &end_of_line, 1);
-        serial::write(end_of_line);
+        write_character('\r', nullptr);
     }
 
+    s_lock.lock();
     flanterm_write(s_context, &character, 1);
+    s_lock.unlock();
+
     serial::write(character);
 }
 
@@ -86,8 +87,6 @@ static void write_string(const char *str)
 
 void log(const char *format, ...)
 {
-    SpinlockLocker _locker(s_lock);
-
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
@@ -98,8 +97,6 @@ void log(const char *format, ...)
 
 void info(const char *format, ...)
 {
-    SpinlockLocker _locker(s_lock);
-
     write_string("\033[38;2;0;128;0minfo\033[39m: ");
 
     va_list args;
@@ -112,8 +109,6 @@ void info(const char *format, ...)
 
 void debug(const char *format, ...)
 {
-    SpinlockLocker _locker(s_lock);
-
     write_string("\033[38;2;0;0;255mdebug\033[39m: ");
 
     va_list args;
@@ -126,8 +121,6 @@ void debug(const char *format, ...)
 
 void warn(const char *format, ...)
 {
-    SpinlockLocker _locker(s_lock);
-
     write_string("\033[38;2;255;215;0mwarn\033[39m: ");
 
     va_list args;
@@ -139,8 +132,6 @@ void warn(const char *format, ...)
 
 void err(const char *format, ...)
 {
-    SpinlockLocker _locker(s_lock);
-
     write_string("\033[38;2;255;0;0merror\033[39m: ");
 
     va_list args;

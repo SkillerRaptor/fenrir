@@ -24,7 +24,7 @@
 #include "scheduler/smp.hpp"
 #include "syscall/syscalls.hpp"
 
-static void kmain_thread();
+[[noreturn]] static void kmain_thread();
 
 extern "C" void kmain()
 {
@@ -69,7 +69,7 @@ extern "C" void kmain()
     scheduler::yield();
 }
 
-void kmain_thread()
+[[noreturn]] void kmain_thread()
 {
     logger::info("Leviathan successfully booted!\n");
 

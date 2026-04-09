@@ -31,6 +31,16 @@ public:
     Atomic(Atomic &&) noexcept = delete;
     Atomic &operator=(Atomic &&) noexcept = delete;
 
+    void store(T value, const MemoryOrder memory_order = MemoryOrder::SeqCst)
+    {
+        __atomic_store(&m_value, &value, static_cast<u8>(memory_order));
+    }
+
+    T load(const MemoryOrder memory_order = MemoryOrder::SeqCst) const
+    {
+        return __atomic_load_n(&m_value, static_cast<u8>(memory_order));
+    }
+
     T fetch_add(const T value, const MemoryOrder memory_order = MemoryOrder::SeqCst)
     {
         return __atomic_fetch_add(&m_value, value, static_cast<u8>(memory_order));
@@ -39,11 +49,6 @@ public:
     T fetch_sub(const T value, const MemoryOrder memory_order = MemoryOrder::SeqCst)
     {
         return __atomic_fetch_sub(&m_value, value, static_cast<u8>(memory_order));
-    }
-
-    T fetch_load(const MemoryOrder memory_order = MemoryOrder::SeqCst)
-    {
-        return __atomic_load_n(&m_value, static_cast<u8>(memory_order));
     }
 
 private:

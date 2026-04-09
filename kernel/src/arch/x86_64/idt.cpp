@@ -43,9 +43,9 @@ extern "C" void load_idt(const Descriptor *descriptor);
 
 extern "C" void *interrupt_handlers[];
 
-static Entry s_entries[256] {};
-static Descriptor s_descriptor {};
-static InterruptHandler s_interrupt_handlers[256] {};
+static Entry s_entries[256] { };
+static Descriptor s_descriptor { };
+static InterruptHandler s_interrupt_handlers[256] { };
 
 static Entry create_entry(void *handler, const Attribute attributes)
 {
@@ -136,7 +136,12 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     u64 faulting_address { 0 };
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
-    logger::err("Page Fault at address 0x%016llx with error code %b\n", faulting_address, registers.error);
+    const cpu::Info &current_cpu = cpu::get_local_cpu_info();
+    logger::err(
+        "Page Fault at address 0x%016llx on CPU #%u and Thread #%u\n",
+        faulting_address,
+        current_cpu.id,
+        current_cpu.current_tid.get());
 
     if (registers.error & 0b00001) {
         logger::err(" - Page-level protection violation\n");
@@ -163,6 +168,38 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     if (registers.error & 0b10000) {
         logger::err(" - Instruction fetch fault\n");
     }
+
+    logger::err("Register dump:\n");
+    logger::err(
+        "  rax=0x%016x rbx=0x%016x rcx=0x%016x rdx=0x%016x\n",
+        registers.rax,
+        registers.rbx,
+        registers.rcx,
+        registers.rdx);
+    logger::err(
+        "  rsi=0x%016x rdi=0x%016x rbp=0x%016x rsp=0x%016x\n",
+        registers.rsi,
+        registers.rdi,
+        registers.rbp,
+        registers.rsp);
+    logger::err(
+        "   r8=0x%016x  r9=0x%016x r10=0x%016x r11=0x%016x\n",
+        registers.r8,
+        registers.r9,
+        registers.r10,
+        registers.r11);
+    logger::err(
+        "  r12=0x%016x r13=0x%016x r14=0x%016x r15=0x%016x\n",
+        registers.r12,
+        registers.r13,
+        registers.r14,
+        registers.r15);
+    logger::err(
+        "  rip=0x%016x  cs=0x%016x  ss=0x%016x flg=0x%016x\n",
+        registers.rip,
+        registers.cs,
+        registers.ss,
+        registers.flags);
 
     stacktrace::print(50);
 

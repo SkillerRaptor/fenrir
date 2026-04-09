@@ -44,12 +44,12 @@ void initialize()
         s_cpu_infos[i].user_rsp = 0;
         s_cpu_infos[i].kernel_rsp = stack;
         s_cpu_infos[i].lapic_id = info->lapic_id;
-        s_cpu_infos[i].current_thread = ThreadId { -1 };
-        s_cpu_infos[i].idle_thread = ThreadId { -1 };
-        s_cpu_infos[i].tss = {};
+        s_cpu_infos[i].current_tid = ThreadId { -1 };
+        s_cpu_infos[i].idle_tid = ThreadId { -1 };
+        s_cpu_infos[i].tss = { };
         s_cpu_infos[i].tss.rsp_0 = stack;
         s_cpu_infos[i].gdt.table = gdt::create_table();
-        s_cpu_infos[i].gdt.descriptor = {};
+        s_cpu_infos[i].gdt.descriptor = { };
 
         info->extra_argument = reinterpret_cast<u64>(&s_cpu_infos[i]);
 
@@ -61,11 +61,11 @@ void initialize()
         info->goto_address = cpu_init;
     }
 
-    while (s_online_cpu_count.fetch_load() != response->cpu_count) {
+    while (s_online_cpu_count.load() != response->cpu_count) {
         asm volatile("");
     }
 
-    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count.fetch_load());
+    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count.load());
 
     logger::info("SMP: Initialized\n");
 }
@@ -84,7 +84,7 @@ static void cpu_init(limine_mp_info *info)
     cpu::set_gs_base(cpu_info);
     cpu::set_kernel_gs_base(cpu_info);
 
-    cpu_info->idle_thread = scheduler::create_idle_thread();
+    cpu_info->idle_tid = scheduler::create_idle_thread();
 
     apic::enable_lapic();
 
