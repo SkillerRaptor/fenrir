@@ -92,4 +92,13 @@ void enable_lapic()
 
 void send_eoi() { mmio::out<u32>(s_base_lapic_address + s_end_of_interrupt_register, 0); }
 
+void send_ipi(const u32 lapic_id, const u8 vector)
+{
+    if (lapic_id == 0xff) {
+        // NOTE: This is a hack to send to every other core except self
+        mmio::out<u32>(s_base_lapic_address + 0x310, 0);
+        mmio::out<u32>(s_base_lapic_address + 0x300, 1 << 19 | 1 << 18 | vector);
+    }
+}
+
 } // namespace apic

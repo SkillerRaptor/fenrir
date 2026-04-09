@@ -86,6 +86,8 @@ static Entry create_entry(void *handler, const Attribute attributes)
 #define _ENUMERATE_EXCEPTION(i, fn, exception)                                   \
     __attribute__((noreturn)) void fn(const Registers &registers)                \
     {                                                                            \
+        apic::send_ipi(0xff, 0xfe);                                              \
+                                                                                 \
         logger::err(exception " occured with error code %u\n", registers.error); \
         logger::err("Register dump:\n");                                         \
         logger::err(                                                             \
@@ -119,7 +121,7 @@ static Entry create_entry(void *handler, const Attribute attributes)
             registers.ss,                                                        \
             registers.flags);                                                    \
                                                                                  \
-        stacktrace::print(50);                                                   \
+        stacktrace::print(10);                                                   \
                                                                                  \
         while (true) {                                                           \
             cpu::disable_interrupts();                                           \
@@ -133,12 +135,14 @@ ENUMERATE_EXCEPTIONS
 
 __attribute__((noreturn)) void page_fault(const Registers &registers)
 {
+    apic::send_ipi(0xff, 0xfe);
+
     u64 faulting_address { 0 };
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
     const cpu::Info &current_cpu = cpu::get_local_cpu_info();
     logger::err(
-        "Page Fault at address 0x%016llx on CPU #%u and Thread #%u\n",
+        "Page Fault at address 0x%016llx on CPU #%u and Thread #%d\n",
         faulting_address,
         current_cpu.id,
         current_cpu.current_tid.get());
@@ -201,7 +205,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
         registers.ss,
         registers.flags);
 
-    stacktrace::print(50);
+    stacktrace::print(10);
 
     while (true) {
         cpu::disable_interrupts();
@@ -243,6 +247,11 @@ extern "C" void interrupt_raise(const Registers *registers)
 {
     if (s_interrupt_handlers[registers->isr]) {
         s_interrupt_handlers[registers->isr](*registers);
+    } else {
+        while (true) {
+            cpu::disable_interrupts();
+            cpu::halt();
+        }
     }
 
     apic::send_eoi();
