@@ -7,7 +7,6 @@
 #pragma once
 
 #include "arch/x86_64/gdt.hpp"
-#include "lib/queue.hpp"
 #include "scheduler/smp.hpp"
 #include "scheduler/thread.hpp"
 
@@ -22,9 +21,9 @@ struct Info {
     gdt::CpuGdt gdt { };
     gdt::Tss tss { };
 
-    ThreadId current_tid { -1 };
-    ThreadId idle_tid { -1 };
-    Queue<ThreadId> run_queue { };
+    Thread *idle_thread { nullptr };
+    Thread *current_thread { nullptr };
+    Thread *next_thread { nullptr };
 };
 
 inline void halt() { asm volatile("hlt"); }

@@ -14,12 +14,10 @@
 #include "core/logger.hpp"
 #include "core/memory.hpp"
 #include "lib/atomic.hpp"
-#include "lib/hash_map.hpp"
 #include "lib/vector.hpp"
 #include "memory/pmm.hpp"
 #include "scheduler/process.hpp"
 #include "scheduler/thread.hpp"
-#include "sync/spinlock.hpp"
 
 // TODO: Add reaper thread
 // It should find every thread in a dead state, free the stack and remove it from the global list
@@ -33,37 +31,16 @@ extern "C" [[noreturn]] void switch_process(const Registers *registers);
 static Atomic<i32> s_current_process_id { 0 };
 static Atomic<i32> s_current_thread_id { 0 };
 
-static SpinlockProtected<HashMap<ProcessId, Process>> s_process_list { };
-static SpinlockProtected<HashMap<ThreadId, Thread>> s_thread_list { };
-
-static ProcessId s_kernel_process_id { -1 };
+static Process *s_kernel_process { nullptr };
 
 static void schedule(const Registers &registers);
-
-static Process *get_process(const ProcessId pid)
-{
-    return s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
-        Process *process = process_list.get(pid);
-        assert(process);
-        return process;
-    });
-}
-
-static Thread *get_thread(const ThreadId tid)
-{
-    return s_thread_list.with([&](const HashMap<ThreadId, Thread> &thread_list) {
-        Thread *thread = thread_list.get(tid);
-        assert(thread);
-        return thread;
-    });
-}
 
 void initialize()
 {
     idt::set_handler(0x20, schedule);
 
-    s_kernel_process_id = create_process(vmm::get_kernel_page_map());
-    logger::debug("Scheduler: Created kernel process with id #%u\n", s_kernel_process_id);
+    s_kernel_process = create_process(vmm::get_kernel_page_map());
+    logger::debug("Scheduler: Created kernel process with id #%u\n", s_kernel_process->id.get());
 
     logger::info("Scheduler: Initialized\n");
 }
@@ -76,23 +53,19 @@ void initialize()
     }
 }
 
-ProcessId create_process(vmm::PageMap *page_map)
+Process *create_process(vmm::PageMap *page_map)
 {
     assert(page_map);
 
-    const ProcessId pid = ProcessId { s_current_process_id.fetch_add(1) };
+    const ProcessId id = ProcessId { s_current_process_id.fetch_add(1) };
 
     // TODO: Copy higher half of page map to always have the kernel mapped
 
-    const Process process {
-        .pid = pid,
+    return new Process {
+        .id = id,
         .state = Process::State::Idle,
         .page_map = page_map,
     };
-
-    s_process_list.with([&](HashMap<ProcessId, Process> &process_list) { process_list.insert(pid, process); });
-
-    return process.pid;
 }
 
 static void thread_wrapper(void (*entry)())
@@ -104,26 +77,21 @@ static void thread_wrapper(void (*entry)())
     // NOTE: The current thread id could change mid way and give the wrong result, resulting in a race condition
 
     const cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    Thread *current_thread = get_thread(current_cpu.current_tid);
-    current_thread->state = Thread::State::Dead;
+    current_cpu.next_thread[0].state = Thread::State::Dead;
 
     yield();
 }
 
-ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
+Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 {
-    assert(pid != ProcessId { -1 });
+    assert(process);
     assert(entry);
 
-    s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) { assert(process_list.contains(pid)); });
-
-    const ThreadId tid = ThreadId { s_current_thread_id.fetch_add(1) };
-
+    const ThreadId id = ThreadId { s_current_thread_id.fetch_add(1) };
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
-    Thread thread {
-        .pid = pid,
-        .tid = tid,
+    Thread *thread = new Thread {
+        .id = id,
         .state = Thread::State::Idle,
         .registers = {
             .cs = cs,
@@ -132,32 +100,29 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
+        .process = process,
+        .next_thread = nullptr,
     };
 
     if (cs == 0x28) {
-        thread.registers.rdi = reinterpret_cast<u64>(entry),
-        thread.registers.rip = reinterpret_cast<u64>(thread_wrapper);
-        thread.registers.rsp += boot::get_hhdm_offset();
-        thread.registers.ss = thread.registers.cs + 0x08;
+        thread->registers.rdi = reinterpret_cast<u64>(entry),
+        thread->registers.rip = reinterpret_cast<u64>(thread_wrapper);
+        thread->registers.rsp += boot::get_hhdm_offset();
+        thread->registers.ss = thread->registers.cs + 0x08;
     } else {
-        thread.registers.rip = reinterpret_cast<u64>(entry);
-        thread.registers.ss = thread.registers.cs - 0x08;
+        thread->registers.rip = reinterpret_cast<u64>(entry);
+        thread->registers.ss = thread->registers.cs - 0x08;
     }
 
-    // NOTE: Map stack
-    s_process_list.with([&](const HashMap<ProcessId, Process> &process_list) {
-        const Process *process = process_list.get(thread.pid);
-        assert(process);
+    vmm::map(
+        process->page_map,
+        stack - memory::s_page_size,
+        thread->registers.rsp - memory::s_page_size,
+        vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
 
-        vmm::map(
-            process->page_map,
-            stack - memory::s_page_size,
-            thread.registers.rsp - memory::s_page_size,
-            vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
-    });
+    // FIXME: Add load-balancing
 
-    s_thread_list.with([&](HashMap<ThreadId, Thread> &thread_list) { thread_list.insert(thread.tid, thread); });
-
+    /*
     usize least_loaded_cpu = 0;
     usize least_load = 0xffffffffffffffff;
     cpu::Info *infos = smp::get_cpu_infos();
@@ -169,23 +134,35 @@ ThreadId create_thread(const ProcessId pid, const u64 cs, void (*entry)())
             least_loaded_cpu = i;
         }
     }
+    */
 
-    infos[least_loaded_cpu].run_queue.push_back(thread.tid);
+    // NOTE: This will always push the thread to the first CPU
+    cpu::Info *infos = smp::get_cpu_infos();
 
-    return thread.tid;
+    if (!infos[0].next_thread) {
+        infos[0].next_thread = thread;
+    } else {
+        Thread *current_thread = infos[0].next_thread;
+        while (current_thread->next_thread != nullptr) {
+            current_thread = current_thread->next_thread;
+        }
+
+        current_thread->next_thread = thread;
+    }
+
+    return thread;
 }
 
-ThreadId create_idle_thread()
+Thread *create_idle_thread()
 {
-    const ThreadId tid = ThreadId { s_current_thread_id.fetch_add(1) };
+    const ThreadId id = ThreadId { s_current_thread_id.fetch_add(1) };
 
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
     constexpr u64 cs = 0x28;
 
-    const Thread thread {
-        .pid = s_kernel_process_id,
-        .tid = tid,
+    Thread *thread = new Thread {
+        .id = id,
         .state = Thread::State::Idle,
         .registers = {
             .rbp = 0,
@@ -198,70 +175,67 @@ ThreadId create_idle_thread()
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
+        .process = s_kernel_process,
+        .next_thread = nullptr,
     };
 
-    s_thread_list.with([&](HashMap<ThreadId, Thread> &thread_list) { thread_list.insert(thread.tid, thread); });
-
-    return thread.tid;
+    return thread;
 }
 
 void destroy_thread(ThreadId) { }
 
 // TODO: Add create thread from current process
 
-ProcessId get_kernel_process() { return s_kernel_process_id; }
+Process *get_kernel_process() { return s_kernel_process; }
+
+// TODO: Handle threads which are in a Dead state
+// TODO: If queue is empty, then replace with idle thread, because it does not get pushed back
 
 void schedule(const Registers &registers)
 {
+    apic::send_eoi();
+
     cpu::Info &cpu = cpu::get_local_cpu_info();
 
-    if (cpu.run_queue.is_empty()) {
-        if (cpu.current_tid != ThreadId { -1 }) {
-            apic::send_eoi();
-            switch_process(&registers);
-        }
-
-        const Thread *idle_thread = get_thread(cpu.idle_tid);
-
-        apic::send_eoi();
-        switch_process(&idle_thread->registers);
-    }
-
-    if (cpu.current_tid != ThreadId { -1 }) {
-        Thread *current_thread = get_thread(cpu.current_tid);
-
-        // FIXME: Make this work with reaper thread
-        if (current_thread->state == Thread::State::Dead) {
+    if (!cpu.next_thread) {
+        // NOTE: If there is a thread running and no thread queued, then continue running
+        if (cpu.current_thread) {
             return;
         }
 
-        current_thread->registers = registers;
-        current_thread->state = Thread::State::Idle;
-
-        cpu.run_queue.push_back(current_thread->tid);
+        // NOTE: If there is no thread running and no thread queued, then idle
+        switch_process(&cpu.idle_thread->registers);
     }
 
-    const ThreadId next_tid = cpu.run_queue.pop_front();
+    Thread *previous_thread = cpu.current_thread;
 
-    Thread *next_thread = get_thread(next_tid);
-
-    const vmm::PageMap *page_map { nullptr };
-    if (cpu.current_tid != ThreadId { -1 }) {
-        const Thread *current_thread = get_thread(cpu.current_tid);
-        if (current_thread->pid != next_thread->pid) {
-            const Process *next_process = get_process(next_thread->pid);
-            page_map = next_process->page_map;
+    // NOTE: Push thread back to the end
+    if (previous_thread) {
+        Thread *thread = cpu.next_thread;
+        while (thread->next_thread != nullptr) {
+            thread = thread->next_thread;
         }
+
+        thread->next_thread = previous_thread;
     }
 
-    cpu.current_tid = next_tid;
+    Thread *next_thread = cpu.next_thread;
+
+    cpu.current_thread = next_thread;
+    cpu.next_thread = next_thread->next_thread;
+    next_thread->next_thread = nullptr;
+
+    if (previous_thread) {
+        previous_thread->registers = registers;
+        previous_thread->state = Thread::State::Idle;
+    }
+
+    if (!previous_thread || previous_thread->process != next_thread->process) {
+        vmm::switch_to_page_map(next_thread->process->page_map);
+    }
+
     next_thread->state = Thread::State::Busy;
 
-    if (page_map) {
-        vmm::switch_to_page_map(page_map);
-    }
-
-    apic::send_eoi();
     switch_process(&next_thread->registers);
 }
 

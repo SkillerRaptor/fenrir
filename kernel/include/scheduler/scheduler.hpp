@@ -9,17 +9,20 @@
 #include "memory/vmm.hpp"
 #include "scheduler/types.hpp"
 
+struct Process;
+struct Thread;
+
 namespace scheduler {
 
 void initialize();
 
 [[noreturn]] void yield();
 
-ProcessId create_process(vmm::PageMap *);
+Process *create_process(vmm::PageMap *);
 
-ThreadId create_thread(ProcessId, u64 cs, void (*entry)());
-ThreadId create_idle_thread();
+Thread *create_thread(Process *, u64 cs, void (*entry)());
+Thread *create_idle_thread();
 
-ProcessId get_kernel_process();
+Process *get_kernel_process();
 
 } // namespace scheduler

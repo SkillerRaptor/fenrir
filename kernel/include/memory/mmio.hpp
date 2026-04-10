@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "lib/assert.hpp"
 #include "lib/types.hpp"
 
 namespace mmio {

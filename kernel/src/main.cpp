@@ -80,7 +80,6 @@ extern "C" void kmain()
     const elf::Elf elf(data);
 
     vmm::PageMap *user_page_map = vmm::create_page_map();
-
     for (const elf::ProgramHeader &program_header : elf.program_headers()) {
         if (program_header.memory_size == 0) {
             continue;
@@ -114,7 +113,9 @@ extern "C" void kmain()
         memcpy(dst, src, program_header.file_size);
     }
 
-    const ProcessId user_process = scheduler::create_process(user_page_map);
+    logger::info("Creating user process...\n");
+
+    Process *user_process = scheduler::create_process(user_page_map);
     scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)()>(elf.header().entry));
 
     scheduler::yield();

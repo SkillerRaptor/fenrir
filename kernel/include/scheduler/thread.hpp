@@ -10,6 +10,8 @@
 #include "lib/types.hpp"
 #include "scheduler/types.hpp"
 
+struct Process;
+
 struct Thread {
     enum class State {
         Idle = 0,
@@ -17,11 +19,13 @@ struct Thread {
         Dead,
     };
 
-    ProcessId pid { -1 };
-    ThreadId tid { -1 };
+    ThreadId id { -1 };
     State state { State::Idle };
 
-    Registers registers {};
+    Registers registers { };
     u8 *stack { nullptr };
     usize stack_size { 0 };
+
+    Process *process { nullptr };
+    Thread *next_thread { nullptr };
 };

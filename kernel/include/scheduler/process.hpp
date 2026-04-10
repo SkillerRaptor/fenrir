@@ -16,7 +16,7 @@ struct Process {
         Dead,
     };
 
-    ProcessId pid { -1 };
+    ProcessId id { -1 };
     State state { State::Idle };
 
     vmm::PageMap *page_map { nullptr };

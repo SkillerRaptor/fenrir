@@ -17,7 +17,6 @@
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "scheduler/scheduler.hpp"
-#include "sync/spinlock.hpp"
 
 namespace smp {
 
@@ -44,12 +43,14 @@ void initialize()
         s_cpu_infos[i].user_rsp = 0;
         s_cpu_infos[i].kernel_rsp = stack;
         s_cpu_infos[i].lapic_id = info->lapic_id;
-        s_cpu_infos[i].current_tid = ThreadId { -1 };
-        s_cpu_infos[i].idle_tid = ThreadId { -1 };
         s_cpu_infos[i].tss = { };
         s_cpu_infos[i].tss.rsp_0 = stack;
         s_cpu_infos[i].gdt.table = gdt::create_table();
         s_cpu_infos[i].gdt.descriptor = { };
+
+        s_cpu_infos[i].idle_thread = scheduler::create_idle_thread();
+        s_cpu_infos[i].current_thread = nullptr;
+        s_cpu_infos[i].next_thread = nullptr;
 
         info->extra_argument = reinterpret_cast<u64>(&s_cpu_infos[i]);
 
@@ -81,10 +82,9 @@ static void cpu_init(limine_mp_info *info)
 
     cpu::Info *cpu_info = reinterpret_cast<cpu::Info *>(info->extra_argument);
     gdt::load(cpu_info->gdt, cpu_info->tss);
+
     cpu::set_gs_base(cpu_info);
     cpu::set_kernel_gs_base(cpu_info);
-
-    cpu_info->idle_tid = scheduler::create_idle_thread();
 
     apic::enable_lapic();
 

@@ -10,6 +10,7 @@
 #include "arch/x86_64/cpu.hpp"
 #include "core/logger.hpp"
 #include "core/stacktrace.hpp"
+#include "lib/assert.hpp"
 #include "lib/bitflags.hpp"
 
 namespace idt {
@@ -145,7 +146,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
         "Page Fault at address 0x%016llx on CPU #%u and Thread #%d\n",
         faulting_address,
         current_cpu.id,
-        current_cpu.current_tid.get());
+        current_cpu.current_thread->id.get());
 
     if (registers.error & 0b00001) {
         logger::err(" - Page-level protection violation\n");
