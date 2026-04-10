@@ -68,18 +68,19 @@ Process *create_process(vmm::PageMap *page_map)
     };
 }
 
+static void thread_exit()
+{
+    cpu::Info &current_cpu = cpu::get_local_cpu_info();
+    current_cpu.current_thread->state = Thread::State::Dead;
+    current_cpu.thread_count -= 1;
+
+    yield();
+}
+
 static void thread_wrapper(void (*entry)())
 {
     entry();
-
-    // TODO: Find a better way to get the current thread id
-    // NOTE: Maybe pass the thread id as argument or make the thread blocking at the time
-    // NOTE: The current thread id could change mid way and give the wrong result, resulting in a race condition
-
-    const cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    current_cpu.next_thread[0].state = Thread::State::Dead;
-
-    yield();
+    thread_exit();
 }
 
 Thread *create_thread(Process *process, const u64 cs, void (*entry)())
@@ -122,33 +123,30 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 
     // FIXME: Add load-balancing
 
-    /*
     usize least_loaded_cpu = 0;
     usize least_load = 0xffffffffffffffff;
     cpu::Info *infos = smp::get_cpu_infos();
     for (usize i = 0; i < boot::get_mp_response()->cpu_count; ++i) {
-        const usize load = infos[i].run_queue.size();
+        const usize load = infos[i].thread_count;
 
         if (load < least_load) {
             least_load = load;
             least_loaded_cpu = i;
         }
     }
-    */
 
-    // NOTE: This will always push the thread to the first CPU
-    cpu::Info *infos = smp::get_cpu_infos();
-
-    if (!infos[0].next_thread) {
-        infos[0].next_thread = thread;
+    if (!infos[least_loaded_cpu].next_thread) {
+        infos[least_loaded_cpu].next_thread = thread;
     } else {
-        Thread *current_thread = infos[0].next_thread;
+        Thread *current_thread = infos[least_loaded_cpu].next_thread;
         while (current_thread->next_thread != nullptr) {
             current_thread = current_thread->next_thread;
         }
 
         current_thread->next_thread = thread;
     }
+
+    infos[least_loaded_cpu].thread_count += 1;
 
     return thread;
 }

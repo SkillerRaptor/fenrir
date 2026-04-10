@@ -24,6 +24,7 @@ struct Info {
     Thread *idle_thread { nullptr };
     Thread *current_thread { nullptr };
     Thread *next_thread { nullptr };
+    usize thread_count { 0 };
 };
 
 inline void halt() { asm volatile("hlt"); }
