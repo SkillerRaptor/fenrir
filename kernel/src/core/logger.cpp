@@ -20,6 +20,7 @@
 #include <nanoprintf.h>
 #include <stdarg.h>
 
+#include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "drivers/serial.hpp"
 #include "lib/string.hpp"
@@ -71,10 +72,7 @@ static void write_character(const int c, void *)
         write_character('\r', nullptr);
     }
 
-    s_lock.lock();
     flanterm_write(s_context, &character, 1);
-    s_lock.unlock();
-
     serial::write(character);
 }
 
@@ -87,16 +85,25 @@ static void write_string(const char *str)
 
 void log(const char *format, ...)
 {
+    Cpu::current().enter_critical_section();
+    s_lock.lock();
+
     va_list args;
     va_start(args, format);
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
 
     write_string("\033[0m");
+
+    s_lock.unlock();
+    Cpu::current().leave_critical_section();
 }
 
 void info(const char *format, ...)
 {
+    Cpu::current().enter_critical_section();
+    s_lock.lock();
+
     write_string("\033[38;2;0;128;0minfo\033[39m: ");
 
     va_list args;
@@ -105,10 +112,16 @@ void info(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_lock.unlock();
+    Cpu::current().leave_critical_section();
 }
 
 void debug(const char *format, ...)
 {
+    Cpu::current().enter_critical_section();
+    s_lock.lock();
+
     write_string("\033[38;2;0;0;255mdebug\033[39m: ");
 
     va_list args;
@@ -117,10 +130,16 @@ void debug(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_lock.unlock();
+    Cpu::current().leave_critical_section();
 }
 
 void warn(const char *format, ...)
 {
+    Cpu::current().enter_critical_section();
+    s_lock.lock();
+
     write_string("\033[38;2;255;215;0mwarn\033[39m: ");
 
     va_list args;
@@ -128,10 +147,16 @@ void warn(const char *format, ...)
     npf_vpprintf(write_character, nullptr, format, args);
     va_end(args);
     write_string("\033[0m");
+
+    s_lock.unlock();
+    Cpu::current().leave_critical_section();
 }
 
 void err(const char *format, ...)
 {
+    Cpu::current().enter_critical_section();
+    s_lock.lock();
+
     write_string("\033[38;2;255;0;0merror\033[39m: ");
 
     va_list args;
@@ -140,6 +165,9 @@ void err(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_lock.unlock();
+    Cpu::current().leave_critical_section();
 }
 
 } // namespace logger

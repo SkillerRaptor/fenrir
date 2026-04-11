@@ -28,14 +28,17 @@
 
 extern "C" void kmain()
 {
-    cpu::disable_interrupts();
+    Cpu::disable_interrupts();
 
     if (!boot::is_base_revision_supported()) {
-        cpu::halt();
+        Cpu::halt();
     }
 
     serial::initialize();
     logger::initialize();
+
+    // FIXME: This is a hack
+    Cpu::get_from_id(0).initialize();
 
     logger::log("\n");
     logger::log("          _______ _    _ _____ _______ _______ _     _ _______ __   _\n");

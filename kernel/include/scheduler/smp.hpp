@@ -6,16 +6,8 @@
 
 #pragma once
 
-namespace cpu {
-
-struct Info;
-
-} // namespace cpu
-
 namespace smp {
 
 void initialize();
-
-cpu::Info *get_cpu_infos();
 
 } // namespace smp

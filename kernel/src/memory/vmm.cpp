@@ -6,6 +6,7 @@
 
 #include "memory/vmm.hpp"
 
+#include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
@@ -97,7 +98,9 @@ void initialize()
 
 PageMap *create_page_map()
 {
-    SpinlockLocker _locker(s_lock);
+    Cpu::current().enter_critical_section();
+
+    s_lock.lock();
 
     PageMap *page_map = new PageMap();
     page_map->top_level = reinterpret_cast<u64>(pmm::allocate(1, true));
@@ -113,6 +116,10 @@ PageMap *create_page_map()
             new_pml4[i] = kernel_pml4[i];
         }
     }
+
+    s_lock.unlock();
+
+    Cpu::current().leave_critical_section();
 
     return page_map;
 }
@@ -205,8 +212,6 @@ static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
 
 void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attribute attributes)
 {
-    SpinlockLocker _locker(s_lock);
-
     const usize aligned_physical_address = math::align_down(paddr, memory::s_page_size);
     const usize aligned_virtual_address = math::align_down(vaddr, memory::s_page_size);
 

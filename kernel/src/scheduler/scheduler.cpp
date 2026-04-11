@@ -48,8 +48,8 @@ void initialize()
 [[noreturn]] void yield()
 {
     while (true) {
-        cpu::enable_interrupts();
-        cpu::halt();
+        Cpu::enable_interrupts();
+        Cpu::halt();
     }
 }
 
@@ -70,9 +70,9 @@ Process *create_process(vmm::PageMap *page_map)
 
 static void thread_exit()
 {
-    cpu::Info &current_cpu = cpu::get_local_cpu_info();
-    current_cpu.current_thread->state = Thread::State::Dead;
-    current_cpu.thread_count -= 1;
+    Cpu &cpu = Cpu::current();
+    cpu.current_thread()->state = Thread::State::Dead;
+    cpu.set_thread_count(cpu.thread_count() - 1);
 
     yield();
 }
@@ -123,22 +123,21 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 
     // FIXME: Add load-balancing
 
-    usize least_loaded_cpu = 0;
     usize least_load = 0xffffffffffffffff;
-    cpu::Info *infos = smp::get_cpu_infos();
-    for (usize i = 0; i < boot::get_mp_response()->cpu_count; ++i) {
-        const usize load = infos[i].thread_count;
+    Cpu *least_loaded_cpu = nullptr;
+    Cpu::for_each([&](Cpu &cpu) {
+        const usize load = cpu.thread_count();
 
         if (load < least_load) {
             least_load = load;
-            least_loaded_cpu = i;
+            least_loaded_cpu = &cpu;
         }
-    }
+    });
 
-    if (!infos[least_loaded_cpu].next_thread) {
-        infos[least_loaded_cpu].next_thread = thread;
+    if (!least_loaded_cpu->next_thread()) {
+        least_loaded_cpu->set_next_thread(thread);
     } else {
-        Thread *current_thread = infos[least_loaded_cpu].next_thread;
+        Thread *current_thread = least_loaded_cpu->next_thread();
         while (current_thread->next_thread != nullptr) {
             current_thread = current_thread->next_thread;
         }
@@ -146,7 +145,7 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         current_thread->next_thread = thread;
     }
 
-    infos[least_loaded_cpu].thread_count += 1;
+    least_loaded_cpu->set_thread_count(least_loaded_cpu->thread_count() + 1);
 
     return thread;
 }
@@ -193,23 +192,23 @@ void schedule(const Registers &registers)
 {
     apic::send_eoi();
 
-    cpu::Info &cpu = cpu::get_local_cpu_info();
+    Cpu &cpu = Cpu::current();
 
-    if (!cpu.next_thread) {
+    if (!cpu.next_thread()) {
         // NOTE: If there is a thread running and no thread queued, then continue running
-        if (cpu.current_thread) {
+        if (cpu.current_thread()) {
             return;
         }
 
         // NOTE: If there is no thread running and no thread queued, then idle
-        switch_process(&cpu.idle_thread->registers);
+        switch_process(&cpu.idle_thread()->registers);
     }
 
-    Thread *previous_thread = cpu.current_thread;
+    Thread *previous_thread = cpu.current_thread();
 
     // NOTE: Push thread back to the end
     if (previous_thread) {
-        Thread *thread = cpu.next_thread;
+        Thread *thread = cpu.next_thread();
         while (thread->next_thread != nullptr) {
             thread = thread->next_thread;
         }
@@ -217,10 +216,11 @@ void schedule(const Registers &registers)
         thread->next_thread = previous_thread;
     }
 
-    Thread *next_thread = cpu.next_thread;
+    Thread *next_thread = cpu.next_thread();
 
-    cpu.current_thread = next_thread;
-    cpu.next_thread = next_thread->next_thread;
+    cpu.set_current_thread(next_thread);
+    cpu.set_next_thread(next_thread->next_thread);
+
     next_thread->next_thread = nullptr;
 
     if (previous_thread) {

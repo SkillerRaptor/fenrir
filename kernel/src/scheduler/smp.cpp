@@ -13,7 +13,6 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "lib/atomic.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "scheduler/scheduler.hpp"
@@ -21,8 +20,6 @@
 namespace smp {
 
 static u32 s_bsp_lapic_id { 0 };
-static Atomic<u8> s_online_cpu_count { 0 };
-static cpu::Info *s_cpu_infos { nullptr };
 
 static void cpu_init(limine_mp_info *info);
 
@@ -30,7 +27,6 @@ void initialize()
 {
     const limine_mp_response *response = boot::get_mp_response();
     s_bsp_lapic_id = response->bsp_lapic_id;
-    s_cpu_infos = new cpu::Info[response->cpu_count];
 
     logger::debug("SMP: Found %u available CPUs\n", response->cpu_count);
 
@@ -38,21 +34,9 @@ void initialize()
         limine_mp_info *info = response->cpus[i];
 
         const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size + boot::get_hhdm_offset();
+        Cpu::early_initialize(i, info->lapic_id, stack);
 
-        s_cpu_infos[i].id = i;
-        s_cpu_infos[i].user_rsp = 0;
-        s_cpu_infos[i].kernel_rsp = stack;
-        s_cpu_infos[i].lapic_id = info->lapic_id;
-        s_cpu_infos[i].tss = { };
-        s_cpu_infos[i].tss.rsp_0 = stack;
-        s_cpu_infos[i].gdt.table = gdt::create_table();
-        s_cpu_infos[i].gdt.descriptor = { };
-
-        s_cpu_infos[i].idle_thread = scheduler::create_idle_thread();
-        s_cpu_infos[i].current_thread = nullptr;
-        s_cpu_infos[i].next_thread = nullptr;
-
-        info->extra_argument = reinterpret_cast<u64>(&s_cpu_infos[i]);
+        info->extra_argument = i;
 
         if (info->lapic_id == s_bsp_lapic_id) {
             cpu_init(info);
@@ -62,33 +46,27 @@ void initialize()
         info->goto_address = cpu_init;
     }
 
-    while (s_online_cpu_count.load() != response->cpu_count) {
+    while (Cpu::online_count() != response->cpu_count) {
         asm volatile("");
     }
 
-    logger::debug("SMP: Successfully started all %u CPUs\n", s_online_cpu_count.load());
+    logger::debug("SMP: Successfully started all %u CPUs\n", Cpu::online_count());
 
     logger::info("SMP: Initialized\n");
 }
 
-cpu::Info *get_cpu_infos() { return s_cpu_infos; }
-
 static void cpu_init(limine_mp_info *info)
 {
-    cpu::disable_interrupts();
+    Cpu::disable_interrupts();
 
     idt::load();
     vmm::switch_to_page_map(vmm::get_kernel_page_map());
 
-    cpu::Info *cpu_info = reinterpret_cast<cpu::Info *>(info->extra_argument);
-    gdt::load(cpu_info->gdt, cpu_info->tss);
-
-    cpu::set_gs_base(cpu_info);
-    cpu::set_kernel_gs_base(cpu_info);
+    Cpu &cpu = Cpu::get_from_id(static_cast<u32>(info->extra_argument));
+    gdt::load(cpu.gdt(), cpu.tss());
+    cpu.initialize();
 
     apic::enable_lapic();
-
-    s_online_cpu_count.fetch_add(1);
 
     if (info->lapic_id == s_bsp_lapic_id) {
         return;

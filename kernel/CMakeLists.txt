@@ -9,6 +9,7 @@ set(SOURCES
         src/acpi/acpi.cpp
         src/acpi/apic.cpp
         src/acpi/hpet.cpp
+        src/arch/x86_64/cpu.cpp
         src/arch/x86_64/gdt.asm
         src/arch/x86_64/gdt.cpp
         src/arch/x86_64/idt.asm

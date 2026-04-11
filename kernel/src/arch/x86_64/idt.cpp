@@ -124,10 +124,7 @@ static Entry create_entry(void *handler, const Attribute attributes)
                                                                                  \
         stacktrace::print(10);                                                   \
                                                                                  \
-        while (true) {                                                           \
-            cpu::disable_interrupts();                                           \
-            cpu::halt();                                                         \
-        }                                                                        \
+        Cpu::hcf();                                                              \
     }
 
 ENUMERATE_EXCEPTIONS
@@ -141,12 +138,12 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
     u64 faulting_address { 0 };
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
-    const cpu::Info &current_cpu = cpu::get_local_cpu_info();
+    const Cpu &cpu = Cpu::current();
     logger::err(
         "Page Fault at address 0x%016llx on CPU #%u and Thread #%d\n",
         faulting_address,
-        current_cpu.id,
-        current_cpu.current_thread->id.get());
+        cpu.id(),
+        cpu.current_thread()->id.get());
 
     if (registers.error & 0b00001) {
         logger::err(" - Page-level protection violation\n");
@@ -208,10 +205,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 
     stacktrace::print(10);
 
-    while (true) {
-        cpu::disable_interrupts();
-        cpu::halt();
-    }
+    Cpu::hcf();
 }
 
 void initialize()
@@ -249,10 +243,7 @@ extern "C" void interrupt_raise(const Registers *registers)
     if (s_interrupt_handlers[registers->isr]) {
         s_interrupt_handlers[registers->isr](*registers);
     } else {
-        while (true) {
-            cpu::disable_interrupts();
-            cpu::halt();
-        }
+        Cpu::hcf();
     }
 
     apic::send_eoi();

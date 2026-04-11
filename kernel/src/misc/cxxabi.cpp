@@ -21,7 +21,7 @@ struct AtexitFunctionEntry {
 static constexpr usize s_atexit_max_functions { 128 };
 
 static usize s_atexit_function_count { 0 };
-static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] {};
+static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
 
 extern "C" void *__dso_handle { nullptr };
 
@@ -43,7 +43,7 @@ extern "C" void __cxa_pure_virtual()
 {
     // TODO: Panic here
 
-    cpu::halt();
+    Cpu::hcf();
 }
 
 using ConstructorFunction = void (*)();

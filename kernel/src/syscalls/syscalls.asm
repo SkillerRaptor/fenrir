@@ -48,8 +48,8 @@ extern syscall_handler
     pop rax
 %endmacro
 
-%define cpu_info_user_rsp 0x08
-%define cpu_info_kernel_rsp 0x10
+%define cpu_info_kernel_rsp 0x08
+%define cpu_info_user_rsp 0x10
 
 syscall_entry:
     swapgs
