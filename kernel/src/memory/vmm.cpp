@@ -98,7 +98,7 @@ void initialize()
 
 PageMap *create_page_map()
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
 
     s_lock.lock();
 
@@ -119,7 +119,7 @@ PageMap *create_page_map()
 
     s_lock.unlock();
 
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 
     return page_map;
 }

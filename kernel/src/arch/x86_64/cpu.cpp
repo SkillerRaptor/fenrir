@@ -11,66 +11,74 @@
 #include "lib/atomic.hpp"
 #include "scheduler/scheduler.hpp"
 
+namespace cpu {
+
 // FIXME: Add config header to change this value
-static constexpr usize s_max_cpus = 16;
+static constexpr usize s_max_cores = 16;
 
-static Cpu s_cpus[s_max_cpus] { };
-static Atomic<u32> s_online_cpus { 0 };
+static Core s_cores[s_max_cores] { };
+static Atomic<u32> s_online_cores { 0 };
 
-void Cpu::early_initialize(const u32 id, const u32 lapic_id, const u64 kernel_stack)
+void early_initialize(const u32 id, const u32 lapic_id, const u64 kernel_stack)
 {
-    Cpu &cpu = s_cpus[id];
-    assert(!cpu.m_is_initialized);
+    Core &core = s_cores[id];
 
-    cpu.m_id = id;
-    cpu.m_lapic_id = lapic_id;
-    cpu.m_kernel_rsp = kernel_stack;
-    cpu.m_user_rsp = 0;
+    core.id = id;
+    core.lapic_id = lapic_id;
+    core.kernel_rsp = kernel_stack;
+    core.user_rsp = 0;
 
-    cpu.m_tss.rsp_0 = kernel_stack;
-    cpu.m_gdt.table = gdt::create_table();
-    cpu.m_gdt.descriptor = { };
+    core.tss.rsp_0 = kernel_stack;
+    core.gdt.table = gdt::create_table();
+    core.gdt.descriptor = { };
 
-    cpu.m_idle_thread = scheduler::create_idle_thread();
-    cpu.m_current_thread = nullptr;
-    cpu.m_next_thread = nullptr;
-
-    cpu.m_is_initialized = true;
+    core.idle_thread = scheduler::create_idle_thread();
+    core.current_thread = nullptr;
+    core.next_thread = nullptr;
 }
 
-void Cpu::initialize()
+void initialize(const u32 id)
 {
-    cpu::set_gs_base(this);
-    cpu::set_kernel_gs_base(this);
+    set_gs_base(&s_cores[id]);
+    set_kernel_gs_base(&s_cores[id]);
 
-    s_online_cpus.fetch_add(1);
+    s_online_cores.fetch_add(1);
 }
 
-Cpu &Cpu::current()
+Core &current()
 {
     u32 cpu_id = 0;
     asm volatile("mov %%gs:0x00, %0" : "=r"(cpu_id));
-    return s_cpus[cpu_id];
+    return s_cores[cpu_id];
 }
 
-Cpu &Cpu::get_from_id(const u32 id) { return s_cpus[id]; }
+Core &by_id(const u32 id) { return s_cores[id]; }
 
-u32 Cpu::online_count() { return s_online_cpus.load(); }
+u32 online_count() { return s_online_cores.load(); }
 
-void Cpu::enter_critical_section()
+void enter_critical()
 {
-    if (m_critical_sections++ == 0 && are_interrupts_enabled()) {
-        m_were_interrupts_enabled = true;
-        disable_interrupts();
-    }
+    const bool were_interrupts_enabled = are_interrupts_enabled();
+    disable_interrupts();
+
+    // NOTE: We first disable interrupts, so we don't get any corruption state
+    Core &core = current();
+    core.critical_sections += 1;
+    core.were_interrupts_enabled = were_interrupts_enabled;
 }
 
-void Cpu::leave_critical_section()
+void leave_critical()
 {
-    assert(m_critical_sections > 0);
-    if (--m_critical_sections == 0 && m_were_interrupts_enabled) {
+    Core &core = current();
+    assert(core.critical_sections > 0);
+
+    core.critical_sections -= 1;
+    if (core.were_interrupts_enabled) {
+        core.were_interrupts_enabled = false;
         enable_interrupts();
     }
 }
 
-bool Cpu::is_in_critical_section() const { return m_critical_sections > 0; }
+bool is_in_critical() { return current().critical_sections > 0; }
+
+} // namespace cpu

@@ -43,7 +43,7 @@ extern "C" void __cxa_pure_virtual()
 {
     // TODO: Panic here
 
-    Cpu::hcf();
+    cpu::hcf();
 }
 
 using ConstructorFunction = void (*)();

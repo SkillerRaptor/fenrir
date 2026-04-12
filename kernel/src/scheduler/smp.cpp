@@ -34,7 +34,7 @@ void initialize()
         limine_mp_info *info = response->cpus[i];
 
         const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size + boot::get_hhdm_offset();
-        Cpu::early_initialize(i, info->lapic_id, stack);
+        cpu::early_initialize(i, info->lapic_id, stack);
 
         info->extra_argument = i;
 
@@ -46,25 +46,25 @@ void initialize()
         info->goto_address = cpu_init;
     }
 
-    while (Cpu::online_count() != response->cpu_count) {
+    while (cpu::online_count() != response->cpu_count) {
         asm volatile("");
     }
 
-    logger::debug("SMP: Successfully started all %u CPUs\n", Cpu::online_count());
+    logger::debug("SMP: Successfully started all %u CPUs\n", cpu::online_count());
 
     logger::info("SMP: Initialized\n");
 }
 
 static void cpu_init(limine_mp_info *info)
 {
-    Cpu::disable_interrupts();
+    cpu::disable_interrupts();
 
     idt::load();
     vmm::switch_to_page_map(vmm::get_kernel_page_map());
 
-    Cpu &cpu = Cpu::get_from_id(static_cast<u32>(info->extra_argument));
-    gdt::load(cpu.gdt(), cpu.tss());
-    cpu.initialize();
+    cpu::Core &core = cpu::by_id(static_cast<u32>(info->extra_argument));
+    gdt::load(core.gdt, core.tss);
+    cpu::initialize(info->extra_argument);
 
     apic::enable_lapic();
 

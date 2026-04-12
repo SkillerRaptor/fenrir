@@ -85,7 +85,7 @@ static void write_string(const char *str)
 
 void log(const char *format, ...)
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
     s_lock.lock();
 
     va_list args;
@@ -96,12 +96,12 @@ void log(const char *format, ...)
     write_string("\033[0m");
 
     s_lock.unlock();
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 }
 
 void info(const char *format, ...)
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
     s_lock.lock();
 
     write_string("\033[38;2;0;128;0minfo\033[39m: ");
@@ -114,12 +114,12 @@ void info(const char *format, ...)
     write_string("\033[0m");
 
     s_lock.unlock();
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 }
 
 void debug(const char *format, ...)
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
     s_lock.lock();
 
     write_string("\033[38;2;0;0;255mdebug\033[39m: ");
@@ -132,12 +132,12 @@ void debug(const char *format, ...)
     write_string("\033[0m");
 
     s_lock.unlock();
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 }
 
 void warn(const char *format, ...)
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
     s_lock.lock();
 
     write_string("\033[38;2;255;215;0mwarn\033[39m: ");
@@ -149,12 +149,12 @@ void warn(const char *format, ...)
     write_string("\033[0m");
 
     s_lock.unlock();
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 }
 
 void err(const char *format, ...)
 {
-    Cpu::current().enter_critical_section();
+    cpu::enter_critical();
     s_lock.lock();
 
     write_string("\033[38;2;255;0;0merror\033[39m: ");
@@ -167,7 +167,7 @@ void err(const char *format, ...)
     write_string("\033[0m");
 
     s_lock.unlock();
-    Cpu::current().leave_critical_section();
+    cpu::leave_critical();
 }
 
 } // namespace logger

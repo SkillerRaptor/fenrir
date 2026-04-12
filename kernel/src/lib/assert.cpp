@@ -25,7 +25,7 @@ extern "C" {
     stacktrace::print(50);
     logger::err("\n");
 
-    Cpu::hcf();
+    cpu::hcf();
 }
 
 #ifdef __cplusplus
