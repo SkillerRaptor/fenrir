@@ -16,6 +16,7 @@
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "scheduler/scheduler.hpp"
+#include "syscall/syscalls.hpp"
 
 namespace smp {
 
@@ -65,6 +66,8 @@ static void cpu_init(limine_mp_info *info)
     cpu::Core &core = cpu::by_id(static_cast<u32>(info->extra_argument));
     gdt::load(core.gdt, core.tss);
     cpu::initialize(info->extra_argument);
+
+    syscalls::initialize();
 
     apic::enable_lapic();
 
