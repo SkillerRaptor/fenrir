@@ -20,4 +20,5 @@ struct Process {
     State state { State::Idle };
 
     vmm::PageMap *page_map { nullptr };
+    Thread *thread_list { nullptr };
 };

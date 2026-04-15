@@ -11,9 +11,10 @@ section .text
 global _start
 
 extern main
+extern syscall
 
 _start:
     call main
-loop:
-    jmp loop
-    ; TODO: Call exit syscall here
+
+    mov rdi, 0x01
+    call syscall

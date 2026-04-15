@@ -28,4 +28,5 @@ struct Thread {
 
     Process *process { nullptr };
     Thread *next_thread { nullptr };
+    Thread *thread_list { nullptr };
 };

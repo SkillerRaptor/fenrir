@@ -17,12 +17,8 @@
 #include "lib/vector.hpp"
 #include "memory/pmm.hpp"
 #include "scheduler/process.hpp"
+#include "scheduler/reaper.hpp"
 #include "scheduler/thread.hpp"
-
-// TODO: Add reaper thread
-// It should find every thread in a dead state, free the stack and remove it from the global list
-// It should find every process, that has no thread anymore that is alive, free the lower half of the page map and
-// remove it from the global list
 
 namespace scheduler {
 
@@ -65,15 +61,14 @@ Process *create_process(vmm::PageMap *page_map)
         .id = id,
         .state = Process::State::Idle,
         .page_map = page_map,
+        .thread_list = nullptr,
     };
 }
 
 static void thread_exit()
 {
     cpu::enter_critical();
-    cpu::Core &core = cpu::current();
-    core.current_thread->state = Thread::State::Dead;
-    core.thread_count -= 1;
+    cpu::current().current_thread->state = Thread::State::Dead;
     cpu::leave_critical();
 
     yield();
@@ -105,10 +100,11 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         .stack_size = memory::s_page_size,
         .process = process,
         .next_thread = nullptr,
+        .thread_list = nullptr,
     };
 
     if (cs == 0x28) {
-        thread->registers.rdi = reinterpret_cast<u64>(entry),
+        thread->registers.rdi = reinterpret_cast<u64>(entry);
         thread->registers.rip = reinterpret_cast<u64>(thread_wrapper);
         thread->registers.rsp += boot::get_hhdm_offset();
         thread->registers.ss = thread->registers.cs + 0x08;
@@ -122,6 +118,16 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         stack - memory::s_page_size,
         thread->registers.rsp - memory::s_page_size,
         vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
+
+    Thread *thread_list = process->thread_list;
+    if (!thread_list) {
+        process->thread_list = thread;
+    } else {
+        while (thread_list->thread_list != nullptr) {
+            thread_list = thread_list->thread_list;
+        }
+        thread_list->thread_list = thread;
+    }
 
     // FIXME: Add load-balancing
 
@@ -178,6 +184,16 @@ Thread *create_idle_thread()
         .next_thread = nullptr,
     };
 
+    Thread *thread_list = s_kernel_process->thread_list;
+    if (!thread_list) {
+        s_kernel_process->thread_list = thread;
+    } else {
+        while (thread_list->thread_list != nullptr) {
+            thread_list = thread_list->thread_list;
+        }
+        thread_list->thread_list = thread;
+    }
+
     return thread;
 }
 
@@ -196,17 +212,24 @@ void schedule(const Registers &registers)
 
     cpu::Core &core = cpu::current();
 
+    Thread *previous_thread = core.current_thread;
+
+    if (previous_thread && previous_thread->state == Thread::State::Dead) {
+        // NOTE: We add the thread to reap
+        reaper::add_thread_to_reap(previous_thread);
+        previous_thread = nullptr;
+        core.current_thread = nullptr;
+    }
+
     if (!core.next_thread) {
         // NOTE: If there is a thread running and no thread queued, then continue running
-        if (core.current_thread) {
+        if (previous_thread) {
             return;
         }
 
         // NOTE: If there is no thread running and no thread queued, then idle
         switch_process(&core.idle_thread->registers);
     }
-
-    Thread *previous_thread = core.current_thread;
 
     // NOTE: Push thread back to the end
     if (previous_thread) {

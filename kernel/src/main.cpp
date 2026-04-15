@@ -20,6 +20,7 @@
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "misc/cxxabi.hpp"
+#include "scheduler/reaper.hpp"
 #include "scheduler/scheduler.hpp"
 #include "scheduler/smp.hpp"
 #include "syscall/syscalls.hpp"
@@ -62,11 +63,12 @@ extern "C" void kmain()
     hpet::initialize();
     apic::initialize();
 
+    syscalls::initialize();
+
     scheduler::initialize();
     smp::initialize();
 
-    syscalls::initialize();
-
+    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, reaper::run);
     scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread);
 
     scheduler::yield();

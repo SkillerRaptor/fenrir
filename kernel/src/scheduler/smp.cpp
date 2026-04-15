@@ -67,7 +67,7 @@ static void cpu_init(limine_mp_info *info)
     gdt::load(core.gdt, core.tss);
     cpu::initialize(info->extra_argument);
 
-    syscalls::initialize();
+    syscalls::load();
 
     apic::enable_lapic();
 

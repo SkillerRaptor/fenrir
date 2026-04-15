@@ -27,12 +27,14 @@ set(SOURCES
         src/memory/pmm.cpp
         src/memory/vmm.cpp
         src/misc/cxxabi.cpp
+        src/scheduler/reaper.cpp
         src/scheduler/scheduler.asm
         src/scheduler/scheduler.cpp
         src/scheduler/smp.cpp
         src/sync/spinlock.cpp
         src/syscalls/syscalls.asm
-        src/syscalls/syscalls.cpp)
+        src/syscalls/syscalls.cpp
+        src/syscalls/syscalls/exit.cpp)
 
 set(HEADERS
         include/acpi/acpi.hpp
@@ -69,12 +71,14 @@ set(HEADERS
         include/memory/vmm.hpp
         include/misc/cxxabi.hpp
         include/scheduler/process.hpp
+        include/scheduler/reaper.hpp
         include/scheduler/scheduler.hpp
         include/scheduler/smp.hpp
         include/scheduler/thread.hpp
         include/scheduler/types.hpp
         include/sync/spinlock.hpp
-        include/syscall/syscalls.hpp)
+        include/syscall/syscalls.hpp
+        include/syscall/syscalls/exit.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 

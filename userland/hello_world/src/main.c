@@ -8,7 +8,7 @@ extern long syscall(long long number, ...);
 
 int main()
 {
-    syscall(1, 1, "Hello from Userland", 19);
+    syscall(0x02, 1, "Hello from Userland", 19);
 
     return 0;
 }
