@@ -61,6 +61,7 @@ set(HEADERS
         include/lib/identifier.hpp
         include/lib/math.hpp
         include/lib/queue.hpp
+        include/lib/span.hpp
         include/lib/string.hpp
         include/lib/type_traits.hpp
         include/lib/types.hpp

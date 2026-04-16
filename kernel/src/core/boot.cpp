@@ -17,12 +17,11 @@ __attribute__((used, section(".limine_requests"))) volatile limine_bootloader_in
 };
 
 __attribute__((
-    used, section(".limine_requests"))) volatile limine_executable_address_request s_executable_address_request
-    = {
-          .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
-          .revision = 0,
-          .response = nullptr,
-      };
+    used, section(".limine_requests"))) volatile limine_executable_address_request s_executable_address_request = {
+    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
 
 __attribute__((used, section(".limine_requests"))) volatile limine_firmware_type_request s_firmware_type_request = {
     .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID,
@@ -108,19 +107,24 @@ u64 get_executable_physical_base() { return s_executable_address_request.respons
 
 u64 get_executable_virtual_base() { return s_executable_address_request.response->virtual_base; }
 
-usize get_framebuffer_count() { return s_framebuffer_request.response->framebuffer_count; }
-
-limine_framebuffer *get_framebuffer(const usize index) { return s_framebuffer_request.response->framebuffers[index]; }
+Span<limine_framebuffer *> get_framebuffers()
+{
+    return { s_framebuffer_request.response->framebuffers, s_framebuffer_request.response->framebuffer_count };
+}
 
 u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
 
 limine_mp_response *get_mp_response() { return s_mp_request.response; }
 
-usize get_memory_map_entry_count() { return s_memmap_request.response->entry_count; }
+Span<limine_memmap_entry *> get_memory_map()
+{
+    return { s_memmap_request.response->entries, s_memmap_request.response->entry_count };
+}
 
-limine_memmap_entry *get_memory_map_entry(const usize index) { return s_memmap_request.response->entries[index]; }
-
-limine_module_response *get_module_response() { return s_module_request.response; }
+Span<limine_file *> get_modules()
+{
+    return { s_module_request.response->modules, s_module_request.response->module_count };
+}
 
 void *get_rsdp_address() { return s_rsdp_request.response->address; }
 

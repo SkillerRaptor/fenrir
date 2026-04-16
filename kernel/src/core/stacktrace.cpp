@@ -54,8 +54,7 @@ static usize parse_hex(const char *src, u64 &out)
 
 void initialize()
 {
-    const limine_module_response *response = boot::get_module_response();
-    const limine_file *symbol_map_file = response->modules[0];
+    const limine_file *symbol_map_file = boot::get_modules()[0];
 
     logger::debug(
         "Stacktrace: Kernel symbol map found at 0x%016x with %zu bytes\n",

@@ -78,8 +78,7 @@ extern "C" void kmain()
 {
     logger::info("Leviathan successfully booted!\n");
 
-    const limine_module_response *response = boot::get_module_response();
-    const limine_file *hello_world = response->modules[1];
+    const limine_file *hello_world = boot::get_modules()[1];
 
     const u8 *data = static_cast<const u8 *>(hello_world->address);
     const elf::Elf elf(data);

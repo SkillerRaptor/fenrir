@@ -33,21 +33,21 @@ static Spinlock s_lock { };
 
 void initialize()
 {
-    const limine_framebuffer *framebuffer = boot::get_framebuffer(0);
+    const Span<limine_framebuffer *> framebuffers = boot::get_framebuffers();
 
     s_context = flanterm_fb_init(
         nullptr,
         nullptr,
-        static_cast<uint32_t *>(framebuffer->address),
-        framebuffer->width,
-        framebuffer->height,
-        framebuffer->pitch,
-        framebuffer->red_mask_size,
-        framebuffer->red_mask_shift,
-        framebuffer->green_mask_size,
-        framebuffer->green_mask_shift,
-        framebuffer->blue_mask_size,
-        framebuffer->blue_mask_shift,
+        static_cast<uint32_t *>(framebuffers[0]->address),
+        framebuffers[0]->width,
+        framebuffers[0]->height,
+        framebuffers[0]->pitch,
+        framebuffers[0]->red_mask_size,
+        framebuffers[0]->red_mask_shift,
+        framebuffers[0]->green_mask_size,
+        framebuffers[0]->green_mask_shift,
+        framebuffers[0]->blue_mask_size,
+        framebuffers[0]->blue_mask_shift,
         nullptr,
         nullptr,
         nullptr,

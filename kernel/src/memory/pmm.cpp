@@ -17,17 +17,15 @@ namespace pmm {
 
 static usize s_highest_page { 0 };
 static usize s_last_used_index { 0 };
-static Bitmap s_bitmap {};
+static Bitmap s_bitmap { };
 
 void initialize()
 {
-    const usize memory_map_entry_count = boot::get_memory_map_entry_count();
+    const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
 
-    logger::debug("PMM: Scanning %zu memory map entries\n", memory_map_entry_count);
+    logger::debug("PMM: Scanning %zu memory map entries\n", memory_map.size());
 
-    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
-        limine_memmap_entry *entry = boot::get_memory_map_entry(i);
-
+    for (limine_memmap_entry *entry : memory_map) {
         const char *type = [&entry]() {
             switch (entry->type) {
             case LIMINE_MEMMAP_USABLE:
@@ -53,12 +51,7 @@ void initialize()
             }
         }();
 
-        logger::debug(
-            "PMM:   %02zu: [0x%016llx - 0x%016llx] - %s\n",
-            i,
-            entry->base,
-            entry->base + entry->length,
-            type);
+        logger::debug("PMM:   [0x%016llx - 0x%016llx] - %s\n", entry->base, entry->base + entry->length, type);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
@@ -80,9 +73,7 @@ void initialize()
 
     s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
 
-    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
-        const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
-
+    for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
         }
@@ -101,9 +92,8 @@ void initialize()
         s_bitmap.size() / 8 / 1024);
 
     usize free_pages { 0 };
-    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
-        const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
 
+    for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
         }

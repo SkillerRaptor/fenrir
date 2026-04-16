@@ -29,14 +29,12 @@ void initialize()
 {
     s_kernel_page_map = create_page_map();
 
-    const usize memory_map_entry_count = boot::get_memory_map_entry_count();
+    const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
     logger::debug("VMM: Mapping memory map entries...\n");
 
     usize mapped_entry_count { 0 };
     usize mapped_bytes { 0 };
-    for (usize i { 0 }; i < memory_map_entry_count; ++i) {
-        const limine_memmap_entry *entry = boot::get_memory_map_entry(i);
-
+    for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE && entry->type != LIMINE_MEMMAP_ACPI_RECLAIMABLE
             && entry->type != LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE
             && entry->type != LIMINE_MEMMAP_EXECUTABLE_AND_MODULES && entry->type != LIMINE_MEMMAP_FRAMEBUFFER) {

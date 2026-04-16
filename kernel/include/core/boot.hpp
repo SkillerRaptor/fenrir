@@ -8,6 +8,7 @@
 
 #include <limine.h>
 
+#include "lib/span.hpp"
 #include "lib/types.hpp"
 
 namespace boot {
@@ -21,17 +22,14 @@ const char *get_firmware_type();
 u64 get_executable_physical_base();
 u64 get_executable_virtual_base();
 
-usize get_framebuffer_count();
-limine_framebuffer *get_framebuffer(usize index);
+Span<limine_framebuffer *> get_framebuffers();
 
 u64 get_hhdm_offset();
 
 limine_mp_response *get_mp_response();
 
-usize get_memory_map_entry_count();
-limine_memmap_entry *get_memory_map_entry(usize index);
-
-limine_module_response *get_module_response();
+Span<limine_memmap_entry *> get_memory_map();
+Span<limine_file *> get_modules();
 
 void *get_rsdp_address();
 
