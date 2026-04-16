@@ -9,6 +9,7 @@
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
 
+#include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/io.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
