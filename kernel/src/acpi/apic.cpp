@@ -44,18 +44,13 @@ void initialize()
     // TODO: Implement I/O APIC
 
     const u32 lapic_physical_address = cpu::read_msr(s_apic_base_msr) & 0xfffff000;
-
-    vmm::map(
-        vmm::get_kernel_page_map(),
-        lapic_physical_address,
-        lapic_physical_address + boot::get_hhdm_offset(),
-        vmm::Attribute::Write);
-
     s_base_lapic_address = lapic_physical_address + boot::get_hhdm_offset();
+
     logger::debug("APIC: Mapping LAPIC MMIO 0x%016llx -> 0x%016llx\n", lapic_physical_address, s_base_lapic_address);
+    vmm::map(vmm::get_kernel_page_map(), lapic_physical_address, s_base_lapic_address, vmm::Attribute::Write);
 
     constexpr u32 apic_global_enable { 1 << 11 };
-    cpu::write_msr(s_apic_base_msr, cpu::read_msr(s_base_lapic_address) | apic_global_enable);
+    cpu::write_msr(s_apic_base_msr, cpu::read_msr(s_apic_base_msr) | apic_global_enable);
 
     enable_lapic();
 
