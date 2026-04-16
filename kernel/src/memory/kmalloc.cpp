@@ -44,7 +44,9 @@ void *kmalloc(const usize size)
 
 void kfree(void *ptr)
 {
-    assert(ptr);
+    if (!ptr) {
+        return;
+    }
 
     const u8 *header_address = static_cast<const u8 *>(ptr) - s_page_size;
     const AllocationHeader *header = reinterpret_cast<const AllocationHeader *>(header_address);
