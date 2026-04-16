@@ -9,6 +9,7 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
+#include "lib/assert.hpp"
 #include "lib/bitmap.hpp"
 #include "lib/math.hpp"
 #include "lib/string.hpp"
@@ -16,7 +17,6 @@
 namespace pmm {
 
 static usize s_highest_page { 0 };
-static usize s_last_used_index { 0 };
 static Bitmap s_bitmap { };
 
 void initialize()
@@ -129,15 +129,13 @@ void initialize()
     logger::info("PMM: Initialized\n");
 }
 
-static void *internal_allocate(const usize pages, const usize limit)
+void *allocate(const usize pages, const bool clear)
 {
-    if (pages == 0) {
-        return nullptr;
-    }
+    assert(pages > 0);
 
     usize current_pages = 0;
-    while (s_last_used_index < limit) {
-        if (s_bitmap.get(s_last_used_index++)) { // Here
+    for (usize i { 0 }; i < s_highest_page / memory::s_page_size; ++i) {
+        if (s_bitmap.get(i)) {
             current_pages = 0;
             continue;
         }
@@ -146,37 +144,28 @@ static void *internal_allocate(const usize pages, const usize limit)
             continue;
         }
 
-        const usize page = s_last_used_index - pages;
-        for (usize i = page; i < s_last_used_index; ++i) {
-            s_bitmap.set(i, true); // Here
+        const usize index = i + 1;
+        const usize page = index - pages;
+        for (usize j = page; j < index; ++j) {
+            s_bitmap.set(j, true);
         }
 
-        return reinterpret_cast<void *>(page * memory::s_page_size);
+        void *ptr = reinterpret_cast<void *>(page * memory::s_page_size);
+
+        if (clear) {
+            u64 *address = reinterpret_cast<u64 *>(reinterpret_cast<u64>(ptr) + boot::get_hhdm_offset());
+
+            for (usize current_page { 0 }; current_page < pages * (memory::s_page_size / sizeof(u64)); ++current_page) {
+                address[current_page] = 0;
+            }
+        }
+
+        return ptr;
     }
+
+    logger::err("PMM: Out of memory - failed to allocate %zu pages\n", pages);
 
     return nullptr;
-}
-
-void *allocate(const usize pages, const bool clear)
-{
-    const usize limit = s_last_used_index;
-    void *ptr = internal_allocate(pages, s_highest_page / memory::s_page_size);
-    if (!ptr) {
-        s_last_used_index = 0;
-        ptr = internal_allocate(pages, limit);
-    }
-
-    if (!ptr) {
-        logger::err("PMM: Out of memory - failed to allocate %zu pages\n", pages);
-    } else if (clear) {
-        u64 *address = reinterpret_cast<u64 *>(reinterpret_cast<u64>(ptr) + boot::get_hhdm_offset());
-
-        for (usize i { 0 }; i < pages * (memory::s_page_size / sizeof(u64)); ++i) {
-            address[i] = 0;
-        }
-    }
-
-    return ptr;
 }
 
 void free(void *ptr, const usize pages)
