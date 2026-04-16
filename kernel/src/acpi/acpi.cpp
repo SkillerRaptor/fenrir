@@ -369,11 +369,7 @@ void uacpi_kernel_free_event(uacpi_handle handle) { delete static_cast<int *>(ha
  *
  * The returned thread id cannot be UACPI_THREAD_ID_NONE.
  */
-uacpi_thread_id uacpi_kernel_get_thread_id()
-{
-    // TODO: Replace this with the TID
-    return reinterpret_cast<uacpi_thread_id>(0);
-}
+uacpi_thread_id uacpi_kernel_get_thread_id() { return reinterpret_cast<uacpi_thread_id>(cpu::current().id); }
 
 /*
  * Disable interrupts and return an kernel-defined value representing the
