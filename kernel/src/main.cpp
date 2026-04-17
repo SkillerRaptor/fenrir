@@ -18,6 +18,7 @@
 #include "filesystem/vfs.hpp"
 #include "lib/math.hpp"
 #include "lib/string.hpp"
+#include "lib/string_view.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "misc/cxxabi.hpp"

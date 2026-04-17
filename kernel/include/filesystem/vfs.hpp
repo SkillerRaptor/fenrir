@@ -7,6 +7,7 @@
 #pragma once
 
 #include "core/boot.hpp"
+#include "lib/string_view.hpp"
 #include "lib/types.hpp"
 
 namespace vfs {
@@ -20,11 +21,11 @@ enum class SeekOrigin {
 };
 
 // FIXME: Using `limine_file` here is a HACK and should be replaced with a driver
-void mount(limine_file *archive, const char *target, const char *filesystem_type);
+void mount(limine_file *archive, StringView target, const char *filesystem_type);
 // TODO: Add a way to unmount a driver and not from the target
-void unmount(const char *target);
+void unmount(StringView target);
 
-File *open(const char *path);
+File *open(StringView path);
 void close(File *);
 
 // FIXME: Implement write
