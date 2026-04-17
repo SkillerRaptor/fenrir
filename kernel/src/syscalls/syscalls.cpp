@@ -7,7 +7,9 @@
 #include "syscall/syscalls.hpp"
 
 #include "arch/x86_64/cpu.hpp"
+#include "core/boot.hpp"
 #include "core/logger.hpp"
+#include "lib/string.hpp"
 #include "syscall/syscalls/exit.hpp"
 
 namespace syscalls {
@@ -39,26 +41,38 @@ void load()
 
 extern "C" void syscall_handler(const SyscallRegisters *registers)
 {
-    if (s_syscall_handlers[registers->rax]) {
-        s_syscall_handlers[registers->rax](registers);
+    const u64 syscall_id = registers->rax;
+    const u64 first_argument = registers->rdi;
+    const u64 second_argument = registers->rsi;
+    const u64 third_argument = registers->rdx;
+    const u64 fourth_argument = registers->rcx;
+    const u64 fifth_argument = registers->r8;
+
+    if (s_syscall_handlers[syscall_id]) {
+        s_syscall_handlers[syscall_id](registers);
         return;
     }
 
-    switch (registers->rax) {
+    switch (syscall_id) {
     case 0x02: {
-        char *string = new char[registers->rsi + 1];
-        for (usize i { 0 }; i < registers->rsi + 1; i++) {
-            string[i] = '\0';
-        }
-
-        u8 *buffer_start = reinterpret_cast<u8 *>(registers->rdi);
-        for (usize i { 0 }; i < registers->rsi; ++i) {
-            string[i] = buffer_start[i];
-        }
+        char *string = new char[second_argument];
+        memcpy(string, reinterpret_cast<char *>(first_argument), second_argument);
+        string[second_argument] = '\0';
 
         logger::info("%s\n", string);
 
+        const limine_framebuffer *framebuffer = boot::get_framebuffers()[0];
+        volatile u32 *fb_ptr = static_cast<volatile u32 *>(framebuffer->address);
+        for (usize y = 0; y < framebuffer->height; y++) {
+            for (usize x = 0; x < framebuffer->width; x++) {
+                const u32 n_x = x * 255 / framebuffer->width;
+                const u32 n_y = y * 255 / framebuffer->height;
+                fb_ptr[y * (framebuffer->pitch / 4) + x] = (n_y << 8) | n_x;
+            }
+        }
+
         delete[] string;
+
         break;
     }
     default:
