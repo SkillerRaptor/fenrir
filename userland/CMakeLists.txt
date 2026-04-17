@@ -4,4 +4,6 @@
 # SPDX-License-Identifier: MIT
 #-------------------------------------------------------------------------------------------
 
+add_subdirectory(libraries/libc)
+
 add_subdirectory(hello_world)

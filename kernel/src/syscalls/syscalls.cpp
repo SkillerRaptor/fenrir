@@ -45,23 +45,22 @@ extern "C" void syscall_handler(const SyscallRegisters *registers)
     }
 
     switch (registers->rax) {
-    case 0x02:
-        if (registers->rdi == 0x01) {
-            char *string = new char[registers->rdx + 1];
-            for (usize i { 0 }; i < registers->rdx + 1; i++) {
-                string[i] = '\0';
-            }
-
-            u8 *buffer_start = reinterpret_cast<u8 *>(registers->rsi);
-            for (usize i { 0 }; i < registers->rdx; ++i) {
-                string[i] = buffer_start[i];
-            }
-
-            logger::info("%s\n", string);
-
-            delete[] string;
+    case 0x02: {
+        char *string = new char[registers->rsi + 1];
+        for (usize i { 0 }; i < registers->rsi + 1; i++) {
+            string[i] = '\0';
         }
+
+        u8 *buffer_start = reinterpret_cast<u8 *>(registers->rdi);
+        for (usize i { 0 }; i < registers->rsi; ++i) {
+            string[i] = buffer_start[i];
+        }
+
+        logger::info("%s\n", string);
+
+        delete[] string;
         break;
+    }
     default:
         logger::debug("Unhandled syscall %u\n", registers->rax);
         break;

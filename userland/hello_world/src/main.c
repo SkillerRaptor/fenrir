@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-extern long syscall(long long number, ...);
+#include <syscalls.h>
 
 int main()
 {
-    syscall(0x02, 1, "Hello from Userland", 19);
+    write("Hello from Userland", 19);
 
     return 0;
 }

@@ -5,15 +5,17 @@
 #-------------------------------------------------------------------------------------------
 
 set(SOURCES
-        src/main.c)
+        src/crt0.asm
+        src/syscall.asm
+        src/syscalls.c)
 
 set(HEADERS
-)
+        include/syscalls.h)
 
-add_executable(hello_world ${SOURCES} ${HEADERS})
-target_link_libraries(hello_world PRIVATE libc)
+add_library(libc STATIC ${SOURCES} ${HEADERS})
+target_include_directories(libc PUBLIC include)
 target_compile_options(
-        hello_world
+        libc
         PRIVATE
         -ffreestanding
         -fno-stack-protector
@@ -22,7 +24,7 @@ target_compile_options(
         -m64
         -nostdlib)
 target_link_options(
-        hello_world
+        libc
         PRIVATE
         -nostdlib
         -static
