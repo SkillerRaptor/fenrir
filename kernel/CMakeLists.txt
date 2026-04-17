@@ -20,6 +20,8 @@ set(SOURCES
         src/core/stacktrace.cpp
         src/drivers/serial.cpp
         src/elf/elf.cpp
+        src/filesystem/ustar.cpp
+        src/filesystem/vfs.cpp
         src/lib/assert.cpp
         src/lib/bitmap.cpp
         src/lib/string.cpp
@@ -52,6 +54,8 @@ set(HEADERS
         include/core/stacktrace.hpp
         include/drivers/serial.hpp
         include/elf/elf.hpp
+        include/filesystem/ustar.hpp
+        include/filesystem/vfs.hpp
         include/lib/assert.hpp
         include/lib/atomic.hpp
         include/lib/bitflags.hpp
@@ -140,7 +144,11 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy ${LIMINE_DIR}/BOOTX64.EFI ${CMAKE_CURRENT_BINARY_DIR}/iso_root/EFI/BOOT/BOOTX64.EFI
         COMMAND ${CMAKE_COMMAND} -E copy ${LIMINE_DIR}/BOOTIA32.EFI ${CMAKE_CURRENT_BINARY_DIR}/iso_root/EFI/BOOT/BOOTIA32.EFI
 
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:hello_world> ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/hello_world
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/applications
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:hello_world> ${CMAKE_CURRENT_BINARY_DIR}/applications/
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules
+        COMMAND tar --sort=name --owner=0 --group=0 --numeric-owner --format=ustar -cf ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/initramfs.tar applications
 
         COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
 

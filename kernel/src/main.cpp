@@ -15,6 +15,7 @@
 #include "core/stacktrace.hpp"
 #include "drivers/serial.hpp"
 #include "elf/elf.hpp"
+#include "filesystem/vfs.hpp"
 #include "lib/math.hpp"
 #include "lib/string.hpp"
 #include "memory/pmm.hpp"
@@ -78,10 +79,24 @@ extern "C" void kmain()
 {
     logger::info("Leviathan successfully booted!\n");
 
-    const limine_file *hello_world = boot::get_modules()[1];
+    limine_file *module = boot::get_modules()[1]; // initramfs.tar
 
-    const u8 *data = static_cast<const u8 *>(hello_world->address);
-    const elf::Elf elf(data);
+    logger::info("File: %s\n", module->path);
+
+    vfs::mount(module, "/", "USTAR");
+
+    auto hello_world_file = vfs::open("/applications/hello_world");
+
+    vfs::seek(hello_world_file, 0, vfs::SeekOrigin::End);
+    const auto size = vfs::tell(hello_world_file);
+    vfs::seek(hello_world_file, 0, vfs::SeekOrigin::Set);
+
+    u8 *bytes = new u8[size];
+    vfs::read(hello_world_file, bytes, size);
+
+    vfs::close(hello_world_file);
+
+    const elf::Elf elf(bytes);
 
     vmm::PageMap *user_page_map = vmm::create_page_map();
     for (const elf::ProgramHeader &program_header : elf.program_headers()) {
@@ -110,7 +125,7 @@ extern "C" void kmain()
             vmm::map(user_page_map, physical_address, virtual_address, attr);
         }
 
-        const u8 *src = data + program_header.offset;
+        const u8 *src = bytes + program_header.offset;
         u8 *dst = reinterpret_cast<u8 *>(
             vmm::virtual_to_physical(user_page_map, program_header.virtual_address) + boot::get_hhdm_offset());
 
