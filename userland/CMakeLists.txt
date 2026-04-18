@@ -6,4 +6,6 @@
 
 add_subdirectory(libraries/libc)
 
+add_subdirectory(services/window_manager)
+
 add_subdirectory(hello_world)
