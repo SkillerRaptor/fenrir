@@ -4,16 +4,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "syscall/syscalls/exit.hpp"
-
 #include "arch/x86_64/cpu.hpp"
 #include "scheduler/scheduler.hpp"
+#include "syscall/syscalls.hpp"
 
 namespace syscalls {
 
 // FIXME: This should kill every thread in the process
 
-void sys$exit(const SyscallRegisters *)
+u64 sys$exit(const Span<const u64>)
 {
     cpu::enter_critical();
     cpu::current().current_thread->state = Thread::State::Dead;

@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-#pragma once
-
-struct SyscallRegisters;
+#include "syscall/syscalls.hpp"
 
 namespace syscalls {
 
-void sys$exit(const SyscallRegisters *);
+u64 sys$open_device(Span<const u64>)
+{
+    // Open (Ignore)
+    return 0;
+}
 
 } // namespace syscalls

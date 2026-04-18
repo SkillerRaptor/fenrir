@@ -6,8 +6,6 @@
 
 #include "leviathan/syscall.h"
 
-Status write(const char *str, const uint64_t len) { return syscall(SYS_WRITE, str, len); }
-
 Status enumerate_devices(struct Device *devices, uint64_t *count)
 {
     return syscall(SYS_ENUMERATE_DEVICES, devices, count);

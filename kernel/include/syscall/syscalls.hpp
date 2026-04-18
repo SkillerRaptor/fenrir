@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "lib/span.hpp"
 #include "lib/types.hpp"
 
 struct SyscallRegisters {
@@ -30,5 +31,11 @@ namespace syscalls {
 
 void initialize();
 void load();
+
+u64 sys$exit(Span<const u64>);
+u64 sys$enumerate_devices(Span<const u64>);
+u64 sys$open_device(Span<const u64>);
+u64 sys$close_device(Span<const u64>);
+u64 sys$map_device(Span<const u64>);
 
 } // namespace syscalls

@@ -30,5 +30,9 @@ int main()
 
     close_device(devices[0].id);
 
+    while (true) {
+        asm volatile("");
+    }
+
     return 0;
 }

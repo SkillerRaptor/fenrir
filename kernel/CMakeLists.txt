@@ -36,7 +36,11 @@ set(SOURCES
         src/sync/spinlock.cpp
         src/syscalls/syscalls.asm
         src/syscalls/syscalls.cpp
-        src/syscalls/syscalls/exit.cpp)
+        src/syscalls/syscalls/close_device.cpp
+        src/syscalls/syscalls/enumerate_devices.cpp
+        src/syscalls/syscalls/exit.cpp
+        src/syscalls/syscalls/map_device.cpp
+        src/syscalls/syscalls/open_device.cpp)
 
 set(HEADERS
         include/acpi/acpi.hpp
@@ -63,6 +67,7 @@ set(HEADERS
         include/lib/hash.hpp
         include/lib/hash_map.hpp
         include/lib/identifier.hpp
+        include/lib/initializer_list.hpp
         include/lib/math.hpp
         include/lib/queue.hpp
         include/lib/span.hpp
@@ -83,8 +88,7 @@ set(HEADERS
         include/scheduler/thread.hpp
         include/scheduler/types.hpp
         include/sync/spinlock.hpp
-        include/syscall/syscalls.hpp
-        include/syscall/syscalls/exit.hpp)
+        include/syscall/syscalls.hpp)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
