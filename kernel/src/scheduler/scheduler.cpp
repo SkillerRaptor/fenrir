@@ -24,10 +24,10 @@ namespace scheduler {
 
 extern "C" [[noreturn]] void switch_process(const Registers *registers);
 
-static Atomic<i32> s_current_process_id { 0 };
-static Atomic<i32> s_current_thread_id { 0 };
+static Atomic<i32> s_current_process_id = 0;
+static Atomic<i32> s_current_thread_id = 0;
 
-static Process *s_kernel_process { nullptr };
+static Process *s_kernel_process = nullptr;
 
 static void schedule(const Registers &registers);
 

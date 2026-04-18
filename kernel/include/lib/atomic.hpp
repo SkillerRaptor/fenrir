@@ -52,5 +52,5 @@ public:
     }
 
 private:
-    T m_value { 0 };
+    T m_value = 0;
 };

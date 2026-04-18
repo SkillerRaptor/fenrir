@@ -54,7 +54,7 @@ public:
         bool operator!=(const Iterator &other) const { return m_ptr != other.m_ptr; }
 
     private:
-        T *m_ptr { nullptr };
+        T *m_ptr = nullptr;
     };
 
     class ConstIterator {
@@ -99,7 +99,7 @@ public:
         bool operator!=(const ConstIterator &other) const { return m_ptr != other.m_ptr; }
 
     private:
-        const T *m_ptr { nullptr };
+        const T *m_ptr = nullptr;
     };
 
 public:
@@ -168,7 +168,7 @@ private:
     }
 
 private:
-    T *m_data { nullptr };
-    usize m_size { 0 };
-    usize m_capacity { 0 };
+    T *m_data = nullptr;
+    usize m_size = 0;
+    usize m_capacity = 0;
 };

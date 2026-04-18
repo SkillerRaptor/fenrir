@@ -26,18 +26,18 @@ enum class Attribute : u8 {
 DECLARE_BITFLAG(Attribute);
 
 struct Entry {
-    u16 offset_low { 0 };
-    u16 selector { 0 };
-    u8 ist { 0 };
-    u8 attributes { 0 };
-    u16 offset_mid { 0 };
-    u32 offset_high { 0 };
-    u32 reserved { 0 };
+    u16 offset_low = 0;
+    u16 selector = 0;
+    u8 ist = 0;
+    u8 attributes = 0;
+    u16 offset_mid = 0;
+    u32 offset_high = 0;
+    u32 reserved = 0;
 } __attribute__((packed));
 
 struct Descriptor {
-    u16 size { 0 };
-    u64 address { 0 };
+    u16 size = 0;
+    u64 address = 0;
 } __attribute__((packed));
 
 extern "C" void load_idt(const Descriptor *descriptor);
@@ -135,7 +135,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 {
     apic::send_ipi(0xff, 0xfe);
 
-    u64 faulting_address { 0 };
+    volatile u64 faulting_address = 0;
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
     const cpu::Core &core = cpu::current();
@@ -210,7 +210,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 
 void initialize()
 {
-    for (usize i { 0 }; i < 256; ++i) {
+    for (usize i = 0; i < 256; ++i) {
         s_entries[i] = create_entry(
             interrupt_handlers[i],
             Attribute::KernelPrivilege | Attribute::Present | Attribute::InterruptGate);

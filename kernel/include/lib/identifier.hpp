@@ -31,10 +31,10 @@ public:
     constexpr T get() const { return m_value; }
 
 private:
-    T m_value { 0 };
+    T m_value = 0;
 };
 
 template <typename U, typename T>
 struct Hash<Identifier<U, T>> {
-    usize operator()(const Identifier<U, T> &key) const { return Hash<u64> {}(key.get()); }
+    usize operator()(const Identifier<U, T> &key) const { return Hash<u64> { }(key.get()); }
 };

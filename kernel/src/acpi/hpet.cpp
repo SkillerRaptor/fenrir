@@ -18,16 +18,16 @@
 
 namespace hpet {
 
-static constexpr u64 s_general_capabilities_register { 0x000 };
-static constexpr u64 s_general_configuration_register { 0x010 };
-static constexpr u64 s_main_counter_register { 0x0f0 };
+static constexpr u64 s_general_capabilities_register = 0x000;
+static constexpr u64 s_general_configuration_register = 0x010;
+static constexpr u64 s_main_counter_register = 0x0f0;
 
-static u64 s_virtual_address { 0 };
-static u32 s_clock_period { 0 };
+static u64 s_virtual_address = 0;
+static u32 s_clock_period = 0;
 
 void initialize()
 {
-    uacpi_table table {};
+    uacpi_table table { };
     const uacpi_status ret = uacpi_table_find_by_signature(ACPI_HPET_SIGNATURE, &table);
     if (uacpi_unlikely_error(ret)) {
         logger::err("uacpi_table_find_by_signature error: %s\n", uacpi_status_to_string(ret));

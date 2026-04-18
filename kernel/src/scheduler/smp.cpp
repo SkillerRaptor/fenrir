@@ -20,7 +20,7 @@
 
 namespace smp {
 
-static u32 s_bsp_lapic_id { 0 };
+static u32 s_bsp_lapic_id = 0;
 
 static void cpu_init(limine_mp_info *info);
 

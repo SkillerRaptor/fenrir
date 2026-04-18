@@ -52,7 +52,7 @@ public:
         constexpr bool operator!=(const Iterator &other) const { return m_ptr != other.m_ptr; }
 
     private:
-        const char *m_ptr { nullptr };
+        const char *m_ptr = nullptr;
     };
 
 public:
@@ -86,6 +86,6 @@ public:
     constexpr Iterator cend() const { return end(); }
 
 private:
-    const char *m_data { nullptr };
-    usize m_length { 0 };
+    const char *m_data = nullptr;
+    usize m_length = 0;
 };

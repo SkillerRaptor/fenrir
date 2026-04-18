@@ -16,7 +16,7 @@
 
 namespace pmm {
 
-static usize s_highest_page { 0 };
+static usize s_highest_page = 0;
 static Bitmap s_bitmap { };
 
 void initialize()
@@ -91,7 +91,7 @@ void initialize()
         s_bitmap.size() / 8,
         s_bitmap.size() / 8 / 1024);
 
-    usize free_pages { 0 };
+    usize free_pages = 0;
 
     for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE) {
@@ -111,7 +111,7 @@ void initialize()
             continue;
         }
 
-        for (usize j { 0 }; j < entry->length; j += memory::s_page_size) {
+        for (usize j = 0; j < entry->length; j += memory::s_page_size) {
             const usize address = entry->base + j;
             const usize page_index = address / memory::s_page_size;
             s_bitmap.set(page_index, false); // Here
@@ -134,7 +134,7 @@ void *allocate(const usize pages, const bool clear)
     assert(pages > 0);
 
     usize current_pages = 0;
-    for (usize i { 0 }; i < s_highest_page / memory::s_page_size; ++i) {
+    for (usize i = 0; i < s_highest_page / memory::s_page_size; ++i) {
         if (s_bitmap.get(i)) {
             current_pages = 0;
             continue;
@@ -155,7 +155,7 @@ void *allocate(const usize pages, const bool clear)
         if (clear) {
             u64 *address = reinterpret_cast<u64 *>(reinterpret_cast<u64>(ptr) + boot::get_hhdm_offset());
 
-            for (usize current_page { 0 }; current_page < pages * (memory::s_page_size / sizeof(u64)); ++current_page) {
+            for (usize current_page = 0; current_page < pages * (memory::s_page_size / sizeof(u64)); ++current_page) {
                 address[current_page] = 0;
             }
         }
@@ -173,7 +173,7 @@ void free(void *ptr, const usize pages)
     const usize address = reinterpret_cast<usize>(ptr);
     const usize page = address / memory::s_page_size;
 
-    for (usize i { 0 }; i < pages; ++i) {
+    for (usize i = 0; i < pages; ++i) {
         s_bitmap.set(page + i, false);
     }
 }

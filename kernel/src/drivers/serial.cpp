@@ -10,20 +10,20 @@
 
 namespace serial {
 
-static constexpr u16 s_port_base { 0x3f8 };
+static constexpr u16 s_port_base = 0x3f8;
 
-static constexpr u16 s_port_receive_buffer { s_port_base + 0 };
-static constexpr u16 s_port_transmit_buffer { s_port_base + 0 };
+static constexpr u16 s_port_receive_buffer = s_port_base + 0;
+static constexpr u16 s_port_transmit_buffer = s_port_base + 0;
 
-static constexpr u16 s_port_interrupt_enable { s_port_base + 1 };
+static constexpr u16 s_port_interrupt_enable = s_port_base + 1;
 
-static constexpr u16 s_port_divisor_low { s_port_base + 0 };
-static constexpr u16 s_port_divisor_high { s_port_base + 1 };
+static constexpr u16 s_port_divisor_low = s_port_base + 0;
+static constexpr u16 s_port_divisor_high = s_port_base + 1;
 
-static constexpr u16 s_port_fifo_control { s_port_base + 2 };
-static constexpr u16 s_port_line_control { s_port_base + 3 };
-static constexpr u16 s_port_modem_control { s_port_base + 4 };
-static constexpr u16 s_port_line_status { s_port_base + 5 };
+static constexpr u16 s_port_fifo_control = s_port_base + 2;
+static constexpr u16 s_port_line_control = s_port_base + 3;
+static constexpr u16 s_port_modem_control = s_port_base + 4;
+static constexpr u16 s_port_line_status = s_port_base + 5;
 
 void initialize()
 {

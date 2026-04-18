@@ -13,10 +13,10 @@ template <typename K, typename V>
 class HashMap {
 private:
     struct Entry {
-        K key {};
-        V value {};
-        bool is_used { false };
-        bool is_deleted { false };
+        K key = { };
+        V value = { };
+        bool is_used = false;
+        bool is_deleted = false;
     };
 
 public:
@@ -44,7 +44,7 @@ public:
             return nullptr;
         }
 
-        const usize index = Hash<K> {}(key);
+        const usize index = Hash<K> { }(key);
         for (usize i = 0; i < m_capacity; ++i) {
             Entry &entry = m_buckets[(index + i) % m_capacity];
             if (!entry.is_used) {
@@ -67,7 +67,7 @@ public:
             return false;
         }
 
-        const usize index = Hash<K> {}(key) % m_capacity;
+        const usize index = Hash<K> { }(key) % m_capacity;
         for (usize i = 0; i < m_capacity; ++i) {
             Entry &entry = m_buckets[(index + i) % m_capacity];
             if (!entry.is_used) {
@@ -87,7 +87,7 @@ public:
     template <typename Fn>
     void for_each(const Fn &fn)
     {
-        for (usize i { 0 }; i < m_capacity; ++i) {
+        for (usize i = 0; i < m_capacity; ++i) {
             Entry &entry = m_buckets[i];
             if (entry.is_used && !entry.is_deleted) {
                 fn(entry.key, entry.value);
@@ -103,7 +103,7 @@ private:
     {
         usize first_dead = m_capacity;
 
-        const usize index = Hash<K> {}(key) % m_capacity;
+        const usize index = Hash<K> { }(key) % m_capacity;
         for (usize i { 0 }; i < m_capacity; ++i) {
             const usize j = (index + i) % m_capacity;
             Entry &entry = m_buckets[j];
@@ -131,13 +131,13 @@ private:
         m_buckets = new Entry[new_capacity];
 
         for (usize i { 0 }; i < new_capacity; ++i) {
-            m_buckets[i] = Entry {};
+            m_buckets[i] = { };
         }
 
         m_capacity = new_capacity;
         m_size = 0;
 
-        for (usize i { 0 }; i < old_capacity; ++i) {
+        for (usize i = 0; i < old_capacity; ++i) {
             Entry &entry = old_buckets[i];
             if (entry.is_used && !entry.is_deleted) {
                 insert(entry.key, entry.value);
@@ -148,7 +148,7 @@ private:
     }
 
 private:
-    Entry *m_buckets { nullptr };
-    usize m_size { 0 };
-    usize m_capacity { 0 };
+    Entry *m_buckets = nullptr;
+    usize m_size = 0;
+    usize m_capacity = 0;
 };

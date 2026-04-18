@@ -23,9 +23,9 @@
 namespace acpi {
 
 struct MemoryMapping {
-    u64 physical_base { 0 };
-    usize page_count { 0 };
-    usize ref_count { 0 };
+    u64 physical_base = 0;
+    usize page_count = 0;
+    usize ref_count = 0;
 };
 
 static Vector<MemoryMapping> s_mappings { };
@@ -36,21 +36,6 @@ void initialize()
     if (uacpi_unlikely_error(ret)) {
         logger::err("uacpi_initialize error: %s\n", uacpi_status_to_string(ret));
     }
-
-    // ret = uacpi_namespace_load();
-    // if (uacpi_unlikely_error(ret)) {
-    //     logger::err("uacpi_namespace_load error: %s\n", uacpi_status_to_string(ret));
-    // }
-
-    // ret = uacpi_namespace_initialize();
-    // if (uacpi_unlikely_error(ret)) {
-    //     logger::err("uacpi_namespace_initialize error: %s\n", uacpi_status_to_string(ret));
-    // }
-
-    // ret = uacpi_finalize_gpe_initialization();
-    // if (uacpi_unlikely_error(ret)) {
-    //     logger::err("uacpi_finalize_gpe_initialization error: %s\n", uacpi_status_to_string(ret));
-    // }
 
     logger::info("ACPI: Initialized\n");
 }
@@ -250,8 +235,8 @@ uacpi_status uacpi_kernel_pci_write32(uacpi_handle, uacpi_size, uacpi_u32)
  */
 
 struct IOMap {
-    u64 base { 0 };
-    u64 length { 0 };
+    u64 base = 0;
+    u64 length = 0;
 } __attribute__((packed));
 
 uacpi_status uacpi_kernel_io_map(uacpi_io_addr base, const uacpi_size len, uacpi_handle *out_handle)

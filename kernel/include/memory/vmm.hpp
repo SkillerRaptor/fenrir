@@ -21,7 +21,7 @@ enum class Attribute : u16 {
 DECLARE_BITFLAG(Attribute);
 
 struct PageMap {
-    u64 top_level { 0 };
+    u64 top_level = 0;
 };
 
 void initialize();

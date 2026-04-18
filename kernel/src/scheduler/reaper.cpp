@@ -7,7 +7,6 @@
 #include "scheduler/reaper.hpp"
 
 #include "arch/x86_64/cpu.hpp"
-#include "core/logger.hpp"
 #include "core/memory.hpp"
 #include "memory/pmm.hpp"
 #include "scheduler/process.hpp"
@@ -15,7 +14,7 @@
 
 namespace reaper {
 
-static Thread *s_next_threads { nullptr };
+static Thread *s_next_threads = nullptr;
 static Spinlock s_lock { };
 
 [[noreturn]] void run()

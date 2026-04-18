@@ -17,25 +17,25 @@
 
 namespace apic {
 
-static constexpr u32 s_apic_base_msr { 0x1b };
+static constexpr u32 s_apic_base_msr = 0x1b;
 
-static constexpr u64 s_spurious_interrupt_vector_register { 0x0f0 };
-static constexpr u64 s_end_of_interrupt_register { 0x0b0 };
+static constexpr u64 s_spurious_interrupt_vector_register = 0x0f0;
+static constexpr u64 s_end_of_interrupt_register = 0x0b0;
 
 // NOTE: LVT
-static constexpr u64 s_timer_register { 0x320 };
-static constexpr u64 s_timer_initial_count_register { 0x380 };
-static constexpr u64 s_timer_current_count_register { 0x390 };
-static constexpr u64 s_timer_divide_configuration_register { 0x3e0 };
+static constexpr u64 s_timer_register = 0x320;
+static constexpr u64 s_timer_initial_count_register = 0x380;
+static constexpr u64 s_timer_current_count_register = 0x390;
+static constexpr u64 s_timer_divide_configuration_register = 0x3e0;
 
 // NOTE: LVT Register Format
-static constexpr u32 s_register_mask { 1 << 16 };
+static constexpr u32 s_register_mask = 1 << 16;
 
-static constexpr u32 s_timer_isr { 0x20 };
-static constexpr u32 s_timer_divide_value { 0b011 }; // NOTE: Divide by 16
-static constexpr u32 s_timer_periodic_mode { 0b01 << 17 };
+static constexpr u32 s_timer_isr = 0x20;
+static constexpr u32 s_timer_divide_value = 0b011; // NOTE: Divide by 16
+static constexpr u32 s_timer_periodic_mode = 0b01 << 17;
 
-static u64 s_base_lapic_address { 0 };
+static u64 s_base_lapic_address = 0;
 
 void initialize()
 {
@@ -49,7 +49,7 @@ void initialize()
     logger::debug("APIC: Mapping LAPIC MMIO 0x%016llx -> 0x%016llx\n", lapic_physical_address, s_base_lapic_address);
     vmm::map(vmm::get_kernel_page_map(), lapic_physical_address, s_base_lapic_address, vmm::Attribute::Write);
 
-    constexpr u32 apic_global_enable { 1 << 11 };
+    constexpr u32 apic_global_enable = 1 << 11;
     cpu::write_msr(s_apic_base_msr, cpu::read_msr(s_apic_base_msr) | apic_global_enable);
 
     enable_lapic();
@@ -61,8 +61,8 @@ void initialize()
 
 void enable_lapic()
 {
-    constexpr u32 apic_software_enable { 1 << 8 };
-    constexpr u32 spurious_vector { 0xff };
+    constexpr u32 apic_software_enable = 1 << 8;
+    constexpr u32 spurious_vector = 0xff;
     mmio::out<u32>(
         s_base_lapic_address + s_spurious_interrupt_vector_register,
         mmio::in<u32>(s_base_lapic_address + s_spurious_interrupt_vector_register) | apic_software_enable

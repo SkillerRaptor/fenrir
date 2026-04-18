@@ -58,6 +58,6 @@ public:
     }
 
 private:
-    T m_value {};
-    Spinlock m_lock {};
+    T m_value { };
+    Spinlock m_lock { };
 };

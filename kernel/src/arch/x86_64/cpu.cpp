@@ -17,7 +17,7 @@ namespace cpu {
 static constexpr usize s_max_cores = 16;
 
 static Core s_cores[s_max_cores] { };
-static Atomic<u32> s_online_cores { 0 };
+static Atomic<u32> s_online_cores = 0;
 
 void early_initialize(const u32 id, const u32 lapic_id, const u64 kernel_stack)
 {

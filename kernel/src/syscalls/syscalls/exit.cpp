@@ -7,7 +7,6 @@
 #include "syscall/syscalls/exit.hpp"
 
 #include "arch/x86_64/cpu.hpp"
-#include "core/logger.hpp"
 #include "scheduler/scheduler.hpp"
 
 namespace syscalls {

@@ -15,8 +15,8 @@
 namespace memory {
 
 struct AllocationHeader {
-    usize page_count { 0 };
-    usize size { 0 };
+    usize page_count = 0;
+    usize size = 0;
 };
 
 void *kmalloc(const usize size)

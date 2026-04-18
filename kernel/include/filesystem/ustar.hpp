@@ -13,8 +13,8 @@ namespace ustar {
 // FIXME: Make this an impl class
 
 struct File {
-    const u8 *ptr { nullptr };
-    usize size { 0 };
+    const u8 *ptr = nullptr;
+    usize size = 0;
 };
 
 File lookup(const u8 *archive, const char *file_name);

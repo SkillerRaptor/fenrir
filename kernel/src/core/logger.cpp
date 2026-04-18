@@ -28,7 +28,7 @@
 
 namespace logger {
 
-static flanterm_context *s_context { nullptr };
+static flanterm_context *s_context = nullptr;
 static Spinlock s_lock { };
 
 void initialize()

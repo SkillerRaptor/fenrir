@@ -16,20 +16,20 @@ struct MountPoint {
     // TODO: Add filesystem type
 
     // NOTE: This is a hack
-    limine_file *archive { nullptr };
+    limine_file *archive = nullptr;
     // NOTE: Make this heap allocated and strcpy
-    const char *target { nullptr };
+    const char *target = nullptr;
 
-    MountPoint *next_mount_point { nullptr };
+    MountPoint *next_mount_point = nullptr;
 };
 
 struct File {
-    const u8 *data { nullptr };
-    usize position { 0 };
-    usize size { 0 };
+    const u8 *data = nullptr;
+    usize position = 0;
+    usize size = 0;
 };
 
-static MountPoint *s_mount_point { nullptr };
+static MountPoint *s_mount_point = nullptr;
 
 static MountPoint *get_mount_point(const StringView path)
 {
@@ -46,7 +46,7 @@ static MountPoint *get_mount_point(const StringView path)
 
         usize matching = 0;
         // FIXME: Match till next slash and not all chars
-        for (usize i { 0 }; i < smallest_length; i++) {
+        for (usize i = 0; i < smallest_length; i++) {
             if (current->target[i] == path[i]) {
                 ++matching;
             }
@@ -116,7 +116,7 @@ void read(File *file, u8 *buffer, const usize size)
 {
     // FIXME: Check against file size
 
-    for (usize i { 0 }; i < size; i++) {
+    for (usize i = 0; i < size; i++) {
         buffer[i] = file->data[file->position + i];
     }
 }

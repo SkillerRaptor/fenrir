@@ -18,12 +18,12 @@ struct AtexitFunctionEntry {
     void *dso_handle;
 };
 
-static constexpr usize s_atexit_max_functions { 128 };
+static constexpr usize s_atexit_max_functions = 128;
 
-static usize s_atexit_function_count { 0 };
+static usize s_atexit_function_count = 0;
 static AtexitFunctionEntry s_atexit_functions[s_atexit_max_functions] { };
 
-extern "C" void *__dso_handle { nullptr };
+extern "C" void *__dso_handle = nullptr;
 
 extern "C" int __cxa_atexit(void (*destructor)(void *), void *object_ptr, void *dso_handle)
 {

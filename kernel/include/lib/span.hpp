@@ -93,6 +93,6 @@ public:
     constexpr Iterator cend() const { return end(); }
 
 private:
-    T *m_data { nullptr };
-    usize m_size { 0 };
+    T *m_data = nullptr;
+    usize m_size = 0;
 };

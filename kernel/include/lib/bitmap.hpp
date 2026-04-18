@@ -22,6 +22,6 @@ public:
     usize size() const { return m_size; }
 
 private:
-    u8 *m_data { nullptr };
-    usize m_size { 0 };
+    u8 *m_data = nullptr;
+    usize m_size = 0;
 };

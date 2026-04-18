@@ -20,13 +20,13 @@ struct Thread {
     };
 
     ThreadId id { -1 };
-    State state { State::Idle };
+    State state = State::Idle;
 
     Registers registers { };
-    u8 *stack { nullptr };
-    usize stack_size { 0 };
+    u8 *stack = nullptr;
+    usize stack_size = 0;
 
-    Process *process { nullptr };
-    Thread *next_thread { nullptr };
-    Thread *thread_list { nullptr };
+    Process *process = nullptr;
+    Thread *next_thread = nullptr;
+    Thread *thread_list = nullptr;
 };

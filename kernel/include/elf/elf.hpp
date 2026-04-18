@@ -32,25 +32,25 @@ struct Header {
     };
 
     u8 magic[4] { };
-    Format format { Format::_64 };
-    Endianness endianness { Endianness::Little };
-    u8 version { 0 };
-    u8 os_abi { 0 };
-    u8 abi_version { 0 };
+    Format format = Format::_64;
+    Endianness endianness = Endianness::Little;
+    u8 version = 0;
+    u8 os_abi = 0;
+    u8 abi_version = 0;
     u8 padding[7] { };
-    Type type { Type::None };
-    u16 machine { 0 };
-    u32 elf_version { 0 };
-    u64 entry { 0 };
-    u64 program_header_offset { 0 };
-    u64 section_header_offset { 0 };
-    u32 flags { 0 };
-    u16 header_size { 0 };
-    u16 program_header_size { 0 };
-    u16 program_header_entry_count { 0 };
-    u16 section_header_size { 0 };
-    u16 section_header_entry_count { 0 };
-    u16 section_name_index { 0 };
+    Type type = Type::None;
+    u16 machine = 0;
+    u32 elf_version = 0;
+    u64 entry = 0;
+    u64 program_header_offset = 0;
+    u64 section_header_offset = 0;
+    u32 flags = 0;
+    u16 header_size = 0;
+    u16 program_header_size = 0;
+    u16 program_header_entry_count = 0;
+    u16 section_header_size = 0;
+    u16 section_header_entry_count = 0;
+    u16 section_name_index = 0;
 } __attribute__((packed));
 
 struct ProgramHeader {
@@ -72,14 +72,14 @@ struct ProgramHeader {
         Readable = 1 << 2,
     };
 
-    Type type { Type::Null };
-    Flags flags { Flags::None };
-    u64 offset { 0 };
-    u64 virtual_address { 0 };
-    u64 physical_address { 0 };
-    u64 file_size { 0 };
-    u64 memory_size { 0 };
-    u64 align { 0 };
+    Type type = Type::Null;
+    Flags flags = Flags::None;
+    u64 offset = 0;
+    u64 virtual_address = 0;
+    u64 physical_address = 0;
+    u64 file_size = 0;
+    u64 memory_size = 0;
+    u64 align = 0;
 } __attribute__((packed));
 
 DECLARE_BITFLAG(ProgramHeader::Flags);
@@ -114,16 +114,16 @@ struct SectionHeader {
         ThreadLocalStorage = 1 << 9,
     };
 
-    u32 name { 0 };
-    Type type { Type::Null };
-    Flags flags { Flags::None };
-    u64 virtual_address { 0 };
-    u64 offset { 0 };
-    u64 size { 0 };
-    u32 link { 0 };
-    u32 info { 0 };
-    u64 address_alignment { 0 };
-    u64 entry_size { 0 };
+    u32 name = 0;
+    Type type = Type::Null;
+    Flags flags = Flags::None;
+    u64 virtual_address = 0;
+    u64 offset = 0;
+    u64 size = 0;
+    u32 link = 0;
+    u32 info = 0;
+    u64 address_alignment = 0;
+    u64 entry_size = 0;
 } __attribute__((packed));
 
 DECLARE_BITFLAG(SectionHeader::Flags);

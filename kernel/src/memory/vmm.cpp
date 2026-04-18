@@ -18,8 +18,8 @@
 namespace vmm {
 
 // NOTE: Assuming MAXPHYADDR is 36, then generate mask and shift it by 12 bits for the flags
-static PageMap *s_kernel_page_map { nullptr };
-static u64 s_address_mask { ((1ull << 36) - 1) << 12 };
+static PageMap *s_kernel_page_map = nullptr;
+static u64 s_address_mask = ((1ull << 36) - 1) << 12;
 static Spinlock s_lock { };
 
 extern "C" unsigned char __kernel_start[];
@@ -32,8 +32,8 @@ void initialize()
     const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
     logger::debug("VMM: Mapping memory map entries...\n");
 
-    usize mapped_entry_count { 0 };
-    usize mapped_bytes { 0 };
+    usize mapped_entry_count = 0;
+    usize mapped_bytes = 0;
     for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE && entry->type != LIMINE_MEMMAP_ACPI_RECLAIMABLE
             && entry->type != LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE
@@ -125,7 +125,7 @@ PageMap *create_page_map()
 static void destroy_page_level(const u64 pml, const u8 level)
 {
     const u64 *top_level = reinterpret_cast<u64 *>(pml + boot::get_hhdm_offset());
-    for (usize i { 0 }; i < 512; ++i) {
+    for (usize i = 0; i < 512; ++i) {
         const u64 entry = top_level[i];
 
         const Attribute attributes = static_cast<Attribute>(entry & 0xfff);
@@ -151,7 +151,7 @@ void destroy_page_map(const PageMap *page_map)
     SpinlockLocker _locker(s_lock);
 
     const u64 *top_level = reinterpret_cast<u64 *>(page_map->top_level + boot::get_hhdm_offset());
-    for (usize i { 0 }; i < 256; ++i) {
+    for (usize i = 0; i < 256; ++i) {
         const u64 entry = top_level[i];
 
         const Attribute attributes = static_cast<Attribute>(entry & 0xfff);

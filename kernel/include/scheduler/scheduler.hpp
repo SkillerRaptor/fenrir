@@ -7,7 +7,6 @@
 #pragma once
 
 #include "memory/vmm.hpp"
-#include "scheduler/types.hpp"
 
 struct Process;
 struct Thread;

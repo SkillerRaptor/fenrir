@@ -12,21 +12,21 @@
 namespace cpu {
 
 struct Core {
-    u32 id { 0 };
-    u32 lapic_id { 0 };
-    u64 kernel_rsp { 0 };
-    u64 user_rsp { 0 };
+    u32 id = 0;
+    u32 lapic_id = 0;
+    u64 kernel_rsp = 0;
+    u64 user_rsp = 0;
 
     gdt::CpuGdt gdt { };
     gdt::Tss tss { };
 
-    u32 critical_sections { 0 };
-    bool were_interrupts_enabled { false };
+    u32 critical_sections = 0;
+    bool were_interrupts_enabled = false;
 
-    Thread *idle_thread { nullptr };
-    Thread *current_thread { nullptr };
-    Thread *next_thread { nullptr };
-    usize thread_count { 0 };
+    Thread *idle_thread = nullptr;
+    Thread *current_thread = nullptr;
+    Thread *next_thread = nullptr;
+    usize thread_count = 0;
 };
 
 void early_initialize(u32 id, u32 lapic_id, u64 kernel_stack);
@@ -43,7 +43,7 @@ u32 online_count();
 template <typename Fn>
 static void for_each(const Fn &fn)
 {
-    for (usize i { 0 }; i < online_count(); ++i) {
+    for (usize i = 0; i < online_count(); ++i) {
         fn(by_id(i));
     }
 }

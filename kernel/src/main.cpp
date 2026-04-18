@@ -86,10 +86,10 @@ extern "C" void kmain()
 
     vfs::mount(module, "/", "USTAR");
 
-    auto hello_world_file = vfs::open("/applications/hello_world");
+    vfs::File *hello_world_file = vfs::open("/applications/hello_world");
 
     vfs::seek(hello_world_file, 0, vfs::SeekOrigin::End);
-    const auto size = vfs::tell(hello_world_file);
+    const usize size = vfs::tell(hello_world_file);
     vfs::seek(hello_world_file, 0, vfs::SeekOrigin::Set);
 
     u8 *bytes = new u8[size];
@@ -114,7 +114,7 @@ extern "C" void kmain()
             = math::align_up(program_header.virtual_address + program_header.memory_size, memory::s_page_size);
         const usize page_count = (virtual_end - virtual_start) / memory::s_page_size;
 
-        for (usize j { 0 }; j < page_count; ++j) {
+        for (usize j = 0; j < page_count; ++j) {
             const u64 physical_address = reinterpret_cast<u64>(pmm::allocate(1, true));
             const u64 virtual_address = virtual_start + j * memory::s_page_size;
 

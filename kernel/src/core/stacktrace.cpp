@@ -14,13 +14,13 @@
 namespace stacktrace {
 
 struct StackFrame {
-    StackFrame *rbp { nullptr };
-    u64 rip { 0 };
+    StackFrame *rbp = nullptr;
+    u64 rip = 0;
 };
 
 struct Symbol {
-    const char *name { nullptr };
-    u64 address { 0 };
+    const char *name = nullptr;
+    u64 address = 0;
 };
 
 static char *s_file_buffer = nullptr;
@@ -65,8 +65,8 @@ void initialize()
     memcpy(s_file_buffer, symbol_map_file->address, symbol_map_file->size);
     s_file_buffer[symbol_map_file->size] = '\0';
 
-    usize count { 0 };
-    for (usize i { 0 }; i < symbol_map_file->size; ++i) {
+    usize count = 0;
+    for (usize i = 0; i < symbol_map_file->size; ++i) {
         if (is_newline(s_file_buffer[i])) {
             ++count;
         }
@@ -130,7 +130,7 @@ static const Symbol *find_symbol(const u64 rip)
         return nullptr;
     }
 
-    usize low { 0 };
+    usize low = 0;
     usize high = s_symbol_count;
     while (low + 1 < high) {
         const usize mid = low + (high - low) / 2;
@@ -157,7 +157,7 @@ void print(const u64 max_frames)
 
     logger::err("Stacktrace:\n");
 
-    for (usize i { 0 }; stack_frame && i < max_frames; ++i) {
+    for (usize i = 0; stack_frame && i < max_frames; ++i) {
         const uint64_t rip = stack_frame->rip;
         if (rip == 0) {
             break;

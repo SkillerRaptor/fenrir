@@ -17,8 +17,8 @@ struct Process {
     };
 
     ProcessId id { -1 };
-    State state { State::Idle };
+    State state = State::Idle;
 
-    vmm::PageMap *page_map { nullptr };
-    Thread *thread_list { nullptr };
+    vmm::PageMap *page_map = nullptr;
+    Thread *thread_list = nullptr;
 };

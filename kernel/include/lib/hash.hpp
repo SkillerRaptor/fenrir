@@ -18,7 +18,7 @@ struct Hash<u64> {
     usize operator()(const u64 &key) const
     {
         u64 result = 0xcbf29ce484222325;
-        for (usize i { 0 }; i < 4; ++i) {
+        for (usize i = 0; i < 4; ++i) {
             const u8 byte = (key >> (i * 8)) & 0xff;
             result = (result ^ byte) * 0x00000100000001b3;
         }
@@ -28,5 +28,5 @@ struct Hash<u64> {
 
 template <>
 struct Hash<u32> {
-    usize operator()(const u32 &key) const { return Hash<u64> {}(key); }
+    usize operator()(const u32 &key) const { return Hash<u64>()(key); }
 };
