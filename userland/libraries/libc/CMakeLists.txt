@@ -10,6 +10,7 @@ set(SOURCES
         src/syscalls.c)
 
 set(HEADERS
+        include/stdint.h
         include/syscalls.h)
 
 add_library(libc STATIC ${SOURCES} ${HEADERS})

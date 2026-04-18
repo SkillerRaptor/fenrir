@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define SYS_EXIT 0x01
 #define SYS_WRITE 0x02
 
@@ -20,24 +22,24 @@ extern "C" {
 #endif
 
 // TODO: Maybe add a separate return type?
-extern __UINT64_TYPE__ syscall(__UINT64_TYPE__ number, ...);
+extern uint64_t syscall(uint64_t number, ...);
 
-__UINT64_TYPE__ write(const char *str, __UINT64_TYPE__ len);
+uint64_t write(const char *str, uint64_t len);
 
 struct Device {
     const char *name;
-    __UINT64_TYPE__ id;
+    uint64_t id;
 
     // FIXME: This is framebuffer specific and should be requested separately
-    __UINT64_TYPE__ width;
-    __UINT64_TYPE__ height;
-    __UINT64_TYPE__ pitch;
+    uint64_t width;
+    uint64_t height;
+    uint64_t pitch;
 };
 
-__UINT64_TYPE__ enumerate_devices(struct Device *devices, __UINT64_TYPE__ *count);
-__UINT64_TYPE__ open_device(__UINT64_TYPE__ id);
-__UINT64_TYPE__ close_device(__UINT64_TYPE__ id);
-__UINT64_TYPE__ map_device(__UINT64_TYPE__ id, void **ptr);
+uint64_t enumerate_devices(struct Device *devices, uint64_t *count);
+uint64_t open_device(uint64_t id);
+uint64_t close_device(uint64_t id);
+uint64_t map_device(uint64_t id, void **ptr);
 
 #ifdef __cplusplus
 }
