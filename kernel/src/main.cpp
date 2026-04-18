@@ -86,7 +86,7 @@ extern "C" void kmain()
 
     vfs::mount(module, "/", "USTAR");
 
-    vfs::File *hello_world_file = vfs::open("/applications/hello_world");
+    vfs::File *hello_world_file = vfs::open("/services/window_service");
 
     vfs::seek(hello_world_file, 0, vfs::SeekOrigin::End);
     const usize size = vfs::tell(hello_world_file);

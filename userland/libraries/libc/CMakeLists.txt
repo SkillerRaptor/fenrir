@@ -22,7 +22,8 @@ target_compile_options(
         -fno-pie
         -fno-pic
         -m64
-        -nostdlib)
+        -nostdlib
+        -nostdinc)
 target_link_options(
         libc
         PRIVATE

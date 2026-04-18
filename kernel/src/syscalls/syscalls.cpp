@@ -9,7 +9,11 @@
 #include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
+#include "core/memory.hpp"
+#include "lib/math.hpp"
 #include "lib/string.hpp"
+#include "memory/vmm.hpp"
+#include "scheduler/process.hpp"
 #include "syscall/syscalls/exit.hpp"
 
 namespace syscalls {
@@ -75,8 +79,87 @@ extern "C" void syscall_handler(const SyscallRegisters *registers)
 
         break;
     }
+    case 0x03: {
+        if (first_argument == 0) {
+            u64 *count = reinterpret_cast<u64 *>(second_argument);
+            *count = 1;
+        } else {
+            struct Device {
+                const char *name;
+                u64 id;
+
+                u64 width;
+                u64 height;
+                u64 pitch;
+            };
+
+            Device *devices = reinterpret_cast<Device *>(first_argument);
+            devices[0] = {
+                .name = "Framebuffer",
+                .id = 69,
+                .width = boot::get_framebuffers()[0]->width,
+                .height = boot::get_framebuffers()[0]->height,
+                .pitch = boot::get_framebuffers()[0]->pitch,
+            };
+
+            u64 *count = reinterpret_cast<u64 *>(second_argument);
+            *count = 1;
+        }
+        break;
+    }
+    case 0x04: { // Open (Ignore)
+        break;
+    }
+    case 0x05: { // Close (Ignore)
+        break;
+    }
+    case 0x06: {
+        const cpu::Core &core = cpu::current();
+
+        limine_framebuffer *framebuffer = boot::get_framebuffers()[0];
+
+        const u64 physical_address = reinterpret_cast<u64>(framebuffer->address) - boot::get_hhdm_offset();
+        const u64 fb_size_bytes = framebuffer->pitch * framebuffer->height;
+
+        // round up to page boundary — the framebuffer may not end on a page boundary
+        const u64 fb_pages = math::div_round_up(fb_size_bytes, memory::s_page_size);
+
+        // choose a fixed virtual address in user space for the framebuffer
+        // pick something well above typical ELF load addresses but below stack
+        // 0x0000700000000000 is a reasonable choice — far from code and stack
+        constexpr u64 fb_user_vaddr = 0x0000000001000000;
+
+        // align the physical base down to a page boundary
+        // the framebuffer physical address might not be page-aligned
+        const u64 aligned_phys = math::align_down(physical_address, memory::s_page_size);
+        const u64 phys_offset = physical_address - aligned_phys;
+
+        // recalculate page count accounting for the alignment offset
+        const u64 total_bytes = fb_size_bytes + phys_offset;
+        const u64 total_pages = math::div_round_up(total_bytes, memory::s_page_size);
+
+        for (u64 i = 0; i < total_pages; ++i) {
+            vmm::map(
+                core.current_thread->process->page_map,
+                aligned_phys + i * memory::s_page_size,
+                fb_user_vaddr + i * memory::s_page_size,
+                vmm::Attribute::Write | vmm::Attribute::User);
+        }
+
+        u64 *ptr = reinterpret_cast<u64 *>(second_argument);
+        *ptr = fb_user_vaddr;
+
+        break;
+    }
     default:
-        logger::debug("Unhandled syscall %u\n", registers->rax);
+        logger::debug(
+            "Unhandled syscall %u (rdi: %llu, rsi: %llu, rdx: %llu, rcx: %llu, r8: %llu)\n",
+            syscall_id,
+            first_argument,
+            second_argument,
+            third_argument,
+            fourth_argument,
+            fifth_argument);
         break;
     }
 }
