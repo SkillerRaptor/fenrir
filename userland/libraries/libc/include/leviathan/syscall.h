@@ -21,10 +21,14 @@
 extern "C" {
 #endif
 
-// TODO: Maybe add a separate return type?
-extern uint64_t syscall(uint64_t number, ...);
+typedef enum : uint64_t {
+    STATUS_OK = 0,
+} Status;
 
-uint64_t write(const char *str, uint64_t len);
+// TODO: Maybe add a separate return type?
+extern Status syscall(uint64_t number, ...);
+
+Status write(const char *str, uint64_t len);
 
 struct Device {
     const char *name;
@@ -36,10 +40,10 @@ struct Device {
     uint64_t pitch;
 };
 
-uint64_t enumerate_devices(struct Device *devices, uint64_t *count);
-uint64_t open_device(uint64_t id);
-uint64_t close_device(uint64_t id);
-uint64_t map_device(uint64_t id, void **ptr);
+Status enumerate_devices(struct Device *devices, uint64_t *count);
+Status open_device(uint64_t id);
+Status close_device(uint64_t id);
+Status map_device(uint64_t id, void **ptr);
 
 #ifdef __cplusplus
 }
