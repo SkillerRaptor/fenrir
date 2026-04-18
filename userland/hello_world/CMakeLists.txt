@@ -15,7 +15,6 @@ target_link_libraries(hello_world PRIVATE libc)
 target_compile_options(
         hello_world
         PRIVATE
-        -ffreestanding
         -fno-stack-protector
         -fno-pie
         -fno-pic

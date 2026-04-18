@@ -10,12 +10,11 @@ set(SOURCES
 set(HEADERS
 )
 
-add_executable(window_manager ${SOURCES} ${HEADERS})
-target_link_libraries(window_manager PRIVATE libc)
+add_executable(window_service ${SOURCES} ${HEADERS})
+target_link_libraries(window_service PRIVATE libc)
 target_compile_options(
-        window_manager
+        window_service
         PRIVATE
-        -ffreestanding
         -fno-stack-protector
         -fno-pie
         -fno-pic
@@ -24,7 +23,7 @@ target_compile_options(
         -fno-rtti
         -fno-exceptions)
 target_link_options(
-        window_manager
+        window_service
         PRIVATE
         -nostdlib
         -static

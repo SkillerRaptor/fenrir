@@ -148,8 +148,11 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/applications
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:hello_world> ${CMAKE_CURRENT_BINARY_DIR}/applications/
 
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/services
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:window_service> ${CMAKE_CURRENT_BINARY_DIR}/services/
+
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules
-        COMMAND tar --sort=name --owner=0 --group=0 --numeric-owner --format=ustar -cf ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/initramfs.tar applications
+        COMMAND tar --sort=name --owner=0 --group=0 --numeric-owner --format=ustar -cf ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/initramfs.tar applications/ services/
 
         COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
 
