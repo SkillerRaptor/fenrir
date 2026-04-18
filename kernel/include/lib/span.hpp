@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "initializer_list.hpp"
 #include "lib/types.hpp"
 
 template <typename T>
@@ -71,9 +72,15 @@ public:
     }
 
     template <usize N>
-    constexpr Span(T (&arr)[N])
-        : m_data(arr)
+    constexpr Span(T (&array)[N])
+        : m_data(array)
         , m_size(N)
+    {
+    }
+
+    constexpr Span(InitializerList<T> values)
+        : m_data(values.begin())
+        , m_size(values.size())
     {
     }
 
