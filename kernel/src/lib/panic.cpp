@@ -8,9 +8,11 @@
 
 #include "acpi/apic.hpp"
 #include "arch/x86_64/cpu.hpp"
+#include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/stacktrace.hpp"
 #include "scheduler/process.hpp"
+#include "scheduler/scheduler.hpp"
 
 static void print_registers(const Registers &registers)
 {
@@ -134,8 +136,9 @@ static const char *s_exceptions[] = {
 
 void __panic_exception(const Registers &registers)
 {
-    cpu::disable_interrupts();
-    apic::send_ipi(0xff, 0xfe);
+    if (registers.cs == 0x28) {
+        apic::send_ipi(0xff, 0xfe);
+    }
 
     logger::fatal("\n");
     logger::fatal("%s occurred!\n", s_exceptions[registers.isr]);
@@ -202,7 +205,53 @@ void __panic_exception(const Registers &registers)
     print_registers(registers);
     logger::fatal("\n");
 
-    print_control_registers();
+    if (registers.cs == 0x28) {
+        print_control_registers();
+        panic();
+    } else {
+        const cpu::Core &core = cpu::current();
 
-    panic();
+        struct StackFrame {
+            u64 rbp = 0;
+            u64 rip = 0;
+        };
+
+        logger::fatal("Stacktrace:\n");
+
+        u64 rbp = registers.rbp;
+        u64 rip = registers.rip;
+        for (usize i = 0; rbp != 0 && i < 50; ++i) {
+            // TODO: Resolve user symbols per ELF symbol table
+            logger::fatal("  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
+
+            const u64 physical_address = vmm::virtual_to_physical(core.current_thread->process->page_map, rbp);
+            if (physical_address == 0) {
+                break;
+            }
+
+            const StackFrame *frame = reinterpret_cast<const StackFrame *>(physical_address + boot::get_hhdm_offset());
+            rip = frame->rip;
+            rbp = frame->rbp;
+        }
+        logger::fatal("\n");
+
+        cpu::enter_critical();
+        core.current_thread->state = Thread::State::Dead;
+        cpu::leave_critical();
+
+        logger::fatal("Current State:\n");
+        logger::fatal("  Core: #%u\n", core.id);
+        if (core.current_thread) {
+            logger::fatal("  Process: #%d \n", core.current_thread->process->id.get());
+            logger::fatal("  Thread: #%d\n", core.current_thread->id.get());
+        } else {
+            logger::fatal("  Process: <unknown>\n");
+            logger::fatal("  Thread: <unknown>\n");
+        }
+
+        logger::fatal("\n");
+        logger::fatal("Terminating process...\n");
+
+        scheduler::yield();
+    }
 }

@@ -162,14 +162,14 @@ add_custom_command(
 
         COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
 
-        DEPENDS kernel hello_world ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
+        DEPENDS kernel hello_world window_service ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
 
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_custom_target(
         iso
         ALL
-        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel hello_world)
+        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel hello_world window_service)
 
 #-------------------------------------------------------------------------------------------
 # Run

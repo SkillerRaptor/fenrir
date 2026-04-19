@@ -97,10 +97,10 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
 
     u64 *stack_ptr = reinterpret_cast<u64 *>(virtual_stack);
-    *--stack_ptr = 0;
-    *--stack_ptr = 0;
-    *--stack_ptr = reinterpret_cast<u64>(__builtin_return_address(0));
-    *--stack_ptr = reinterpret_cast<u64>(reinterpret_cast<void *>(&create_thread));
+    if (cs == 0x28) {
+        *--stack_ptr = reinterpret_cast<u64>(__builtin_return_address(0));
+        *--stack_ptr = reinterpret_cast<u64>(reinterpret_cast<void *>(&create_thread));
+    }
 
     Thread *thread = new Thread {
         .id = id,
