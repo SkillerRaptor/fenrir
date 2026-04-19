@@ -12,7 +12,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 CPMAddPackage(
         NAME Limine
         GIT_REPOSITORY https://github.com/Limine-Bootloader/Limine.git
-        GIT_TAG v11.2.1-binary
+        GIT_TAG v11.4.0-binary
         DOWNLOAD_ONLY YES)
 
 #-------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ endif ()
 #-------------------------------------------------------------------------------------------
 CPMAddPackage(
         NAME Flanterm
-        GIT_REPOSITORY https://codeberg.org/Mintsuki/Flanterm.git
+        GIT_REPOSITORY https://github.com/Mintsuki/Flanterm.git
         GIT_TAG v3.0.2
         DOWNLOAD_ONLY YES)
 
