@@ -24,6 +24,7 @@ set(SOURCES
         src/filesystem/vfs.cpp
         src/lib/assert.cpp
         src/lib/bitmap.cpp
+        src/lib/panic.cpp
         src/lib/string.cpp
         src/memory/kmalloc.cpp
         src/memory/pmm.cpp
@@ -69,6 +70,7 @@ set(HEADERS
         include/lib/identifier.hpp
         include/lib/initializer_list.hpp
         include/lib/math.hpp
+        include/lib/panic.hpp
         include/lib/queue.hpp
         include/lib/span.hpp
         include/lib/string.hpp

@@ -155,7 +155,7 @@ void print(const u64 max_frames)
     volatile StackFrame *stack_frame = nullptr;
     asm volatile("mov %%rbp, %0" : "=r"(stack_frame) : : "memory");
 
-    logger::err("Stacktrace:\n");
+    logger::fatal("Stacktrace:\n");
 
     for (usize i = 0; stack_frame && i < max_frames; ++i) {
         const uint64_t rip = stack_frame->rip;
@@ -167,19 +167,19 @@ void print(const u64 max_frames)
 
         const Symbol *symbol = find_symbol(rip);
         if (!symbol) {
-            logger::err("  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
+            logger::fatal("  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
             continue;
         }
 
         const u64 offset = rip - symbol->address;
         if (offset == 0) {
-            logger::err(
+            logger::fatal(
                 "  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m%s\n",
                 i + 1,
                 rip,
                 symbol->name);
         } else {
-            logger::err(
+            logger::fatal(
                 "  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m%s \033[38;2;0;128;0m+0x%lx\n",
                 i + 1,
                 rip,

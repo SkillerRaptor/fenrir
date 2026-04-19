@@ -86,7 +86,11 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
     assert(entry);
 
     const ThreadId id = ThreadId { s_current_thread_id.fetch_add(1) };
-    const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
+    u64 *stack = static_cast<u64 *>(pmm::allocate(1, true)) + memory::s_page_size;
+
+    const u64 caller = reinterpret_cast<u64>(__builtin_return_address(0));
+    *--stack = caller;
+    *--stack = 0xdeadbeef;
 
     Thread *thread = new Thread {
         .id = id,
@@ -94,7 +98,7 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         .registers = {
             .cs = cs,
             .flags = 1 << 9 | 1 << 1,
-            .rsp = stack,
+            .rsp = reinterpret_cast<u64>(stack),
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
@@ -113,9 +117,10 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         thread->registers.ss = thread->registers.cs - 0x08;
     }
 
+    // FIXME: Should the stack here be the original value?
     vmm::map(
         process->page_map,
-        stack - memory::s_page_size,
+        reinterpret_cast<u64>(stack) - memory::s_page_size,
         thread->registers.rsp - memory::s_page_size,
         vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
 

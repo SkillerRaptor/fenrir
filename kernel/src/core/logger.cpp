@@ -114,7 +114,7 @@ static void write_string(const char *str)
 static void print_timestamp()
 {
     const Timestamp ts = get_timestamp();
-    npf_pprintf(write_character, nullptr, "[%03lu.%03lu] ", ts.seconds, ts.milliseconds);
+    npf_pprintf(write_character, nullptr, "[%lu.%03lu] ", ts.seconds, ts.milliseconds);
 }
 
 void log(const char *format, ...)
@@ -207,6 +207,22 @@ void err(const char *format, ...)
     va_end(args);
 
     write_string("\033[0m");
+
+    s_lock.unlock();
+    cpu::leave_critical();
+}
+
+void fatal(const char *format, ...)
+{
+    cpu::enter_critical();
+    s_lock.lock();
+
+    write_string("\033[38;2;128;0;0mfatal\033[39m: ");
+
+    va_list args;
+    va_start(args, format);
+    npf_vpprintf(write_character, nullptr, format, args);
+    va_end(args);
 
     s_lock.unlock();
     cpu::leave_critical();

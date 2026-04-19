@@ -20,6 +20,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+add_compile_options(-fdebug-prefix-map=${CMAKE_SOURCE_DIR}=.)
+add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
+
 #-------------------------------------------------------------------------------------------
 # Build Options
 #-------------------------------------------------------------------------------------------

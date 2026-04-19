@@ -15,11 +15,11 @@ extern "C" {
 #ifdef NDEBUG
 #    define assert(assertion) ((void) 0)
 #else
-#    define assert(assertion)                                                 \
-        do {                                                                  \
-            if (!(assertion)) {                                               \
-                __assertion_failed(#assertion, __FILE__, __LINE__, __func__); \
-            }                                                                 \
+#    define assert(assertion)                                                            \
+        do {                                                                             \
+            if (!(assertion)) {                                                          \
+                __assertion_failed(#assertion, __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+            }                                                                            \
         } while (0)
 #endif
 

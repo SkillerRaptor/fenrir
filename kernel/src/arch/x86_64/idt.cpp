@@ -12,6 +12,7 @@
 #include "core/stacktrace.hpp"
 #include "lib/assert.hpp"
 #include "lib/bitflags.hpp"
+#include "lib/panic.hpp"
 
 namespace idt {
 
@@ -63,74 +64,7 @@ static Entry create_entry(void *handler, const Attribute attributes)
     };
 }
 
-#define ENUMERATE_EXCEPTIONS                                                                 \
-    _ENUMERATE_EXCEPTION(0, divide_by_zero, "Divide-by-zero Error")                          \
-    _ENUMERATE_EXCEPTION(1, debug, "Debug")                                                  \
-    _ENUMERATE_EXCEPTION(2, non_maskable_interrupt, "Non-maskable Interrupt")                \
-    _ENUMERATE_EXCEPTION(3, breakpoint, "Breakpoint")                                        \
-    _ENUMERATE_EXCEPTION(4, overflow, "Overflow")                                            \
-    _ENUMERATE_EXCEPTION(5, bound_range_exceeded, "Bound Range Exceeded")                    \
-    _ENUMERATE_EXCEPTION(6, invalid_opcode, "Invalid Opcode")                                \
-    _ENUMERATE_EXCEPTION(7, device_not_available, "Device Not Available")                    \
-    _ENUMERATE_EXCEPTION(8, double_fault, "Double Fault")                                    \
-    _ENUMERATE_EXCEPTION(10, invalid_tss, "Invalid TSS")                                     \
-    _ENUMERATE_EXCEPTION(11, segment_not_present, "Segment Not Present")                     \
-    _ENUMERATE_EXCEPTION(12, stack_segment_fault, "Stack-Segment-Fault")                     \
-    _ENUMERATE_EXCEPTION(13, general_protection_fault, "General-Protection-Fault")           \
-    _ENUMERATE_EXCEPTION(16, x87_floating_point_exception, "x87 Floating-Point Exception")   \
-    _ENUMERATE_EXCEPTION(17, alignment_check, "Alignment Check")                             \
-    _ENUMERATE_EXCEPTION(18, machine_check, "Machine Check")                                 \
-    _ENUMERATE_EXCEPTION(19, simd_floating_point_exception, "SIMD Floating-Point Exception") \
-    _ENUMERATE_EXCEPTION(20, virtualization_exception, "Virtualization Exception")           \
-    _ENUMERATE_EXCEPTION(30, security_exception, "Security Exception")
-
-#define _ENUMERATE_EXCEPTION(i, fn, exception)                                    \
-    __attribute__((noreturn)) void fn(const Registers &registers)                 \
-    {                                                                             \
-        apic::send_ipi(0xff, 0xfe);                                               \
-                                                                                  \
-        logger::err(exception " occured with error code %lu\n", registers.error); \
-        logger::err("Register dump:\n");                                          \
-        logger::err(                                                              \
-            "  rax=0x%016lx rbx=0x%016lx rcx=0x%016lx rdx=0x%016lx\n",            \
-            registers.rax,                                                        \
-            registers.rbx,                                                        \
-            registers.rcx,                                                        \
-            registers.rdx);                                                       \
-        logger::err(                                                              \
-            "  rsi=0x%016lx rdi=0x%016lx rbp=0x%016lx rsp=0x%016lx\n",            \
-            registers.rsi,                                                        \
-            registers.rdi,                                                        \
-            registers.rbp,                                                        \
-            registers.rsp);                                                       \
-        logger::err(                                                              \
-            "   r8=0x%016lx  r9=0x%016lx r10=0x%016lx r11=0x%016lx\n",            \
-            registers.r8,                                                         \
-            registers.r9,                                                         \
-            registers.r10,                                                        \
-            registers.r11);                                                       \
-        logger::err(                                                              \
-            "  r12=0x%016lx r13=0x%016lx r14=0x%016lx r15=0x%016lx\n",            \
-            registers.r12,                                                        \
-            registers.r13,                                                        \
-            registers.r14,                                                        \
-            registers.r15);                                                       \
-        logger::err(                                                              \
-            "  rip=0x%016lx  cs=0x%016lx  ss=0x%016lx flg=0x%016lx\n",            \
-            registers.rip,                                                        \
-            registers.cs,                                                         \
-            registers.ss,                                                         \
-            registers.flags);                                                     \
-                                                                                  \
-        stacktrace::print(10);                                                    \
-                                                                                  \
-        cpu::hcf();                                                               \
-    }
-
-ENUMERATE_EXCEPTIONS
-
-#undef _ENUMERATE_EXCEPTION
-
+/*
 __attribute__((noreturn)) void page_fault(const Registers &registers)
 {
     apic::send_ipi(0xff, 0xfe);
@@ -171,42 +105,11 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
         logger::err(" - Instruction fetch fault\n");
     }
 
-    logger::err("Register dump:\n");
-    logger::err(
-        "  rax=0x%016lx rbx=0x%016lx rcx=0x%016lx rdx=0x%016lx\n",
-        registers.rax,
-        registers.rbx,
-        registers.rcx,
-        registers.rdx);
-    logger::err(
-        "  rsi=0x%016lx rdi=0x%016lx rbp=0x%016lx rsp=0x%016lx\n",
-        registers.rsi,
-        registers.rdi,
-        registers.rbp,
-        registers.rsp);
-    logger::err(
-        "   r8=0x%016lx  r9=0x%016lx r10=0x%016lx r11=0x%016lx\n",
-        registers.r8,
-        registers.r9,
-        registers.r10,
-        registers.r11);
-    logger::err(
-        "  r12=0x%016lx r13=0x%016lx r14=0x%016lx r15=0x%016lx\n",
-        registers.r12,
-        registers.r13,
-        registers.r14,
-        registers.r15);
-    logger::err(
-        "  rip=0x%016lx  cs=0x%016lx  ss=0x%016lx flg=0x%016lx\n",
-        registers.rip,
-        registers.cs,
-        registers.ss,
-        registers.flags);
-
     stacktrace::print(10);
 
     cpu::hcf();
 }
+*/
 
 void initialize()
 {
@@ -216,11 +119,13 @@ void initialize()
             Attribute::KernelPrivilege | Attribute::Present | Attribute::InterruptGate);
     }
 
-#define _ENUMERATE_EXCEPTION(i, fn, err) s_interrupt_handlers[i] = fn;
-    ENUMERATE_EXCEPTIONS
-#undef _ENUMERATE_EXCEPTION
+    for (usize i = 0; i < 31; ++i) {
+        if (i == 9 || i == 15 || (i >= 21 && i <= 29)) {
+            continue;
+        }
 
-    s_interrupt_handlers[14] = page_fault;
+        s_interrupt_handlers[i] = __panic_exception;
+    }
 
     s_descriptor.size = sizeof(s_entries) - 1;
     s_descriptor.address = reinterpret_cast<u64>(s_entries);
