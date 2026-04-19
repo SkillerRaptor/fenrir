@@ -41,7 +41,8 @@ set(KERNEL_BASE_OPTIONS
         -fno-rtti
         -fno-exceptions
         -fno-unwind-tables
-        -fno-asynchronous-unwind-tables)
+        -fno-asynchronous-unwind-tables
+        -fno-omit-frame-pointer)
 
 set(KERNEL_ARCH_OPTIONS
         -m64

@@ -163,6 +163,12 @@ void print(const u64 max_frames)
             break;
         }
 
+        // NOTE: Check for misaligned address
+        const u64 address = reinterpret_cast<u64>(stack_frame->rbp);
+        if (address != 0 && (address & 0x7)) {
+            break;
+        }
+
         stack_frame = stack_frame->rbp;
 
         const Symbol *symbol = find_symbol(rip);

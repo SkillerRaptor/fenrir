@@ -64,53 +64,6 @@ static Entry create_entry(void *handler, const Attribute attributes)
     };
 }
 
-/*
-__attribute__((noreturn)) void page_fault(const Registers &registers)
-{
-    apic::send_ipi(0xff, 0xfe);
-
-    volatile u64 faulting_address = 0;
-    asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-
-    const cpu::Core &core = cpu::current();
-    logger::err(
-        "Page Fault at address 0x%016lx on CPU #%u and Thread #%d\n",
-        faulting_address,
-        core.id,
-        core.current_thread->id.get());
-
-    if (registers.error & 0b00001) {
-        logger::err(" - Page-level protection violation\n");
-    } else {
-        logger::err(" - Non-present page\n");
-    }
-
-    if (registers.error & 0b00010) {
-        logger::err(" - Write access\n");
-    } else {
-        logger::err(" - Read access\n");
-    }
-
-    if (registers.error & 0b00100) {
-        logger::err(" - User-mode\n");
-    } else {
-        logger::err(" - Kernel-mode\n");
-    }
-
-    if (registers.error & 0b01000) {
-        logger::err(" - Reserved bit set\n");
-    }
-
-    if (registers.error & 0b10000) {
-        logger::err(" - Instruction fetch fault\n");
-    }
-
-    stacktrace::print(10);
-
-    cpu::hcf();
-}
-*/
-
 void initialize()
 {
     for (usize i = 0; i < 256; ++i) {
@@ -145,6 +98,19 @@ void set_handler(const u8 isr, const InterruptHandler handler)
 
 extern "C" void interrupt_raise(const Registers *registers)
 {
+    struct StackFrame {
+        u64 rbp { 0 };
+        u64 rip { 0 };
+    };
+
+    const StackFrame stack_frame {
+        .rbp = registers->rbp,
+        .rip = registers->rip,
+    };
+
+    // NOTE: This is to keep the stack frame chain alive
+    asm volatile("mov %0, %%rbp" : : "r"(&stack_frame) : "memory", "rbp");
+
     if (s_interrupt_handlers[registers->isr]) {
         s_interrupt_handlers[registers->isr](*registers);
     } else {

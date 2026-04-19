@@ -86,19 +86,30 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
     assert(entry);
 
     const ThreadId id = ThreadId { s_current_thread_id.fetch_add(1) };
-    u64 *stack = static_cast<u64 *>(pmm::allocate(1, true)) + memory::s_page_size;
+    const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;
 
-    const u64 caller = reinterpret_cast<u64>(__builtin_return_address(0));
-    *--stack = caller;
-    *--stack = 0xdeadbeef;
+    const u64 virtual_stack = stack + (cs == 0x28 ? boot::get_hhdm_offset() : 0);
+
+    vmm::map(
+        process->page_map,
+        stack - memory::s_page_size,
+        virtual_stack - memory::s_page_size,
+        vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
+
+    u64 *stack_ptr = reinterpret_cast<u64 *>(virtual_stack);
+    *--stack_ptr = 0;
+    *--stack_ptr = 0;
+    *--stack_ptr = reinterpret_cast<u64>(__builtin_return_address(0));
+    *--stack_ptr = reinterpret_cast<u64>(reinterpret_cast<void *>(&create_thread));
 
     Thread *thread = new Thread {
         .id = id,
         .state = Thread::State::Idle,
         .registers = {
+            .rbp = reinterpret_cast<u64>(stack_ptr),
             .cs = cs,
             .flags = 1 << 9 | 1 << 1,
-            .rsp = reinterpret_cast<u64>(stack),
+            .rsp = reinterpret_cast<u64>(stack_ptr),
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
@@ -110,19 +121,11 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
     if (cs == 0x28) {
         thread->registers.rdi = reinterpret_cast<u64>(entry);
         thread->registers.rip = reinterpret_cast<u64>(thread_wrapper);
-        thread->registers.rsp += boot::get_hhdm_offset();
         thread->registers.ss = thread->registers.cs + 0x08;
     } else {
         thread->registers.rip = reinterpret_cast<u64>(entry);
         thread->registers.ss = thread->registers.cs - 0x08;
     }
-
-    // FIXME: Should the stack here be the original value?
-    vmm::map(
-        process->page_map,
-        reinterpret_cast<u64>(stack) - memory::s_page_size,
-        thread->registers.rsp - memory::s_page_size,
-        vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
 
     Thread *thread_list = process->thread_list;
     if (!thread_list) {
