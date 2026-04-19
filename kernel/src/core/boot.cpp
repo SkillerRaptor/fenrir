@@ -48,23 +48,23 @@ __attribute__((used, section(".limine_requests"))) volatile limine_mp_request s_
     .flags = 0,
 };
 
-__attribute__((used, section(".limine_requests"))) volatile limine_memmap_request s_memmap_request  {
+__attribute__((used, section(".limine_requests"))) volatile limine_memmap_request s_memmap_request {
     .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 0,
     .response = nullptr,
 };
 
-__attribute__((used, section(".limine_requests"))) limine_internal_module s_kernel_symbols_module  {
+__attribute__((used, section(".limine_requests"))) limine_internal_module s_kernel_symbols_module {
     .path = "kernel_symbols.map",
     .string = "kernel_symbols",
     .flags = LIMINE_INTERNAL_MODULE_REQUIRED,
 };
 
-__attribute__((used, section(".limine_requests"))) limine_internal_module *s_internal_modules[]  {
+__attribute__((used, section(".limine_requests"))) limine_internal_module *s_internal_modules[] {
     &s_kernel_symbols_module,
 };
 
-__attribute__((used, section(".limine_requests"))) volatile limine_module_request s_module_request  {
+__attribute__((used, section(".limine_requests"))) volatile limine_module_request s_module_request {
     .id = LIMINE_MODULE_REQUEST_ID,
     .revision = 1,
     .response = nullptr,
@@ -72,8 +72,14 @@ __attribute__((used, section(".limine_requests"))) volatile limine_module_reques
     .internal_modules = s_internal_modules,
 };
 
-__attribute__((used, section(".limine_requests"))) volatile limine_rsdp_request s_rsdp_request  {
+__attribute__((used, section(".limine_requests"))) volatile limine_rsdp_request s_rsdp_request {
     .id = LIMINE_RSDP_REQUEST_ID,
+    .revision = 0,
+    .response = nullptr,
+};
+
+__attribute__((used, section(".limine_requests"))) volatile limine_tsc_frequency_request s_tsc_frequency_request {
+    .id = LIMINE_TSC_FREQUENCY_REQUEST_ID,
     .revision = 0,
     .response = nullptr,
 };
@@ -127,5 +133,7 @@ Span<limine_file *> get_modules()
 }
 
 void *get_rsdp_address() { return s_rsdp_request.response->address; }
+
+u64 get_tsc_frequency() { return s_tsc_frequency_request.response->frequency; }
 
 } // namespace boot

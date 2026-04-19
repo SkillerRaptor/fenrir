@@ -33,4 +33,6 @@ Span<limine_file *> get_modules();
 
 void *get_rsdp_address();
 
+u64 get_tsc_frequency();
+
 } // namespace boot

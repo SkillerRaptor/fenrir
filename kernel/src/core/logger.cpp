@@ -31,8 +31,36 @@ namespace logger {
 static flanterm_context *s_context = nullptr;
 static Spinlock s_lock { };
 
+static u64 s_tsc_frequency = 0;
+static u64 s_tsc_boot = 0;
+
+struct Timestamp {
+    u64 seconds = 0;
+    u64 milliseconds = 0;
+};
+
+static u64 get_tsc()
+{
+    u32 low = 0;
+    u32 high = 0;
+    asm volatile("rdtsc" : "=a"(low), "=d"(high));
+    return (static_cast<u64>(high) << 32) | low;
+}
+
+static Timestamp get_timestamp()
+{
+    const u64 elapsed = get_tsc() - s_tsc_boot;
+    const u64 seconds = elapsed / s_tsc_frequency;
+    const u64 remainder = elapsed % s_tsc_frequency;
+    const u64 milliseconds = (remainder * 1'000ull) / s_tsc_frequency;
+    return { seconds, milliseconds };
+}
+
 void initialize()
 {
+    s_tsc_frequency = boot::get_tsc_frequency();
+    s_tsc_boot = get_tsc();
+
     const Span<limine_framebuffer *> framebuffers = boot::get_framebuffers();
 
     s_context = flanterm_fb_init(
@@ -83,6 +111,12 @@ static void write_string(const char *str)
     }
 }
 
+static void print_timestamp()
+{
+    const Timestamp ts = get_timestamp();
+    npf_pprintf(write_character, nullptr, "[%03lu.%03lu] ", ts.seconds, ts.milliseconds);
+}
+
 void log(const char *format, ...)
 {
     cpu::enter_critical();
@@ -104,7 +138,9 @@ void info(const char *format, ...)
     cpu::enter_critical();
     s_lock.lock();
 
-    write_string("\033[38;2;0;128;0minfo\033[39m: ");
+    print_timestamp();
+
+    write_string(" \033[38;2;0;128;0minfo\033[39m: ");
 
     va_list args;
     va_start(args, format);
@@ -121,6 +157,8 @@ void debug(const char *format, ...)
 {
     cpu::enter_critical();
     s_lock.lock();
+
+    print_timestamp();
 
     write_string("\033[38;2;0;0;255mdebug\033[39m: ");
 
@@ -140,7 +178,9 @@ void warn(const char *format, ...)
     cpu::enter_critical();
     s_lock.lock();
 
-    write_string("\033[38;2;255;215;0mwarn\033[39m: ");
+    print_timestamp();
+
+    write_string(" \033[38;2;255;215;0mwarn\033[39m: ");
 
     va_list args;
     va_start(args, format);
@@ -156,6 +196,8 @@ void err(const char *format, ...)
 {
     cpu::enter_critical();
     s_lock.lock();
+
+    print_timestamp();
 
     write_string("\033[38;2;255;0;0merror\033[39m: ");
 
