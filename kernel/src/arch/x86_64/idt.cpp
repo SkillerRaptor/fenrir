@@ -84,47 +84,47 @@ static Entry create_entry(void *handler, const Attribute attributes)
     _ENUMERATE_EXCEPTION(20, virtualization_exception, "Virtualization Exception")           \
     _ENUMERATE_EXCEPTION(30, security_exception, "Security Exception")
 
-#define _ENUMERATE_EXCEPTION(i, fn, exception)                                   \
-    __attribute__((noreturn)) void fn(const Registers &registers)                \
-    {                                                                            \
-        apic::send_ipi(0xff, 0xfe);                                              \
-                                                                                 \
-        logger::err(exception " occured with error code %u\n", registers.error); \
-        logger::err("Register dump:\n");                                         \
-        logger::err(                                                             \
-            "  rax=0x%016x rbx=0x%016x rcx=0x%016x rdx=0x%016x\n",               \
-            registers.rax,                                                       \
-            registers.rbx,                                                       \
-            registers.rcx,                                                       \
-            registers.rdx);                                                      \
-        logger::err(                                                             \
-            "  rsi=0x%016x rdi=0x%016x rbp=0x%016x rsp=0x%016x\n",               \
-            registers.rsi,                                                       \
-            registers.rdi,                                                       \
-            registers.rbp,                                                       \
-            registers.rsp);                                                      \
-        logger::err(                                                             \
-            "   r8=0x%016x  r9=0x%016x r10=0x%016x r11=0x%016x\n",               \
-            registers.r8,                                                        \
-            registers.r9,                                                        \
-            registers.r10,                                                       \
-            registers.r11);                                                      \
-        logger::err(                                                             \
-            "  r12=0x%016x r13=0x%016x r14=0x%016x r15=0x%016x\n",               \
-            registers.r12,                                                       \
-            registers.r13,                                                       \
-            registers.r14,                                                       \
-            registers.r15);                                                      \
-        logger::err(                                                             \
-            "  rip=0x%016x  cs=0x%016x  ss=0x%016x flg=0x%016x\n",               \
-            registers.rip,                                                       \
-            registers.cs,                                                        \
-            registers.ss,                                                        \
-            registers.flags);                                                    \
-                                                                                 \
-        stacktrace::print(10);                                                   \
-                                                                                 \
-        cpu::hcf();                                                              \
+#define _ENUMERATE_EXCEPTION(i, fn, exception)                                    \
+    __attribute__((noreturn)) void fn(const Registers &registers)                 \
+    {                                                                             \
+        apic::send_ipi(0xff, 0xfe);                                               \
+                                                                                  \
+        logger::err(exception " occured with error code %lu\n", registers.error); \
+        logger::err("Register dump:\n");                                          \
+        logger::err(                                                              \
+            "  rax=0x%016lx rbx=0x%016lx rcx=0x%016lx rdx=0x%016lx\n",            \
+            registers.rax,                                                        \
+            registers.rbx,                                                        \
+            registers.rcx,                                                        \
+            registers.rdx);                                                       \
+        logger::err(                                                              \
+            "  rsi=0x%016lx rdi=0x%016lx rbp=0x%016lx rsp=0x%016lx\n",            \
+            registers.rsi,                                                        \
+            registers.rdi,                                                        \
+            registers.rbp,                                                        \
+            registers.rsp);                                                       \
+        logger::err(                                                              \
+            "   r8=0x%016lx  r9=0x%016lx r10=0x%016lx r11=0x%016lx\n",            \
+            registers.r8,                                                         \
+            registers.r9,                                                         \
+            registers.r10,                                                        \
+            registers.r11);                                                       \
+        logger::err(                                                              \
+            "  r12=0x%016lx r13=0x%016lx r14=0x%016lx r15=0x%016lx\n",            \
+            registers.r12,                                                        \
+            registers.r13,                                                        \
+            registers.r14,                                                        \
+            registers.r15);                                                       \
+        logger::err(                                                              \
+            "  rip=0x%016lx  cs=0x%016lx  ss=0x%016lx flg=0x%016lx\n",            \
+            registers.rip,                                                        \
+            registers.cs,                                                         \
+            registers.ss,                                                         \
+            registers.flags);                                                     \
+                                                                                  \
+        stacktrace::print(10);                                                    \
+                                                                                  \
+        cpu::hcf();                                                               \
     }
 
 ENUMERATE_EXCEPTIONS
@@ -140,7 +140,7 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 
     const cpu::Core &core = cpu::current();
     logger::err(
-        "Page Fault at address 0x%016llx on CPU #%u and Thread #%d\n",
+        "Page Fault at address 0x%016lx on CPU #%u and Thread #%d\n",
         faulting_address,
         core.id,
         core.current_thread->id.get());
@@ -173,31 +173,31 @@ __attribute__((noreturn)) void page_fault(const Registers &registers)
 
     logger::err("Register dump:\n");
     logger::err(
-        "  rax=0x%016x rbx=0x%016x rcx=0x%016x rdx=0x%016x\n",
+        "  rax=0x%016lx rbx=0x%016lx rcx=0x%016lx rdx=0x%016lx\n",
         registers.rax,
         registers.rbx,
         registers.rcx,
         registers.rdx);
     logger::err(
-        "  rsi=0x%016x rdi=0x%016x rbp=0x%016x rsp=0x%016x\n",
+        "  rsi=0x%016lx rdi=0x%016lx rbp=0x%016lx rsp=0x%016lx\n",
         registers.rsi,
         registers.rdi,
         registers.rbp,
         registers.rsp);
     logger::err(
-        "   r8=0x%016x  r9=0x%016x r10=0x%016x r11=0x%016x\n",
+        "   r8=0x%016lx  r9=0x%016lx r10=0x%016lx r11=0x%016lx\n",
         registers.r8,
         registers.r9,
         registers.r10,
         registers.r11);
     logger::err(
-        "  r12=0x%016x r13=0x%016x r14=0x%016x r15=0x%016x\n",
+        "  r12=0x%016lx r13=0x%016lx r14=0x%016lx r15=0x%016lx\n",
         registers.r12,
         registers.r13,
         registers.r14,
         registers.r15);
     logger::err(
-        "  rip=0x%016x  cs=0x%016x  ss=0x%016x flg=0x%016x\n",
+        "  rip=0x%016lx  cs=0x%016lx  ss=0x%016lx flg=0x%016lx\n",
         registers.rip,
         registers.cs,
         registers.ss,

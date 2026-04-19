@@ -29,7 +29,7 @@ void initialize()
     const limine_mp_response *response = boot::get_mp_response();
     s_bsp_lapic_id = response->bsp_lapic_id;
 
-    logger::debug("SMP: Found %u available CPUs\n", response->cpu_count);
+    logger::debug("SMP: Found %lu available CPUs\n", response->cpu_count);
 
     for (usize i { 0 }; i < response->cpu_count; ++i) {
         limine_mp_info *info = response->cpus[i];

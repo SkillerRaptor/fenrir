@@ -45,10 +45,10 @@ void initialize()
         vmm::Attribute::Write);
 
     s_virtual_address = physical_address + boot::get_hhdm_offset();
-    logger::debug("HPET: Mapping MMIO 0x%016llx -> 0x%016llx\n", physical_address, s_virtual_address);
+    logger::debug("HPET: Mapping MMIO 0x%016lx -> 0x%016lx\n", physical_address, s_virtual_address);
 
     s_clock_period = mmio::in<u32>(s_virtual_address + s_general_capabilities_register + 0x04);
-    logger::debug("HPET: Clock period configured with %zuns\n", s_clock_period / 1000000);
+    logger::debug("HPET: Clock period configured with %uns\n", s_clock_period / 1000000);
 
     // NOTE: Reset
 

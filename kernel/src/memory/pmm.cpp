@@ -51,7 +51,7 @@ void initialize()
             }
         }();
 
-        logger::debug("PMM:   [0x%016llx - 0x%016llx] - %s\n", entry->base, entry->base + entry->length, type);
+        logger::debug("PMM:   [0x%016lx - 0x%016lx] - %s\n", entry->base, entry->base + entry->length, type);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
@@ -69,7 +69,7 @@ void initialize()
         }
     }
 
-    logger::debug("PMM: Found highest page address at 0x%llx\n", s_highest_page);
+    logger::debug("PMM: Found highest page address at 0x%lx\n", s_highest_page);
 
     s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
 
