@@ -205,12 +205,29 @@ void __panic_exception(const Registers &registers)
     print_registers(registers);
     logger::fatal("\n");
 
+    const cpu::Core &core = cpu::current();
     if (registers.cs == 0x28) {
         print_control_registers();
-        panic();
-    } else {
-        const cpu::Core &core = cpu::current();
+        logger::fatal("\n");
 
+        logger::fatal("Current State:\n");
+        logger::fatal("  Core: #%u\n", core.id);
+        if (core.current_thread) {
+            logger::fatal("  Process: #%d \n", core.current_thread->process->id.get());
+            logger::fatal("  Thread: #%d\n", core.current_thread->id.get());
+        } else {
+            logger::fatal("  Process: <unknown>\n");
+            logger::fatal("  Thread: <unknown>\n");
+        }
+        logger::fatal("\n");
+
+        stacktrace::print(50, registers.rip);
+
+        logger::fatal("\n");
+        logger::fatal("Halting System...\n");
+
+        cpu::hcf();
+    } else {
         struct StackFrame {
             u64 rbp = 0;
             u64 rip = 0;

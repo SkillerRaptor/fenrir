@@ -9,7 +9,6 @@
 #include "acpi/apic.hpp"
 #include "arch/x86_64/cpu.hpp"
 #include "core/logger.hpp"
-#include "core/stacktrace.hpp"
 #include "lib/assert.hpp"
 #include "lib/bitflags.hpp"
 #include "lib/panic.hpp"
@@ -98,19 +97,6 @@ void set_handler(const u8 isr, const InterruptHandler handler)
 
 extern "C" void interrupt_raise(const Registers *registers)
 {
-    struct StackFrame {
-        u64 rbp { 0 };
-        u64 rip { 0 };
-    };
-
-    const StackFrame stack_frame {
-        .rbp = registers->rbp,
-        .rip = registers->rip,
-    };
-
-    // NOTE: This is to keep the stack frame chain alive
-    asm volatile("mov %0, %%rbp" : : "r"(&stack_frame) : "memory", "rbp");
-
     if (s_interrupt_handlers[registers->isr]) {
         s_interrupt_handlers[registers->isr](*registers);
     } else {

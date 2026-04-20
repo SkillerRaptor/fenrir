@@ -74,12 +74,6 @@ static void thread_exit()
     yield();
 }
 
-static void thread_wrapper(void (*entry)())
-{
-    entry();
-    thread_exit();
-}
-
 static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 {
     assert(process);
@@ -96,20 +90,13 @@ static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         virtual_stack - memory::s_page_size,
         vmm::Attribute::Write | (cs == 0x28 ? vmm::Attribute::None : vmm::Attribute::User));
 
-    u64 *stack_ptr = reinterpret_cast<u64 *>(virtual_stack);
-    if (cs == 0x28) {
-        *--stack_ptr = reinterpret_cast<u64>(__builtin_return_address(0));
-        *--stack_ptr = reinterpret_cast<u64>(reinterpret_cast<void *>(&create_thread));
-    }
-
     Thread *thread = new Thread {
         .id = id,
         .state = Thread::State::Idle,
         .registers = {
-            .rbp = reinterpret_cast<u64>(stack_ptr),
             .cs = cs,
             .flags = 1 << 9 | 1 << 1,
-            .rsp = reinterpret_cast<u64>(stack_ptr),
+            .rsp = virtual_stack,
         },
         .stack = reinterpret_cast<u8*>(stack),
         .stack_size = memory::s_page_size,
@@ -119,8 +106,7 @@ static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
     };
 
     if (cs == 0x28) {
-        thread->registers.rdi = reinterpret_cast<u64>(entry);
-        thread->registers.rip = reinterpret_cast<u64>(thread_wrapper);
+        thread->registers.rip = reinterpret_cast<u64>(entry);
         thread->registers.ss = thread->registers.cs + 0x08;
     } else {
         thread->registers.rip = reinterpret_cast<u64>(entry);
@@ -164,7 +150,12 @@ static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
     return thread;
 }
 
-Thread *create_kernel_thread(void (*entry)()) { return create_thread(s_kernel_process, 0x28, entry); }
+static Thread *create_thread_internal(Process *process, const u64 cs, void (*entry)())
+{
+    return create_thread(process, cs, entry);
+}
+
+Thread *create_kernel_thread(void (*entry)()) { return create_thread_internal(s_kernel_process, 0x28, entry); }
 
 Thread *create_user_thread(Process *process, void (*entry)()) { return create_thread(process, 0x40 | 0x3, entry); }
 

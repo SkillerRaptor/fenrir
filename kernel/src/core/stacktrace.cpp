@@ -148,7 +148,7 @@ static const Symbol *find_symbol(const u64 rip)
     return &s_symbols[low];
 }
 
-void print(const u64 max_frames)
+void print(const u64 max_frames, const u64 rip_argument)
 {
     assert(max_frames > 0);
 
@@ -158,7 +158,7 @@ void print(const u64 max_frames)
     logger::fatal("Stacktrace:\n");
 
     for (usize i = 0; stack_frame && i < max_frames; ++i) {
-        const uint64_t rip = stack_frame->rip;
+        const uint64_t rip = stack_frame->rip == 0x1 ? rip_argument : stack_frame->rip;
         if (rip == 0) {
             break;
         }
