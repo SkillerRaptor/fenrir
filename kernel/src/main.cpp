@@ -70,8 +70,8 @@ extern "C" void kmain()
     scheduler::initialize();
     smp::initialize();
 
-    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, reaper::run);
-    scheduler::create_thread(scheduler::get_kernel_process(), 0x28, kmain_thread);
+    scheduler::create_kernel_thread(reaper::run);
+    scheduler::create_kernel_thread(kmain_thread);
 
     scheduler::yield();
 }
@@ -136,7 +136,7 @@ extern "C" void kmain()
     logger::info("Creating user process...\n");
 
     Process *user_process = scheduler::create_process(user_page_map);
-    scheduler::create_thread(user_process, 0x40 | 3, reinterpret_cast<void (*)()>(elf.header().entry));
+    scheduler::create_user_thread(user_process, reinterpret_cast<void (*)()>(elf.header().entry));
 
     scheduler::yield();
 }

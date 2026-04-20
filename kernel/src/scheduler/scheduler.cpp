@@ -80,7 +80,7 @@ static void thread_wrapper(void (*entry)())
     thread_exit();
 }
 
-Thread *create_thread(Process *process, const u64 cs, void (*entry)())
+static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 {
     assert(process);
     assert(entry);
@@ -137,8 +137,6 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
         thread_list->thread_list = thread;
     }
 
-    // FIXME: Add load-balancing
-
     usize least_load = 0xffffffffffffffff;
     cpu::Core *least_loaded_cpu = nullptr;
     cpu::for_each([&](cpu::Core &core) {
@@ -165,6 +163,10 @@ Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 
     return thread;
 }
+
+Thread *create_kernel_thread(void (*entry)()) { return create_thread(s_kernel_process, 0x28, entry); }
+
+Thread *create_user_thread(Process *process, void (*entry)()) { return create_thread(process, 0x40 | 0x3, entry); }
 
 Thread *create_idle_thread()
 {
