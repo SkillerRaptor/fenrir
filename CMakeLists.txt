@@ -27,7 +27,7 @@ add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 # Build Options
 #-------------------------------------------------------------------------------------------
 set(KERNEL_BASE_OPTIONS
-        -O0
+        -O1
         -g
         -Wall
         -Wextra

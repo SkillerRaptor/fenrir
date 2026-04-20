@@ -31,7 +31,7 @@ void initialize()
 
     logger::debug("SMP: Found %lu available CPUs\n", response->cpu_count);
 
-    for (usize i { 0 }; i < response->cpu_count; ++i) {
+    for (usize i = 0; i < response->cpu_count; ++i) {
         limine_mp_info *info = response->cpus[i];
 
         const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size + boot::get_hhdm_offset();
@@ -66,10 +66,11 @@ static void cpu_init(limine_mp_info *info)
     cpu::Core &core = cpu::by_id(static_cast<u32>(info->extra_argument));
     gdt::load(core.gdt, core.tss);
     cpu::initialize(info->extra_argument);
-
     syscalls::load();
 
     apic::enable_lapic();
+
+    cpu::add_online();
 
     if (info->lapic_id == s_bsp_lapic_id) {
         return;

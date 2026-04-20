@@ -31,6 +31,7 @@ struct Core {
 
 void early_initialize(u32 id, u32 lapic_id, u64 kernel_stack);
 void initialize(u32 id);
+void add_online();
 
 void enter_critical();
 void leave_critical();

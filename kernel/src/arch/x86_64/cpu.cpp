@@ -41,9 +41,9 @@ void initialize(const u32 id)
 {
     set_gs_base(&s_cores[id]);
     set_kernel_gs_base(&s_cores[id]);
-
-    s_online_cores.fetch_add(1);
 }
+
+void add_online() { s_online_cores.fetch_add(1); }
 
 Core &current()
 {
