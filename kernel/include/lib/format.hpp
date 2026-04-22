@@ -88,6 +88,9 @@ template <>
 Argument create_argument(const void *);
 
 template <>
+Argument create_argument(char *);
+
+template <>
 Argument create_argument(const char *);
 
 template <>

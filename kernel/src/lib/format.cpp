@@ -99,6 +99,15 @@ Argument create_argument(const void *value)
 }
 
 template <>
+Argument create_argument(char *value)
+{
+    return {
+        .kind = Argument::Kind::String,
+        .as_string = value,
+    };
+}
+
+template <>
 Argument create_argument(const char *value)
 {
     return {
