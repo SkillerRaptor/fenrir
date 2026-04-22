@@ -4,6 +4,4 @@
 # SPDX-License-Identifier: MIT
 #-------------------------------------------------------------------------------------------
 
-add_subdirectory(services/window_service)
-
-add_subdirectory(hello_world)
+add_subdirectory(libc)
