@@ -17,7 +17,6 @@
 
 #include <flanterm.h>
 #include <flanterm_backends/fb.h>
-#include <nanoprintf.h>
 #include <stdarg.h>
 
 #include "arch/x86_64/cpu.hpp"
@@ -93,139 +92,43 @@ void initialize()
         FLANTERM_FB_ROTATE_0);
 }
 
-static void write_character(const int c, void *)
-{
-    const char character = static_cast<char>(c);
-    if (character == '\n') {
-        write_character('\r', nullptr);
-    }
+namespace detail {
 
-    flanterm_write(s_context, &character, 1);
-    serial::write(character);
+void lock()
+{
+    cpu::enter_critical();
+    s_lock.lock();
 }
 
-static void write_string(const char *str)
+void unlock()
 {
-    for (usize i = 0; i < strlen(str); i++) {
-        write_character(str[i], nullptr);
+    s_lock.unlock();
+    cpu::leave_critical();
+}
+
+void write_character(const char c)
+{
+    if (c == '\n') {
+        write_character('\r');
+    }
+
+    flanterm_write(s_context, &c, 1);
+    serial::write(c);
+}
+
+void write_string(const StringView string)
+{
+    for (const char c : string) {
+        write_character(c);
     }
 }
 
-static void print_timestamp()
+void write_timestamp()
 {
     const Timestamp ts = get_timestamp();
-    npf_pprintf(write_character, nullptr, "[%lu.%03lu] ", ts.seconds, ts.milliseconds);
+    fmt::format(write_character, "[{}.{:03u}] ", ts.seconds, ts.milliseconds);
 }
 
-void log(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-
-    write_string("\033[0m");
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
-
-void info(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    print_timestamp();
-
-    write_string(" \033[38;2;0;128;0minfo\033[39m: ");
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-
-    write_string("\033[0m");
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
-
-void debug(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    print_timestamp();
-
-    write_string("\033[38;2;0;0;255mdebug\033[39m: ");
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-
-    write_string("\033[0m");
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
-
-void warn(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    print_timestamp();
-
-    write_string(" \033[38;2;255;215;0mwarn\033[39m: ");
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-    write_string("\033[0m");
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
-
-void err(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    print_timestamp();
-
-    write_string("\033[38;2;255;0;0merror\033[39m: ");
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-
-    write_string("\033[0m");
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
-
-void fatal(const char *format, ...)
-{
-    cpu::enter_critical();
-    s_lock.lock();
-
-    write_string("\033[38;2;128;0;0mfatal\033[39m: ");
-
-    va_list args;
-    va_start(args, format);
-    npf_vpprintf(write_character, nullptr, format, args);
-    va_end(args);
-
-    s_lock.unlock();
-    cpu::leave_critical();
-}
+} // namespace detail
 
 } // namespace logger

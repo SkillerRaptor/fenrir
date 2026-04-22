@@ -44,6 +44,22 @@ public:
             return iterator;
         }
 
+        Iterator operator+(const usize offset) const { return Iterator(m_ptr + offset); }
+
+        Iterator &operator+=(const usize offset)
+        {
+            m_ptr += offset;
+            return *this;
+        }
+
+        Iterator operator-(const usize offset) const { return Iterator(m_ptr - offset); }
+
+        Iterator &operator-=(const usize offset)
+        {
+            m_ptr -= offset;
+            return *this;
+        }
+
         constexpr const char *operator->() const { return m_ptr; }
         constexpr const char &operator*() const { return *m_ptr; }
         constexpr const char &operator[](const usize index) const { return m_ptr[index]; }

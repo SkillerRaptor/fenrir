@@ -23,7 +23,7 @@ void initialize()
 {
     const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
 
-    logger::debug("PMM: Scanning %zu memory map entries\n", memory_map.size());
+    logger::debug("PMM: Scanning {} memory map entries\n", memory_map.size());
 
     for (limine_memmap_entry *entry : memory_map) {
         const char *type = [&entry]() {
@@ -51,7 +51,7 @@ void initialize()
             }
         }();
 
-        logger::debug("PMM:   [0x%016lx - 0x%016lx] - %s\n", entry->base, entry->base + entry->length, type);
+        logger::debug("PMM:   [{:#016x} - {:#016x}] - {}\n", entry->base, entry->base + entry->length, type);
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
@@ -69,7 +69,7 @@ void initialize()
         }
     }
 
-    logger::debug("PMM: Found highest page address at 0x%lx\n", s_highest_page);
+    logger::debug("PMM: Found highest page address at {:#016x}\n", s_highest_page);
 
     s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
 
@@ -86,7 +86,7 @@ void initialize()
     }
 
     logger::debug(
-        "PMM: Placed bitmap at 0x%p with a size of %zu bytes (%zu KiB)\n",
+        "PMM: Placed bitmap at {:#016x} with a size of {} bytes ({} KiB)\n",
         s_bitmap.data(),
         s_bitmap.size() / 8,
         s_bitmap.size() / 8 / 1024);
@@ -121,7 +121,7 @@ void initialize()
     }
 
     logger::debug(
-        "PMM: Detected %zu free pages (%zu KiB, %zu MiB)\n",
+        "PMM: Detected {} free pages ({} KiB, {} MiB)\n",
         free_pages,
         (free_pages * memory::s_page_size) / 1024,
         (free_pages * memory::s_page_size) / 1024 / 1024);
@@ -163,7 +163,7 @@ void *allocate(const usize pages, const bool clear)
         return ptr;
     }
 
-    logger::err("PMM: Out of memory - failed to allocate %zu pages\n", pages);
+    logger::error("PMM: Out of memory - failed to allocate {} pages\n", pages);
 
     return nullptr;
 }

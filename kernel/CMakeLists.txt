@@ -24,6 +24,7 @@ set(SOURCES
         src/filesystem/vfs.cpp
         src/lib/assert.cpp
         src/lib/bitmap.cpp
+        src/lib/format.cpp
         src/lib/panic.cpp
         src/lib/string.cpp
         src/memory/kmalloc.cpp
@@ -65,6 +66,7 @@ set(HEADERS
         include/lib/atomic.hpp
         include/lib/bitflags.hpp
         include/lib/bitmap.hpp
+        include/lib/format.hpp
         include/lib/hash.hpp
         include/lib/hash_map.hpp
         include/lib/identifier.hpp
@@ -96,7 +98,7 @@ set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE limine flanterm nanoprintf uacpi)
+target_link_libraries(kernel PRIVATE limine flanterm uacpi)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ extern "C" void syscall_handler(SyscallRegisters *registers)
 
     const SyscallHandler syscall_handler = s_syscall_handlers[syscall_id];
     if (!syscall_handler) {
-        logger::err("Unknown syscall 0x%02lx!\n", syscall_id);
+        logger::error("Unknown syscall {:#02x}!\n", syscall_id);
         return;
     }
 

@@ -45,20 +45,6 @@ if (Flanterm_ADDED)
 endif ()
 
 #-------------------------------------------------------------------------------------------
-# nanoprintf
-#-------------------------------------------------------------------------------------------
-CPMAddPackage(
-        NAME nanoprintf
-        GIT_REPOSITORY https://github.com/charlesnicholson/nanoprintf.git
-        GIT_TAG v0.5.6
-        DOWNLOAD_ONLY YES)
-
-if (nanoprintf_ADDED)
-    add_library(nanoprintf INTERFACE)
-    target_include_directories(nanoprintf INTERFACE ${nanoprintf_SOURCE_DIR})
-endif ()
-
-#-------------------------------------------------------------------------------------------
 # uacpi
 #-------------------------------------------------------------------------------------------
 CPMAddPackage(

@@ -30,7 +30,7 @@ void initialize()
     uacpi_table table { };
     const uacpi_status ret = uacpi_table_find_by_signature(ACPI_HPET_SIGNATURE, &table);
     if (uacpi_unlikely_error(ret)) {
-        logger::err("uacpi_table_find_by_signature error: %s\n", uacpi_status_to_string(ret));
+        logger::error("uacpi_table_find_by_signature error: {}\n", uacpi_status_to_string(ret));
     }
 
     const acpi_hpet *hpet = static_cast<acpi_hpet *>(table.ptr);
@@ -45,10 +45,10 @@ void initialize()
         vmm::Attribute::Write);
 
     s_virtual_address = physical_address + boot::get_hhdm_offset();
-    logger::debug("HPET: Mapping MMIO 0x%016lx -> 0x%016lx\n", physical_address, s_virtual_address);
+    logger::debug("HPET: Mapping MMIO {:#016x} -> {:#016x}\n", physical_address, s_virtual_address);
 
     s_clock_period = mmio::in<u32>(s_virtual_address + s_general_capabilities_register + 0x04);
-    logger::debug("HPET: Clock period configured with %uns\n", s_clock_period / 1000000);
+    logger::debug("HPET: Clock period configured with {}ns\n", s_clock_period / 1000000);
 
     // NOTE: Reset
 

@@ -34,7 +34,7 @@ void initialize()
 {
     const uacpi_status ret = uacpi_initialize(0);
     if (uacpi_unlikely_error(ret)) {
-        logger::err("uacpi_initialize error: %s\n", uacpi_status_to_string(ret));
+        logger::error("uacpi_initialize error: {}\n", uacpi_status_to_string(ret));
     }
 
     logger::info("ACPI: Initialized\n");
@@ -148,13 +148,13 @@ void uacpi_kernel_log(const uacpi_log_level level, const uacpi_char *str)
 {
     switch (level) {
     case UACPI_LOG_INFO:
-        logger::debug("UACPI: %s", str);
+        logger::debug("UACPI: {}", str);
         break;
     case UACPI_LOG_WARN:
-        logger::warn("UACPI: %s", str);
+        logger::warn("UACPI: {}", str);
         break;
     case UACPI_LOG_ERROR:
-        logger::err("UACPI: %s", str);
+        logger::error("UACPI: {}", str);
         break;
     default:
         break;

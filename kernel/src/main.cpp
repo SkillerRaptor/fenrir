@@ -16,7 +16,10 @@
 #include "drivers/serial.hpp"
 #include "elf/elf.hpp"
 #include "filesystem/vfs.hpp"
+#include "lib/format.hpp"
 #include "lib/math.hpp"
+#include "lib/option.hpp"
+#include "lib/result.hpp"
 #include "lib/string.hpp"
 #include "lib/string_view.hpp"
 #include "memory/pmm.hpp"
@@ -43,14 +46,14 @@ extern "C" void kmain()
     // FIXME: This is a hack
     cpu::initialize(0);
 
-    logger::log("\n");
-    logger::log("          _______ _    _ _____ _______ _______ _     _ _______ __   _\n");
-    logger::log("   |      |______  \\  /    |   |_____|    |    |_____| |_____| | \\  |\n");
-    logger::log("   |_____ |______   \\/   __|__ |     |    |    |     | |     | |  \\_|\n");
-    logger::log("\n");
-    logger::log("   Bootloader: %s %s\n", boot::get_bootloader_name(), boot::get_bootloader_version());
-    logger::log("   Firmware: %s\n", boot::get_firmware_type());
-    logger::log("\n");
+    logger::print("\n");
+    logger::print("          _______ _    _ _____ _______ _______ _     _ _______ __   _\n");
+    logger::print("   |      |______  \\  /    |   |_____|    |    |_____| |_____| | \\  |\n");
+    logger::print("   |_____ |______   \\/   __|__ |     |    |    |     | |     | |  \\_|\n");
+    logger::print("\n");
+    logger::print("   Bootloader: {} {}\n", boot::get_bootloader_name(), boot::get_bootloader_version());
+    logger::print("   Firmware: {}\n", boot::get_firmware_type());
+    logger::print("\n");
 
     cxxabi::construct();
 
@@ -82,7 +85,7 @@ extern "C" void kmain()
 
     limine_file *module = boot::get_modules()[1]; // initramfs.tar
 
-    logger::info("File: %s\n", module->path);
+    logger::info("File: {}\n", module->path);
 
     vfs::mount(module, "/", "USTAR");
 

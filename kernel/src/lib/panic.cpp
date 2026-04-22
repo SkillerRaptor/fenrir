@@ -18,31 +18,31 @@ static void print_registers(const Registers &registers)
 {
     logger::fatal("Registers:\n");
     logger::fatal(
-        "  rax=0x%016lx rbx=0x%016lx rcx=0x%016lx rdx=0x%016lx\n",
+        "  rax={:#016x} rbx={:#016x} rcx={:#016x} rdx={:#016x}\n",
         registers.rax,
         registers.rbx,
         registers.rcx,
         registers.rdx);
     logger::fatal(
-        "  rsi=0x%016lx rdi=0x%016lx rbp=0x%016lx rsp=0x%016lx\n",
+        "  rsi={:#016x} rdi={:#016x} rbp={:#016x} rsp={:#016x}\n",
         registers.rsi,
         registers.rdi,
         registers.rbp,
         registers.rsp);
     logger::fatal(
-        "   r8=0x%016lx  r9=0x%016lx r10=0x%016lx r11=0x%016lx\n",
+        "   r8={:#016x}  r9={:#016x} r10={:#016x} r11={:#016x}\n",
         registers.r8,
         registers.r9,
         registers.r10,
         registers.r11);
     logger::fatal(
-        "  r12=0x%016lx r13=0x%016lx r14=0x%016lx r15=0x%016lx\n",
+        "  r12={:#016x} r13={:#016x} r14={:#016x} r15={:#016x}\n",
         registers.r12,
         registers.r13,
         registers.r14,
         registers.r15);
     logger::fatal(
-        "  rip=0x%016lx  cs=0x%02lx  ss=0x%02lx  rflags=0x%016lx\n",
+        "  rip={:#016x}  cs={:#02x}  ss={:#02x}  rflags={:#016x}\n",
         registers.rip,
         registers.cs,
         registers.ss,
@@ -64,8 +64,8 @@ static void print_control_registers()
     asm volatile("mov %%cr4, %0" : "=r"(cr4));
 
     logger::fatal("Control Registers:\n");
-    logger::fatal("  cr0=0x%016lx  cr2=0x%016lx\n", cr0, cr2);
-    logger::fatal("  cr3=0x%016lx  cr4=0x%016lx\n", cr3, cr4);
+    logger::fatal("  cr0={:#016x}  cr2={:#016x}\n", cr0, cr2);
+    logger::fatal("  cr3={:#016x}  cr4={:#016x}\n", cr3, cr4);
 }
 
 [[noreturn]] void __panic(const char *file, const u32 line, const char *function, const char *message)
@@ -76,17 +76,17 @@ static void print_control_registers()
     const cpu::Core &core = cpu::current();
 
     logger::fatal("\n");
-    logger::fatal("Panic in \033[38;2;255;215;0m%s\033[0m at \033[38;2;0;128;0m%s:%u\n", function, file, line);
+    logger::fatal("Panic in \033[38;2;255;215;0m{}\033[0m at \033[38;2;0;128;0m{}:{}\n", function, file, line);
     if (message) {
-        logger::fatal("  -> %s\n", message);
+        logger::fatal("  -> {}\n", message);
     }
     logger::fatal("\n");
 
     logger::fatal("Current State:\n");
-    logger::fatal("  Core: #%u\n", core.id);
+    logger::fatal("  Core: #{}\n", core.id);
     if (core.current_thread) {
-        logger::fatal("  Process: #%d \n", core.current_thread->process->id.get());
-        logger::fatal("  Thread: #%d\n", core.current_thread->id.get());
+        logger::fatal("  Process: #{} \n", core.current_thread->process->id.get());
+        logger::fatal("  Thread: #{}\n", core.current_thread->id.get());
     } else {
         logger::fatal("  Process: <unknown>\n");
         logger::fatal("  Thread: <unknown>\n");
@@ -141,30 +141,30 @@ void __panic_exception(const Registers &registers)
     }
 
     logger::fatal("\n");
-    logger::fatal("%s occurred!\n", s_exceptions[registers.isr]);
+    logger::fatal("{} occurred!\n", s_exceptions[registers.isr]);
 
     switch (registers.isr) {
     case 0x0e: {
         volatile u64 cr2 = 0;
         asm volatile("mov %%cr2, %0" : "=r"(cr2));
 
-        logger::fatal("  at 0x%016lx\n", cr2);
+        logger::fatal("  at {:#016x}\n", cr2);
 
         const u64 error = registers.error;
         logger::fatal("  because");
-        logger::log(" %s,", (error & (1 << 0)) ? "protection violation" : "non-present page");
-        logger::log(" %s,", (error & (1 << 1)) ? "write access" : "read access");
-        logger::log(" %s", (error & (1 << 2)) ? "user-mode" : "kernel-mode");
+        logger::print(" {},", (error & (1 << 0)) ? "protection violation" : "non-present page");
+        logger::print(" {},", (error & (1 << 1)) ? "write access" : "read access");
+        logger::print(" {}", (error & (1 << 2)) ? "user-mode" : "kernel-mode");
 
         if (error & (1 << 3)) {
-            logger::log(", reserved bit set in PTE");
+            logger::print(", reserved bit set in PTE");
         }
 
         if (error & (1 << 4)) {
-            logger::log(", instruction fetch (NX fault)");
+            logger::print(", instruction fetch (NX fault)");
         }
 
-        logger::log("\n");
+        logger::print("\n");
 
         break;
     }
@@ -193,7 +193,7 @@ void __panic_exception(const Registers &registers)
             }
         }();
 
-        logger::fatal("  in %s at at %u\n", table_name, index);
+        logger::fatal("  in {} at at {}\n", table_name, index);
 
         break;
     }
@@ -211,10 +211,10 @@ void __panic_exception(const Registers &registers)
         logger::fatal("\n");
 
         logger::fatal("Current State:\n");
-        logger::fatal("  Core: #%u\n", core.id);
+        logger::fatal("  Core: #{}\n", core.id);
         if (core.current_thread) {
-            logger::fatal("  Process: #%d \n", core.current_thread->process->id.get());
-            logger::fatal("  Thread: #%d\n", core.current_thread->id.get());
+            logger::fatal("  Process: #{} \n", core.current_thread->process->id.get());
+            logger::fatal("  Thread: #{}\n", core.current_thread->id.get());
         } else {
             logger::fatal("  Process: <unknown>\n");
             logger::fatal("  Thread: <unknown>\n");
@@ -239,7 +239,7 @@ void __panic_exception(const Registers &registers)
         u64 rip = registers.rip;
         for (usize i = 0; rbp != 0 && i < 50; ++i) {
             // TODO: Resolve user symbols per ELF symbol table
-            logger::fatal("  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
+            logger::fatal("  {:02u}. \033[38;2;0;0;255m{:#016x} \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
 
             const u64 physical_address = vmm::virtual_to_physical(core.current_thread->process->page_map, rbp);
             if (physical_address == 0) {
@@ -257,10 +257,10 @@ void __panic_exception(const Registers &registers)
         cpu::leave_critical();
 
         logger::fatal("Current State:\n");
-        logger::fatal("  Core: #%u\n", core.id);
+        logger::fatal("  Core: #{}\n", core.id);
         if (core.current_thread) {
-            logger::fatal("  Process: #%d \n", core.current_thread->process->id.get());
-            logger::fatal("  Thread: #%d\n", core.current_thread->id.get());
+            logger::fatal("  Process: #{} \n", core.current_thread->process->id.get());
+            logger::fatal("  Thread: #{}\n", core.current_thread->id.get());
         } else {
             logger::fatal("  Process: <unknown>\n");
             logger::fatal("  Thread: <unknown>\n");

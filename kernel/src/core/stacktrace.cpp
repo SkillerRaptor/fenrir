@@ -57,7 +57,7 @@ void initialize()
     const limine_file *symbol_map_file = boot::get_modules()[0];
 
     logger::debug(
-        "Stacktrace: Kernel symbol map found at 0x%016lx with %zu bytes\n",
+        "Stacktrace: Kernel symbol map found at {:#016x} with {} bytes\n",
         reinterpret_cast<u64>(symbol_map_file->address),
         symbol_map_file->size);
 
@@ -173,20 +173,20 @@ void print(const u64 max_frames, const u64 rip_argument)
 
         const Symbol *symbol = find_symbol(rip);
         if (!symbol) {
-            logger::fatal("  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
+            logger::fatal("  {:02u}. \033[38;2;0;0;255m{:#016x} \033[0min \033[38;2;255;215;0m??\n", i + 1, rip);
             continue;
         }
 
         const u64 offset = rip - symbol->address;
         if (offset == 0) {
             logger::fatal(
-                "  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m%s\n",
+                "  {:02u}. \033[38;2;0;0;255m{:#016x} \033[0min \033[38;2;255;215;0m{}\n",
                 i + 1,
                 rip,
                 symbol->name);
         } else {
             logger::fatal(
-                "  %02lu. \033[38;2;0;0;255m0x%016lx \033[0min \033[38;2;255;215;0m%s \033[38;2;0;128;0m+0x%lx\n",
+                "  {:02u}. \033[38;2;0;0;255m{:#016x} \033[0min \033[38;2;255;215;0m{} \033[38;2;0;128;0m+0x{:x}\n",
                 i + 1,
                 rip,
                 symbol->name,

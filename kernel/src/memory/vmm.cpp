@@ -46,7 +46,7 @@ void initialize()
         const usize entry_pages = (entry_end - entry_start) / memory::s_page_size;
 
         logger::debug(
-            "VMM:   [0x%016lx - 0x%016lx] -> [0x%016lx - 0x%016lx] (%zu pages)\n",
+            "VMM:   [{:#016x} - {:#016x}] -> [{:#016x} - {:#016x}] (70 pages)\n",
             entry_start,
             entry_end,
             entry_start + boot::get_hhdm_offset(),
@@ -62,7 +62,7 @@ void initialize()
     }
 
     logger::debug(
-        "VMM: Mapped %zu entries (%zu KiB, %zu MiB)\n",
+        "VMM: Mapped {} entries ({} KiB, {} MiB)\n",
         mapped_entry_count,
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024);
@@ -75,7 +75,7 @@ void initialize()
 
     logger::debug("VMM: Mapping kernel image...\n");
     logger::debug(
-        "VMM:   [0x%016lx - 0x%016lx] -> [0x%016lx - 0x%016lx] (%zu pages)\n",
+        "VMM:   [{:#016x} - {:#016x}] -> [{:#016x} - {:#016x}] ({} pages)\n",
         kernel_virtual_start - virtual_base + physical_base,
         kernel_virtual_end - virtual_base + physical_base,
         kernel_virtual_start,
@@ -86,7 +86,7 @@ void initialize()
         map(s_kernel_page_map, i - virtual_base + physical_base, i, Attribute::Write);
     }
 
-    logger::debug("VMM: Mapped kernel (%zu KiB)\n", (kernel_virtual_end - kernel_virtual_start) / 1024);
+    logger::debug("VMM: Mapped kernel ({} KiB)\n", (kernel_virtual_end - kernel_virtual_start) / 1024);
 
     logger::debug("VMM: Switching to kernel page map...\n");
     switch_to_page_map(s_kernel_page_map);

@@ -18,7 +18,7 @@ extern "C" {
 {
     logger::fatal("\n");
     logger::fatal(
-        "Assertion \033[38;2;0;0;255m%s\033[0m failed in \033[38;2;255;215;0m%s\033[0m at \033[38;2;0;128;0m%s:%u\n",
+        "Assertion \033[38;2;0;0;255m{}\033[0m failed in \033[38;2;255;215;0m{}\033[0m at \033[38;2;0;128;0m{}:{}\n",
         assertion,
         function,
         file,

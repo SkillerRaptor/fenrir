@@ -36,7 +36,7 @@ void initialize()
     idt::set_handler(0x20, schedule);
 
     s_kernel_process = create_process(vmm::get_kernel_page_map());
-    logger::debug("Scheduler: Created kernel process with id #%u\n", s_kernel_process->id.get());
+    logger::debug("Scheduler: Created kernel process with id #{}\n", s_kernel_process->id.get());
 
     logger::info("Scheduler: Initialized\n");
 }
