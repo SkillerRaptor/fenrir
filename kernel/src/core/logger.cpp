@@ -17,12 +17,10 @@
 
 #include <flanterm.h>
 #include <flanterm_backends/fb.h>
-#include <stdarg.h>
 
 #include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "drivers/serial.hpp"
-#include "lib/string.hpp"
 #include "sync/spinlock.hpp"
 
 namespace logger {

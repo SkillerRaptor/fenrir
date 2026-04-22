@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "assert.hpp"
+#include "lib/assert.hpp"
 #include "lib/types.hpp"
 #include "lib/vector.hpp"
 
@@ -38,5 +38,5 @@ public:
     usize size() const { return m_data.size(); }
 
 private:
-    Vector<T> m_data {};
+    Vector<T> m_data { };
 };

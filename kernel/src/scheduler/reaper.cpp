@@ -7,7 +7,6 @@
 #include "scheduler/reaper.hpp"
 
 #include "arch/x86_64/cpu.hpp"
-#include "core/logger.hpp"
 #include "core/memory.hpp"
 #include "memory/pmm.hpp"
 #include "scheduler/process.hpp"

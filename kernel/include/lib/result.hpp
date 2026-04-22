@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "lib/assert.hpp"
+
 template <typename T>
 struct OkType {
     T value;
