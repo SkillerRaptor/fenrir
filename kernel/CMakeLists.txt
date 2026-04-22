@@ -71,9 +71,12 @@ set(HEADERS
         include/lib/hash_map.hpp
         include/lib/identifier.hpp
         include/lib/initializer_list.hpp
+        include/lib/macros.hpp
         include/lib/math.hpp
+        include/lib/optional.hpp
         include/lib/panic.hpp
         include/lib/queue.hpp
+        include/lib/result.hpp
         include/lib/span.hpp
         include/lib/string.hpp
         include/lib/string_view.hpp
