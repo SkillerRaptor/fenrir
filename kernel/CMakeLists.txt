@@ -139,7 +139,7 @@ set(LIMINE_FILES
         ${LIMINE_DIR}/BOOTIA32.EFI)
 
 add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/leviathan.iso
+        OUTPUT ${CMAKE_BINARY_DIR}/fenrir.iso
 
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:kernel> ${CMAKE_CURRENT_BINARY_DIR}/iso_root/boot/kernel
@@ -165,7 +165,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules
         COMMAND tar --sort=name --owner=0 --group=0 --numeric-owner --format=ustar -cf ${CMAKE_CURRENT_BINARY_DIR}/iso_root/modules/initramfs.tar applications/ services/
 
-        COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/leviathan.iso
+        COMMAND xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label ${CMAKE_CURRENT_BINARY_DIR}/iso_root -o ${CMAKE_BINARY_DIR}/fenrir.iso
 
         DEPENDS kernel hello_world window_service ${CMAKE_SOURCE_DIR}/limine.conf ${LINKER_SCRIPT} ${LIMINE_FILES}
 
@@ -174,7 +174,7 @@ add_custom_command(
 add_custom_target(
         iso
         ALL
-        DEPENDS ${CMAKE_BINARY_DIR}/leviathan.iso kernel hello_world window_service)
+        DEPENDS ${CMAKE_BINARY_DIR}/fenrir.iso kernel hello_world window_service)
 
 #-------------------------------------------------------------------------------------------
 # Run
@@ -183,7 +183,7 @@ add_custom_target(run
         COMMAND qemu-system-x86_64
         -M q35,smm=off
         -boot d
-        -cdrom leviathan.iso
+        -cdrom fenrir.iso
         --no-reboot
         --no-shutdown
         -d int

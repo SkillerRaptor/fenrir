@@ -7,11 +7,11 @@
 set(SOURCES
         src/crt0.asm
         src/syscall.asm
-        src/leviathan/syscall.c)
+        src/fenrir/syscall.c)
 
 set(HEADERS
         include/stdint.h
-        include/leviathan/syscall.h)
+        include/fenrir/syscall.h)
 
 add_library(libc STATIC ${SOURCES} ${HEADERS})
 target_include_directories(libc PUBLIC include)

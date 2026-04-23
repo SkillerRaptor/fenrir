@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <leviathan/syscall.h>
+#include <fenrir/syscall.h>
 
 int main()
 {

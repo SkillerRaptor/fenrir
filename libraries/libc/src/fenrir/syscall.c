@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "leviathan/syscall.h"
+#include "fenrir/syscall.h"
 
 Status enumerate_devices(struct Device *devices, uint64_t *count)
 {

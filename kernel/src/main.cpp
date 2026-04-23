@@ -78,7 +78,7 @@ extern "C" void kmain()
 
 [[noreturn]] void kmain_thread()
 {
-    logger::info("Leviathan successfully booted!\n");
+    logger::info("Fenrir successfully booted!\n");
 
     limine_file *module = boot::get_modules()[1]; // initramfs.tar
 

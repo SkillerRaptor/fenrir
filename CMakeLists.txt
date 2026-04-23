@@ -8,7 +8,7 @@
 # CMake Info
 #-------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.5)
-project(Leviathan LANGUAGES ASM_NASM C CXX)
+project(Fenrir LANGUAGES ASM_NASM C CXX)
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
