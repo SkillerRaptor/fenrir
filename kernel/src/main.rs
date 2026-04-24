@@ -13,7 +13,7 @@ mod common;
 use core::panic::PanicInfo;
 
 use crate::{
-    arch::x86_64::cpu,
+    arch::x86_64::{cpu, gdt},
     common::{boot, logger},
 };
 
@@ -21,7 +21,7 @@ use crate::{
 unsafe extern "C" fn kmain() -> ! {
     cpu::disable_interrupts();
 
-    if boot::is_base_revision_supported() {
+    if !boot::is_base_revision_supported() {
         cpu::halt();
     }
 
@@ -39,6 +39,8 @@ unsafe extern "C" fn kmain() -> ! {
     );
     println!("   Firmware: {}", boot::get_firmware_type());
     println!("");
+
+    gdt::initialize();
 
     log::info!("Hello, World!");
 

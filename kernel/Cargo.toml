@@ -14,10 +14,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+bitflags = "2.11"
 limine = { git = "https://github.com/jasondyoungberg/limine-rs.git", branch = "0.6.x" }
 log = "0.4"
 
 flanterm-sys = { path = "./bindings/flanterm" }
+
+[build-dependencies]
+nasm-rs = { version = "0.3", features = ["parallel"] }
 
 [profile.dev]
 panic = "abort"
