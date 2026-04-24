@@ -30,7 +30,9 @@ impl Log for Logger {
             Level::Trace => print!("\x1b[38;2;170;68;255mtrace"),
         }
 
-        println!("\x1b[0m: {}", record.args());
+        print!("\x1b[0m: ");
+        print!("\x1b[38;2;60;60;60m{} ", record.target());
+        println!("\x1b[0m{}", record.args());
     }
 
     fn flush(&self) {}
