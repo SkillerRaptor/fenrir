@@ -1,0 +1,27 @@
+#-------------------------------------------------------------------------------------------
+# Copyright (c) 2026-present, SkillerRaptor
+#
+# SPDX-License-Identifier: MIT
+#-------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------------------
+# Editor Config
+#-------------------------------------------------------------------------------------------
+root = true
+
+# All files
+[*]
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C++ files
+[*.{cpp,c,hpp,h}]
+indent_style = space
+indent_size = 4
+
+# Rust files
+[*.rs]
+indent_style = space
+indent_size = 4

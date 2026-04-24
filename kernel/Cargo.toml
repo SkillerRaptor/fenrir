@@ -1,0 +1,19 @@
+#-------------------------------------------------------------------------------------------
+# Copyright (c) 2026-present, SkillerRaptor
+#
+# SPDX-License-Identifier: MIT
+#-------------------------------------------------------------------------------------------
+
+[package]
+name = "kernel"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+limine = { git = "https://github.com/jasondyoungberg/limine-rs.git", branch = "0.6.x" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
