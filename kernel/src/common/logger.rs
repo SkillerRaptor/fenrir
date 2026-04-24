@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{common::writer, print, println};
-
 use log::{Level, LevelFilter, Log, Metadata, Record};
+
+use crate::{common::writer, print, println};
 
 static LOGGER: Logger = Logger;
 

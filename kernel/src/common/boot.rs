@@ -5,9 +5,14 @@
 //
 
 use limine::{
-    BaseRevision, RequestsEndMarker, RequestsStartMarker,
+    BaseRevision,
+    RequestsEndMarker,
+    RequestsStartMarker,
     firmware::{
-        FIRMWARE_TYPE_EFI32, FIRMWARE_TYPE_EFI64, FIRMWARE_TYPE_SBI, FIRMWARE_TYPE_X86BIOS,
+        FIRMWARE_TYPE_EFI32,
+        FIRMWARE_TYPE_EFI64,
+        FIRMWARE_TYPE_SBI,
+        FIRMWARE_TYPE_X86BIOS,
     },
     framebuffer::Framebuffer,
     request::{BootloaderInfoRequest, FirmwareTypeRequest, FramebufferRequest},
