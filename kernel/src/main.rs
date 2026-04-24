@@ -7,15 +7,23 @@
 #![no_std]
 #![no_main]
 
+mod arch;
 mod common;
 
-use core::{arch::asm, panic::PanicInfo};
+use core::panic::PanicInfo;
 
-use crate::common::{boot, logger};
+use crate::{
+    arch::x86_64::cpu,
+    common::{boot, logger},
+};
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn kmain() -> ! {
-    assert!(boot::is_base_revision_supported());
+    cpu::disable_interrupts();
+
+    if boot::is_base_revision_supported() {
+        cpu::halt();
+    }
 
     logger::initialize();
 
@@ -34,19 +42,10 @@ unsafe extern "C" fn kmain() -> ! {
 
     log::info!("Hello, World!");
 
-    loop {
-        unsafe {
-            asm!("hlt");
-        }
-    }
+    cpu::hcf();
 }
 
 #[panic_handler]
 fn rust_panic(_info: &PanicInfo) -> ! {
-    loop {
-        unsafe {
-            asm!("cli");
-            asm!("hlt");
-        }
-    }
+    cpu::hcf();
 }
