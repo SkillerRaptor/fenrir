@@ -6,6 +6,9 @@
 
 #include "scheduler/scheduler.hpp"
 
+#include <ygg/atomic.hpp>
+#include <ygg/vector.hpp>
+
 #include "acpi/apic.hpp"
 #include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/idt.hpp"
@@ -13,8 +16,6 @@
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "lib/atomic.hpp"
-#include "lib/vector.hpp"
 #include "memory/pmm.hpp"
 #include "scheduler/process.hpp"
 #include "scheduler/reaper.hpp"
@@ -24,8 +25,8 @@ namespace scheduler {
 
 extern "C" [[noreturn]] void switch_process(const Registers *registers);
 
-static Atomic<i32> s_current_process_id = 0;
-static Atomic<i32> s_current_thread_id = 0;
+static ygg::Atomic<i32> s_current_process_id = 0;
+static ygg::Atomic<i32> s_current_thread_id = 0;
 
 static Process *s_kernel_process = nullptr;
 
@@ -51,7 +52,7 @@ void initialize()
 
 Process *create_process(vmm::PageMap *page_map)
 {
-    assert(page_map);
+    ASSERT(page_map);
 
     const ProcessId id = ProcessId { s_current_process_id.fetch_add(1) };
 
@@ -76,8 +77,8 @@ static void thread_exit()
 
 static Thread *create_thread(Process *process, const u64 cs, void (*entry)())
 {
-    assert(process);
-    assert(entry);
+    ASSERT(process);
+    ASSERT(entry);
 
     const ThreadId id = ThreadId { s_current_thread_id.fetch_add(1) };
     const u64 stack = reinterpret_cast<u64>(pmm::allocate(1, true)) + memory::s_page_size;

@@ -113,7 +113,7 @@ u64 get_executable_physical_base() { return s_executable_address_request.respons
 
 u64 get_executable_virtual_base() { return s_executable_address_request.response->virtual_base; }
 
-Span<limine_framebuffer *> get_framebuffers()
+ygg::Span<limine_framebuffer *> get_framebuffers()
 {
     return { s_framebuffer_request.response->framebuffers, s_framebuffer_request.response->framebuffer_count };
 }
@@ -122,12 +122,12 @@ u64 get_hhdm_offset() { return s_hhdm_request.response->offset; }
 
 limine_mp_response *get_mp_response() { return s_mp_request.response; }
 
-Span<limine_memmap_entry *> get_memory_map()
+ygg::Span<limine_memmap_entry *> get_memory_map()
 {
     return { s_memmap_request.response->entries, s_memmap_request.response->entry_count };
 }
 
-Span<limine_file *> get_modules()
+ygg::Span<limine_file *> get_modules()
 {
     return { s_module_request.response->modules, s_module_request.response->module_count };
 }

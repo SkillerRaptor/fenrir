@@ -8,7 +8,7 @@
 
 namespace syscalls {
 
-u64 sys$close_device(Span<const u64>)
+u64 sys$close_device(ygg::Span<const u64>)
 {
     // Close (Ignore)
     return 0;

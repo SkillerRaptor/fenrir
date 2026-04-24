@@ -6,12 +6,13 @@
 
 #include "memory/vmm.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/math.hpp>
+
 #include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "lib/assert.hpp"
-#include "lib/math.hpp"
 #include "memory/pmm.hpp"
 #include "sync/spinlock.hpp"
 
@@ -29,7 +30,7 @@ void initialize()
 {
     s_kernel_page_map = create_page_map();
 
-    const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
+    const ygg::Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
     logger::debug("VMM: Mapping memory map entries...\n");
 
     usize mapped_entry_count = 0;
@@ -41,8 +42,8 @@ void initialize()
             continue;
         }
 
-        const usize entry_start = math::align_down(entry->base, memory::s_page_size);
-        const usize entry_end = math::align_up(entry->base + entry->length, memory::s_page_size);
+        const usize entry_start = ygg::math::align_down(entry->base, memory::s_page_size);
+        const usize entry_end = ygg::math::align_up(entry->base + entry->length, memory::s_page_size);
         const usize entry_pages = (entry_end - entry_start) / memory::s_page_size;
 
         logger::debug(
@@ -67,8 +68,9 @@ void initialize()
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024);
 
-    const usize kernel_virtual_start = math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
-    const usize kernel_virtual_end = math::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
+    const usize kernel_virtual_start
+        = ygg::math::align_down(reinterpret_cast<usize>(&__kernel_start), memory::s_page_size);
+    const usize kernel_virtual_end = ygg::math::align_up(reinterpret_cast<usize>(&__kernel_end), memory::s_page_size);
     const usize physical_base = boot::get_executable_physical_base();
     const usize virtual_base = boot::get_executable_virtual_base();
     const usize kernel_pages = (kernel_virtual_end - kernel_virtual_start) / memory::s_page_size;
@@ -146,7 +148,7 @@ static void destroy_page_level(const u64 pml, const u8 level)
 
 void destroy_page_map(const PageMap *page_map)
 {
-    assert(page_map);
+    ASSERT(page_map);
 
     SpinlockLocker _locker(s_lock);
 
@@ -210,8 +212,8 @@ static u64 *get_pte(const PageMap *page_map, const u64 vaddr)
 
 void map(const PageMap *page_map, const u64 paddr, const u64 vaddr, const Attribute attributes)
 {
-    const usize aligned_physical_address = math::align_down(paddr, memory::s_page_size);
-    const usize aligned_virtual_address = math::align_down(vaddr, memory::s_page_size);
+    const usize aligned_physical_address = ygg::math::align_down(paddr, memory::s_page_size);
+    const usize aligned_virtual_address = ygg::math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
     *entry = (aligned_physical_address & s_address_mask) | static_cast<u64>(attributes | Attribute::Present);
@@ -221,7 +223,7 @@ void unmap(const PageMap *page_map, const u64 vaddr)
 {
     SpinlockLocker _locker(s_lock);
 
-    const usize aligned_virtual_address = math::align_down(vaddr, memory::s_page_size);
+    const usize aligned_virtual_address = ygg::math::align_down(vaddr, memory::s_page_size);
 
     u64 *entry = get_pte(page_map, aligned_virtual_address);
     *entry = 0;

@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <ygg/string_view.hpp>
+#include <ygg/types.hpp>
+
 #include "core/boot.hpp"
-#include "lib/string_view.hpp"
-#include "lib/types.hpp"
 
 namespace vfs {
 
@@ -21,11 +22,11 @@ enum class SeekOrigin {
 };
 
 // FIXME: Using `limine_file` here is a HACK and should be replaced with a driver
-void mount(limine_file *archive, StringView target, const char *filesystem_type);
+void mount(limine_file *archive, ygg::StringView target, const char *filesystem_type);
 // TODO: Add a way to unmount a driver and not from the target
-void unmount(StringView target);
+void unmount(ygg::StringView target);
 
-File *open(StringView path);
+File *open(ygg::StringView path);
 void close(File *);
 
 // FIXME: Implement write

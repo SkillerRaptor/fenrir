@@ -6,7 +6,7 @@
 
 #include "filesystem/ustar.hpp"
 
-#include "lib/string.hpp"
+#include <ygg/string.hpp>
 
 namespace ustar {
 

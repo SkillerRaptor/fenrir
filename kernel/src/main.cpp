@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <ygg/math.hpp>
+#include <ygg/string.hpp>
+#include <ygg/string_view.hpp>
+
 #include "acpi/acpi.hpp"
 #include "acpi/apic.hpp"
 #include "acpi/hpet.hpp"
@@ -16,9 +20,6 @@
 #include "drivers/serial.hpp"
 #include "elf/elf.hpp"
 #include "filesystem/vfs.hpp"
-#include "lib/math.hpp"
-#include "lib/string.hpp"
-#include "lib/string_view.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 #include "misc/cxxabi.hpp"
@@ -109,9 +110,9 @@ extern "C" void kmain()
             continue;
         }
 
-        const u64 virtual_start = math::align_down(program_header.virtual_address, memory::s_page_size);
+        const u64 virtual_start = ygg::math::align_down(program_header.virtual_address, memory::s_page_size);
         const u64 virtual_end
-            = math::align_up(program_header.virtual_address + program_header.memory_size, memory::s_page_size);
+            = ygg::math::align_up(program_header.virtual_address + program_header.memory_size, memory::s_page_size);
         const usize page_count = (virtual_end - virtual_start) / memory::s_page_size;
 
         for (usize j = 0; j < page_count; ++j) {

@@ -6,20 +6,20 @@
 
 #include "elf/elf.hpp"
 
-#include "lib/assert.hpp"
-#include "lib/string.hpp"
+#include <ygg/assert.hpp>
+#include <ygg/string.hpp>
 
 namespace elf {
 
 Elf::Elf(const u8 *data)
 {
-    assert(data);
+    ASSERT(data);
 
     memcpy(&m_header, data, sizeof(Header));
 
-    assert(memcmp(m_header.magic, s_magic, 4) == 0);
-    assert(m_header.format == Format::_64);
-    assert(m_header.machine == 0x3e); // NOTE: This is x86_64
+    ASSERT(memcmp(m_header.magic, s_magic, 4) == 0);
+    ASSERT(m_header.format == Format::_64);
+    ASSERT(m_header.machine == 0x3e); // NOTE: This is x86_64
 
     for (u16 i { 0 }; i < m_header.program_header_entry_count; ++i) {
         const ProgramHeader *program_header = reinterpret_cast<const ProgramHeader *>(

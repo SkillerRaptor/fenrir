@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "lib/panic.hpp"
+#include "ygg/panic.hpp"
 
+/*
 #include "acpi/apic.hpp"
 #include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
@@ -272,3 +273,4 @@ void __panic_exception(const Registers &registers)
         scheduler::yield();
     }
 }
+*/

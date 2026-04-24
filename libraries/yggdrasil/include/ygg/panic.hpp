@@ -6,8 +6,9 @@
 
 #pragma once
 
+/*
 #include "arch/x86_64/registers.hpp"
-#include "lib/string_view.hpp"
+#include "ygg/string_view.hpp"
 
 #define panic(...)                                                                  \
     do {                                                                            \
@@ -16,3 +17,4 @@
 
 [[noreturn]] void __panic(const char *file, u32 line, const char *function, const char *message = nullptr);
 [[noreturn]] void __panic_exception(const Registers &);
+*/

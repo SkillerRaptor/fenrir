@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "lib/bitflags.hpp"
-#include "lib/types.hpp"
-#include "lib/vector.hpp"
+#include <ygg/bitflags.hpp>
+#include <ygg/types.hpp>
+#include <ygg/vector.hpp>
 
 namespace elf {
 
@@ -137,14 +137,14 @@ public:
     explicit Elf(const u8 *data);
 
     const Header &header() const { return m_header; }
-    const Vector<ProgramHeader> &program_headers() const { return m_program_headers; }
-    const Vector<SectionHeader> &section_headers() const { return m_section_headers; }
+    const ygg::Vector<ProgramHeader> &program_headers() const { return m_program_headers; }
+    const ygg::Vector<SectionHeader> &section_headers() const { return m_section_headers; }
 
 private:
     // TODO: Don't save header
     Header m_header { };
-    Vector<ProgramHeader> m_program_headers { };
-    Vector<SectionHeader> m_section_headers { };
+    ygg::Vector<ProgramHeader> m_program_headers { };
+    ygg::Vector<SectionHeader> m_section_headers { };
 };
 
 } // namespace elf

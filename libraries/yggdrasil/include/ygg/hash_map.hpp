@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "lib/hash.hpp"
-#include "lib/types.hpp"
+#include "ygg/hash.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 template <typename K, typename V>
 class HashMap {
 private:
@@ -152,3 +153,5 @@ private:
     usize m_size = 0;
     usize m_capacity = 0;
 };
+
+} // namespace ygg

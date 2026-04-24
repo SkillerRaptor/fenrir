@@ -6,8 +6,9 @@
 
 #include "misc/cxxabi.hpp"
 
+#include <ygg/types.hpp>
+
 #include "arch/x86_64/cpu.hpp"
-#include "lib/types.hpp"
 #include "memory/kmalloc.hpp"
 
 namespace cxxabi {

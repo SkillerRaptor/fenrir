@@ -6,10 +6,11 @@
 
 #include "memory/kmalloc.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/math.hpp>
+
 #include "core/boot.hpp"
 #include "core/memory.hpp"
-#include "lib/assert.hpp"
-#include "lib/math.hpp"
 #include "memory/pmm.hpp"
 
 namespace memory {
@@ -21,9 +22,9 @@ struct AllocationHeader {
 
 void *kmalloc(const usize size)
 {
-    assert(size > 0);
+    ASSERT(size > 0);
 
-    const usize page_count = math::div_round_up(size, s_page_size);
+    const usize page_count = ygg::math::div_round_up(size, s_page_size);
 
     // NOTE: Allocate one extra page for the header
     u8 *ptr = static_cast<u8 *>(pmm::allocate(page_count + 1, false));

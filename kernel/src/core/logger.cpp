@@ -58,7 +58,7 @@ void initialize()
     s_tsc_frequency = boot::get_tsc_frequency();
     s_tsc_boot = get_tsc();
 
-    const Span<limine_framebuffer *> framebuffers = boot::get_framebuffers();
+    const ygg::Span<limine_framebuffer *> framebuffers = boot::get_framebuffers();
 
     s_context = flanterm_fb_init(
         nullptr,
@@ -114,7 +114,7 @@ void write_character(const char c)
     serial::write(c);
 }
 
-void write_string(const StringView string)
+void write_string(const ygg::StringView string)
 {
     for (const char c : string) {
         write_character(c);
@@ -124,7 +124,7 @@ void write_string(const StringView string)
 void write_timestamp()
 {
     const Timestamp ts = get_timestamp();
-    fmt::format(write_character, "[{}.{:03u}] ", ts.seconds, ts.milliseconds);
+    ygg::fmt::format(write_character, "[{}.{:03u}] ", ts.seconds, ts.milliseconds);
 }
 
 } // namespace detail

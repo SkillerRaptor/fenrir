@@ -6,8 +6,8 @@
 
 #include "arch/x86_64/gdt.hpp"
 
-#include "lib/bitflags.hpp"
-#include "lib/types.hpp"
+#include <ygg/bitflags.hpp>
+#include <ygg/types.hpp>
 
 namespace gdt {
 
@@ -72,7 +72,7 @@ static TssEntry create_tss_entry(const u64 address)
 
 Table create_table()
 {
-    Table table {};
+    Table table { };
 
     table.entries[0] = create_entry(0x00000000, 0x00000000, AccessAttribute::None, FlagAttribute::None);
 

@@ -18,7 +18,7 @@ struct Device {
     u64 pitch;
 };
 
-u64 sys$enumerate_devices(const Span<const u64> arguments)
+u64 sys$enumerate_devices(const ygg::Span<const u64> arguments)
 {
     Device *devices = reinterpret_cast<Device *>(arguments[0]);
     u64 *count = reinterpret_cast<u64 *>(arguments[1]);

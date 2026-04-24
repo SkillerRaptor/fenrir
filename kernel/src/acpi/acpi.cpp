@@ -8,14 +8,14 @@
 
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
+#include <ygg/math.hpp>
+#include <ygg/vector.hpp>
 
 #include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/io.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "lib/math.hpp"
-#include "lib/vector.hpp"
 #include "memory/kmalloc.hpp"
 #include "memory/vmm.hpp"
 #include "sync/spinlock.hpp"
@@ -28,7 +28,7 @@ struct MemoryMapping {
     usize ref_count = 0;
 };
 
-static Vector<MemoryMapping> s_mappings { };
+static ygg::Vector<MemoryMapping> s_mappings { };
 
 void initialize()
 {
@@ -77,9 +77,9 @@ uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
  */
 void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 {
-    const u64 aligned_address = math::align_down(addr, memory::s_page_size);
+    const u64 aligned_address = ygg::math::align_down(addr, memory::s_page_size);
     const u64 address_diff = addr - aligned_address;
-    const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
+    const u64 aligned_length = ygg::math::align_up(len + address_diff, memory::s_page_size);
 
     for (acpi::MemoryMapping &mapping : acpi::s_mappings) {
         if (mapping.physical_base == aligned_address && mapping.page_count == aligned_length) {
@@ -117,9 +117,9 @@ void *uacpi_kernel_map(const uacpi_phys_addr addr, const uacpi_size len)
 void uacpi_kernel_unmap(void *addr, const uacpi_size len)
 {
     const u64 virtual_address = reinterpret_cast<u64>(addr);
-    const u64 aligned_address = math::align_down(virtual_address, memory::s_page_size);
+    const u64 aligned_address = ygg::math::align_down(virtual_address, memory::s_page_size);
     const u64 address_diff = virtual_address - aligned_address;
-    const u64 aligned_length = math::align_up(len + address_diff, memory::s_page_size);
+    const u64 aligned_length = ygg::math::align_up(len + address_diff, memory::s_page_size);
 
     for (usize i = 0; i < acpi::s_mappings.size(); ++i) {
         acpi::MemoryMapping &mapping = acpi::s_mappings[i];

@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include "ygg/types.hpp"
+
+namespace ygg {
+
 enum class MemoryOrder : u8 {
     Relaxed = __ATOMIC_RELAXED,
     Consume = __ATOMIC_CONSUME,
@@ -15,12 +19,13 @@ enum class MemoryOrder : u8 {
     SeqCst = __ATOMIC_SEQ_CST
 };
 
+// FIXME: Add concept to check if the type is integral
 template <typename T>
 class Atomic {
 public:
-    Atomic() = default;
+    constexpr Atomic() = default;
 
-    Atomic(const T value)
+    constexpr Atomic(const T value)
         : m_value(value)
     {
     }
@@ -54,3 +59,5 @@ public:
 private:
     T m_value = 0;
 };
+
+} // namespace ygg

@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "lib/assert.hpp"
-#include "lib/types.hpp"
+#include "ygg/assert.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 template <typename T>
 class Vector {
 public:
@@ -118,7 +119,7 @@ public:
 
     void pop_back()
     {
-        assert(!is_empty());
+        ASSERT(!is_empty());
         --m_size;
     }
 
@@ -130,13 +131,13 @@ public:
 
     T &operator[](const usize index)
     {
-        assert(index < m_size);
+        ASSERT(index < m_size);
         return m_data[index];
     }
 
     const T &operator[](const usize index) const
     {
-        assert(index < m_size);
+        ASSERT(index < m_size);
         return m_data[index];
     }
 
@@ -149,7 +150,7 @@ public:
 private:
     void reallocate(const usize new_capacity)
     {
-        assert(new_capacity != 0);
+        ASSERT(new_capacity != 0);
 
         T *new_block = new T[new_capacity];
 
@@ -172,3 +173,5 @@ private:
     usize m_size = 0;
     usize m_capacity = 0;
 };
+
+} // namespace ygg

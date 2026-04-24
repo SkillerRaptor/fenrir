@@ -6,22 +6,23 @@
 
 #include "memory/pmm.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/bitmap.hpp>
+#include <ygg/math.hpp>
+#include <ygg/string.hpp>
+
 #include "core/boot.hpp"
 #include "core/logger.hpp"
 #include "core/memory.hpp"
-#include "lib/assert.hpp"
-#include "lib/bitmap.hpp"
-#include "lib/math.hpp"
-#include "lib/string.hpp"
 
 namespace pmm {
 
 static usize s_highest_page = 0;
-static Bitmap s_bitmap { };
+static ygg::Bitmap s_bitmap { };
 
 void initialize()
 {
-    const Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
+    const ygg::Span<limine_memmap_entry *> memory_map = boot::get_memory_map();
 
     logger::debug("PMM: Scanning {} memory map entries\n", memory_map.size());
 
@@ -71,7 +72,7 @@ void initialize()
 
     logger::debug("PMM: Found highest page address at {:#016x}\n", s_highest_page);
 
-    s_bitmap.set_size(math::div_round_up(s_highest_page, memory::s_page_size));
+    s_bitmap.set_size(ygg::math::div_round_up(s_highest_page, memory::s_page_size));
 
     for (const limine_memmap_entry *entry : memory_map) {
         if (entry->type != LIMINE_MEMMAP_USABLE) {
@@ -131,7 +132,7 @@ void initialize()
 
 void *allocate(const usize pages, const bool clear)
 {
-    assert(pages > 0);
+    ASSERT(pages > 0);
 
     usize current_pages = 0;
     for (usize i = 0; i < s_highest_page / memory::s_page_size; ++i) {

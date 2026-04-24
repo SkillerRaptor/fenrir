@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "lib/format.hpp"
+#include "ygg/format.hpp"
 
-namespace fmt::detail {
+namespace ygg::fmt::detail {
 
 template <>
 Argument create_argument(const i8 value)
@@ -400,4 +400,4 @@ void do_format(void (*write_character)(char), const StringView fmt, const Span<A
     }
 }
 
-} // namespace fmt::detail
+} // namespace ygg::fmt::detail

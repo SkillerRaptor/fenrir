@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "lib/string.hpp"
+#include "ygg/string.hpp"
 
 #include <stdint.h>
 

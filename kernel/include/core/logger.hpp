@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "lib/format.hpp"
-#include "lib/string_view.hpp"
+#include <ygg/format.hpp>
+#include <ygg/string_view.hpp>
 
 namespace logger {
 
@@ -28,14 +28,14 @@ void lock();
 void unlock();
 
 void write_character(char);
-void write_string(StringView);
+void write_string(ygg::StringView);
 
 void write_timestamp();
 
 } // namespace detail
 
 template <typename... Args>
-void log(const Level level, const StringView fmt, Args &&...args)
+void log(const Level level, const ygg::StringView fmt, Args &&...args)
 {
     detail::lock();
 
@@ -64,43 +64,43 @@ void log(const Level level, const StringView fmt, Args &&...args)
         break;
     }
 
-    fmt::format(detail::write_character, fmt, args...);
+    ygg::fmt::format(detail::write_character, fmt, args...);
 
     detail::unlock();
 }
 
 template <typename... Args>
-void debug(const StringView fmt, Args &&...args)
+void debug(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::Debug, fmt, args...);
 }
 
 template <typename... Args>
-void info(const StringView fmt, Args &&...args)
+void info(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::Info, fmt, args...);
 }
 
 template <typename... Args>
-void warn(const StringView fmt, Args &&...args)
+void warn(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::Warning, fmt, args...);
 }
 
 template <typename... Args>
-void error(const StringView fmt, Args &&...args)
+void error(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::Error, fmt, args...);
 }
 
 template <typename... Args>
-void fatal(const StringView fmt, Args &&...args)
+void fatal(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::Fatal, fmt, args...);
 }
 
 template <typename... Args>
-void print(const StringView fmt, Args &&...args)
+void print(const ygg::StringView fmt, Args &&...args)
 {
     log(Level::None, fmt, args...);
 }

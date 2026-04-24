@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "lib/bitflags.hpp"
-#include "lib/types.hpp"
+#include <ygg/bitflags.hpp>
+#include <ygg/types.hpp>
 
 namespace vmm {
 

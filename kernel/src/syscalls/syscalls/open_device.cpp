@@ -8,7 +8,7 @@
 
 namespace syscalls {
 
-u64 sys$open_device(Span<const u64>)
+u64 sys$open_device(ygg::Span<const u64>)
 {
     // Open (Ignore)
     return 0;

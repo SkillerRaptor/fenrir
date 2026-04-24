@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <ygg/types.hpp>
+
 #include "arch/x86_64/registers.hpp"
-#include "lib/types.hpp"
 #include "scheduler/types.hpp"
 
 struct Process;

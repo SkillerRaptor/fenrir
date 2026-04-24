@@ -6,8 +6,9 @@
 
 #include "filesystem/vfs.hpp"
 
+#include <ygg/string.hpp>
+
 #include "filesystem/ustar.hpp"
-#include "lib/string.hpp"
 
 namespace vfs {
 
@@ -31,7 +32,7 @@ struct File {
 
 static MountPoint *s_mount_point = nullptr;
 
-static MountPoint *get_mount_point(const StringView path)
+static MountPoint *get_mount_point(const ygg::StringView path)
 {
     const usize path_length = path.length();
 
@@ -63,7 +64,7 @@ static MountPoint *get_mount_point(const StringView path)
     return longest_match;
 }
 
-void mount(limine_file *archive, const StringView target, const char *)
+void mount(limine_file *archive, const ygg::StringView target, const char *)
 {
     // FIXME: Add check if mount already exists, maybe return an error? Also handle different systems
 
@@ -89,12 +90,12 @@ void mount(limine_file *archive, const StringView target, const char *)
     }
 }
 
-void unmount(const StringView target)
+void unmount(const ygg::StringView target)
 {
     // FIXME: Implement me
 }
 
-File *open(const StringView path)
+File *open(const ygg::StringView path)
 {
     // FIXME: Reduce path to the mounted point
 

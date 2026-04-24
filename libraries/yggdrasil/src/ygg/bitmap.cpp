@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "lib/bitmap.hpp"
+#include "ygg/bitmap.hpp"
 
-#include "lib/assert.hpp"
+#include "ygg/assert.hpp"
+
+namespace ygg {
 
 void Bitmap::set(const usize index, const bool value)
 {
-    assert(index < m_size);
+    ASSERT(index < m_size);
 
     const usize byte = index / 8;
     const usize bit = index % 8;
@@ -24,10 +26,12 @@ void Bitmap::set(const usize index, const bool value)
 
 bool Bitmap::get(const usize index) const
 {
-    assert(index < m_size);
+    ASSERT(index < m_size);
 
     const usize byte = index / 8;
     const usize bit = index % 8;
 
     return m_data[byte] & (1 << bit);
 }
+
+} // namespace ygg

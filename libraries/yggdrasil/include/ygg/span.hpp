@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "initializer_list.hpp"
-#include "lib/types.hpp"
+#include "ygg/initializer_list.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 template <typename T>
 class Span {
 public:
@@ -103,3 +104,5 @@ private:
     T *m_data = nullptr;
     usize m_size = 0;
 };
+
+} // namespace ygg

@@ -4,4 +4,6 @@
 # SPDX-License-Identifier: MIT
 #-------------------------------------------------------------------------------------------
 
+add_subdirectory(yggdrasil)
+
 add_subdirectory(libc)

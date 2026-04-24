@@ -6,12 +6,13 @@
 
 #include "arch/x86_64/idt.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/bitflags.hpp>
+#include <ygg/panic.hpp>
+
 #include "acpi/apic.hpp"
 #include "arch/x86_64/cpu.hpp"
 #include "core/logger.hpp"
-#include "lib/assert.hpp"
-#include "lib/bitflags.hpp"
-#include "lib/panic.hpp"
 
 namespace idt {
 
@@ -76,7 +77,7 @@ void initialize()
             continue;
         }
 
-        s_interrupt_handlers[i] = __panic_exception;
+        // s_interrupt_handlers[i] = __panic_exception;
     }
 
     s_descriptor.size = sizeof(s_entries) - 1;
@@ -91,7 +92,7 @@ void load() { load_idt(&s_descriptor); }
 
 void set_handler(const u8 isr, const InterruptHandler handler)
 {
-    assert(handler);
+    ASSERT(handler);
     s_interrupt_handlers[isr] = handler;
 }
 

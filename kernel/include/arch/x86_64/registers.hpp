@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "lib/types.hpp"
+#include <ygg/types.hpp>
 
 struct Registers {
     u64 r15 = 0;

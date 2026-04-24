@@ -6,12 +6,13 @@
 
 #include "acpi/apic.hpp"
 
+#include <ygg/types.hpp>
+
 #include "acpi/hpet.hpp"
 #include "arch/x86_64/cpu.hpp"
 #include "arch/x86_64/pic.hpp"
 #include "core/boot.hpp"
 #include "core/logger.hpp"
-#include "lib/types.hpp"
 #include "memory/mmio.hpp"
 #include "memory/vmm.hpp"
 

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "lib/span.hpp"
-#include "lib/types.hpp"
+#include <ygg/span.hpp>
+#include <ygg/types.hpp>
 
 struct SyscallRegisters {
     u64 r15 = 0;
@@ -32,10 +32,10 @@ namespace syscalls {
 void initialize();
 void load();
 
-u64 sys$exit(Span<const u64>);
-u64 sys$enumerate_devices(Span<const u64>);
-u64 sys$open_device(Span<const u64>);
-u64 sys$close_device(Span<const u64>);
-u64 sys$map_device(Span<const u64>);
+u64 sys$exit(ygg::Span<const u64>);
+u64 sys$enumerate_devices(ygg::Span<const u64>);
+u64 sys$open_device(ygg::Span<const u64>);
+u64 sys$close_device(ygg::Span<const u64>);
+u64 sys$map_device(ygg::Span<const u64>);
 
 } // namespace syscalls

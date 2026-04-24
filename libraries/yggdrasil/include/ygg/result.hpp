@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "lib/assert.hpp"
+#include "ygg/assert.hpp"
 
+namespace ygg {
 template <typename T>
 struct OkType {
     T value;
@@ -134,13 +135,13 @@ public:
 
     T &unwrap()
     {
-        assert(m_is_ok);
+        ASSERT(m_is_ok);
         return m_ok;
     }
 
     const T &unwrap() const
     {
-        assert(m_is_ok);
+        ASSERT(m_is_ok);
         return m_ok;
     }
 
@@ -148,19 +149,19 @@ public:
 
     E &unwrap_err()
     {
-        assert(!m_is_ok);
+        ASSERT(!m_is_ok);
         return m_err;
     }
 
     const E &unwrap_err() const
     {
-        assert(!m_is_ok);
+        ASSERT(!m_is_ok);
         return m_err;
     }
 
     ErrorType<E> unwrap_other() const
     {
-        assert(!m_is_ok);
+        ASSERT(!m_is_ok);
         return Err(m_err);
     }
 
@@ -178,3 +179,5 @@ private:
 
     bool m_is_ok = false;
 };
+
+} // namespace ygg

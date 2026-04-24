@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "lib/identifier.hpp"
+#include <ygg/identifier.hpp>
 
 struct ProcessIdTag;
-using ProcessId = Identifier<ProcessIdTag, i32>;
+using ProcessId = ygg::Identifier<ProcessIdTag, i32>;
 
 struct ThreadIdTag;
-using ThreadId = Identifier<ThreadIdTag, i32>;
+using ThreadId = ygg::Identifier<ThreadIdTag, i32>;

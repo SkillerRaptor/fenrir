@@ -16,7 +16,7 @@ static constexpr u32 s_star_msr = 0xc0000081;
 static constexpr u32 s_lstar_msr = 0xc0000082;
 static constexpr u32 s_fmask_msr = 0xc0000084;
 
-using SyscallHandler = u64 (*)(Span<const u64>);
+using SyscallHandler = u64 (*)(ygg::Span<const u64>);
 
 extern "C" void syscall_entry();
 

@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "lib/string.hpp"
-#include "lib/types.hpp"
+#include "ygg/string.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 class StringView {
 public:
     class Iterator {
@@ -105,3 +106,5 @@ private:
     const char *m_data = nullptr;
     usize m_length = 0;
 };
+
+} // namespace ygg

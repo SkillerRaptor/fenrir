@@ -22,11 +22,6 @@ set(SOURCES
         src/elf/elf.cpp
         src/filesystem/ustar.cpp
         src/filesystem/vfs.cpp
-        src/lib/assert.cpp
-        src/lib/bitmap.cpp
-        src/lib/format.cpp
-        src/lib/panic.cpp
-        src/lib/string.cpp
         src/memory/kmalloc.cpp
         src/memory/pmm.cpp
         src/memory/vmm.cpp
@@ -62,27 +57,6 @@ set(HEADERS
         include/elf/elf.hpp
         include/filesystem/ustar.hpp
         include/filesystem/vfs.hpp
-        include/lib/assert.hpp
-        include/lib/atomic.hpp
-        include/lib/bitflags.hpp
-        include/lib/bitmap.hpp
-        include/lib/format.hpp
-        include/lib/hash.hpp
-        include/lib/hash_map.hpp
-        include/lib/identifier.hpp
-        include/lib/initializer_list.hpp
-        include/lib/macros.hpp
-        include/lib/math.hpp
-        include/lib/optional.hpp
-        include/lib/panic.hpp
-        include/lib/queue.hpp
-        include/lib/result.hpp
-        include/lib/span.hpp
-        include/lib/string.hpp
-        include/lib/string_view.hpp
-        include/lib/type_traits.hpp
-        include/lib/types.hpp
-        include/lib/vector.hpp
         include/memory/kmalloc.hpp
         include/memory/mmio.hpp
         include/memory/pmm.hpp
@@ -101,7 +75,14 @@ set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_scripts/x86_64.ld)
 
 add_executable(kernel ${SOURCES} ${HEADERS})
 target_include_directories(kernel PRIVATE include)
-target_link_libraries(kernel PRIVATE limine flanterm uacpi)
+target_link_libraries(
+        kernel
+        PRIVATE
+        yggdrasil
+        limine
+        flanterm
+        uacpi)
+target_compile_definitions(kernel PRIVATE __KERNEL)
 set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
 #-------------------------------------------------------------------------------------------

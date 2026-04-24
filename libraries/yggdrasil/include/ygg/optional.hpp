@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "lib/assert.hpp"
-#include "lib/types.hpp"
+#include "ygg/assert.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 struct NoneType {
     constexpr NoneType() = default;
 };
@@ -134,13 +135,13 @@ public:
 
     T &unwrap()
     {
-        assert(m_has_value);
+        ASSERT(m_has_value);
         return m_value;
     }
 
     const T &unwrap() const
     {
-        assert(m_has_value);
+        ASSERT(m_has_value);
         return m_value;
     }
 
@@ -148,7 +149,7 @@ public:
 
     const NoneType &unwrap_other() const
     {
-        assert(!m_has_value);
+        ASSERT(!m_has_value);
         return None;
     }
 
@@ -203,7 +204,7 @@ public:
 
     T *unwrap() const
     {
-        assert(m_ptr != nullptr);
+        ASSERT(m_ptr != nullptr);
         return m_ptr;
     }
 
@@ -218,3 +219,5 @@ private:
 private:
     T *m_ptr = nullptr;
 };
+
+} // namespace ygg

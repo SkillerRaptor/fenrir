@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "lib/types.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 template <typename Key>
 struct Hash {
     usize operator()(const Key &key) const = delete;
@@ -30,3 +31,5 @@ template <>
 struct Hash<u32> {
     usize operator()(const u32 &key) const { return Hash<u64>()(key); }
 };
+
+} // namespace ygg

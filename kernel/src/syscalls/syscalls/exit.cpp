@@ -12,7 +12,7 @@ namespace syscalls {
 
 // FIXME: This should kill every thread in the process
 
-u64 sys$exit(const Span<const u64>)
+u64 sys$exit(const ygg::Span<const u64>)
 {
     cpu::enter_critical();
     cpu::current().current_thread->state = Thread::State::Dead;

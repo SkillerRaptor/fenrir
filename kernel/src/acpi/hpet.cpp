@@ -8,11 +8,11 @@
 
 #include <uacpi/acpi.h>
 #include <uacpi/tables.h>
+#include <ygg/assert.hpp>
+#include <ygg/types.hpp>
 
 #include "core/boot.hpp"
 #include "core/logger.hpp"
-#include "lib/assert.hpp"
-#include "lib/types.hpp"
 #include "memory/mmio.hpp"
 #include "memory/vmm.hpp"
 
@@ -66,7 +66,7 @@ void initialize()
 
 void sleep(const u64 ms)
 {
-    assert(ms > 0);
+    ASSERT(ms > 0);
 
     const u64 target_ticks
         = mmio::in<u64>(s_virtual_address + s_main_counter_register) + (ms * 1000000000000) / s_clock_period;

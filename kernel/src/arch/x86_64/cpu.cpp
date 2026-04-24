@@ -6,9 +6,10 @@
 
 #include "arch/x86_64/cpu.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/atomic.hpp>
+
 #include "acpi/apic.hpp"
-#include "lib/assert.hpp"
-#include "lib/atomic.hpp"
 #include "scheduler/scheduler.hpp"
 
 namespace cpu {
@@ -17,7 +18,7 @@ namespace cpu {
 static constexpr usize s_max_cores = 16;
 
 static Core s_cores[s_max_cores] { };
-static Atomic<u32> s_online_cores = 0;
+static ygg::Atomic<u32> s_online_cores = 0;
 
 void early_initialize(const u32 id, const u32 lapic_id, const u64 kernel_stack)
 {
@@ -70,7 +71,7 @@ void enter_critical()
 void leave_critical()
 {
     Core &core = current();
-    assert(core.critical_sections > 0);
+    ASSERT(core.critical_sections > 0);
 
     core.critical_sections -= 1;
     if (core.were_interrupts_enabled) {

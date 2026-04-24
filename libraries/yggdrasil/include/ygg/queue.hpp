@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include "lib/assert.hpp"
-#include "lib/types.hpp"
-#include "lib/vector.hpp"
+#include "ygg/assert.hpp"
+#include "ygg/types.hpp"
+#include "ygg/vector.hpp"
 
+namespace ygg {
 template <typename T>
 class Queue {
 public:
@@ -20,7 +21,7 @@ public:
 
     T pop_front()
     {
-        assert(!is_empty());
+        ASSERT(!is_empty());
 
         const T front = m_data[0];
 
@@ -40,3 +41,5 @@ public:
 private:
     Vector<T> m_data { };
 };
+
+} // namespace ygg

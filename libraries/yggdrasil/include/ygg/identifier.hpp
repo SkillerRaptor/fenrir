@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "lib/hash.hpp"
-#include "lib/types.hpp"
+#include "ygg/hash.hpp"
+#include "ygg/types.hpp"
 
+namespace ygg {
 template <typename, typename T = u32>
 class Identifier {
 public:
@@ -38,3 +39,5 @@ template <typename U, typename T>
 struct Hash<Identifier<U, T>> {
     usize operator()(const Identifier<U, T> &key) const { return Hash<u64> { }(key.get()); }
 };
+
+} // namespace ygg

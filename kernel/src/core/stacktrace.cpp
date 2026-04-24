@@ -6,10 +6,11 @@
 
 #include "core/stacktrace.hpp"
 
+#include <ygg/assert.hpp>
+#include <ygg/string.hpp>
+
 #include "core/boot.hpp"
 #include "core/logger.hpp"
-#include "lib/assert.hpp"
-#include "lib/string.hpp"
 
 namespace stacktrace {
 
@@ -150,7 +151,7 @@ static const Symbol *find_symbol(const u64 rip)
 
 void print(const u64 max_frames, const u64 rip_argument)
 {
-    assert(max_frames > 0);
+    ASSERT(max_frames > 0);
 
     volatile StackFrame *stack_frame = nullptr;
     asm volatile("mov %%rbp, %0" : "=r"(stack_frame) : : "memory");

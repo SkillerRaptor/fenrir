@@ -4,17 +4,18 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <ygg/math.hpp>
+
 #include "arch/x86_64/cpu.hpp"
 #include "core/boot.hpp"
 #include "core/memory.hpp"
-#include "lib/math.hpp"
 #include "memory/vmm.hpp"
 #include "scheduler/process.hpp"
 #include "syscall/syscalls.hpp"
 
 namespace syscalls {
 
-u64 sys$map_device(const Span<const u64> arguments)
+u64 sys$map_device(const ygg::Span<const u64> arguments)
 {
     const cpu::Core &core = cpu::current();
 
@@ -23,11 +24,11 @@ u64 sys$map_device(const Span<const u64> arguments)
     const u64 physical_address = reinterpret_cast<u64>(framebuffer->address) - boot::get_hhdm_offset();
     const u64 byte_size = framebuffer->pitch * framebuffer->height;
 
-    const u64 aligned_physical_address = math::align_down(physical_address, memory::s_page_size);
+    const u64 aligned_physical_address = ygg::math::align_down(physical_address, memory::s_page_size);
     const u64 physical_offset = physical_address - aligned_physical_address;
 
     const u64 total_bytes = byte_size + physical_offset;
-    const u64 total_pages = math::div_round_up(total_bytes, memory::s_page_size);
+    const u64 total_pages = ygg::math::div_round_up(total_bytes, memory::s_page_size);
 
     for (u64 i = 0; i < total_pages; ++i) {
         vmm::map(

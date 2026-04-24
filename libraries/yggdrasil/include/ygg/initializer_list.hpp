@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "lib/types.hpp"
+#include "ygg/types.hpp"
 
 namespace std {
 
@@ -34,5 +34,9 @@ private:
 
 } // namespace std
 
+namespace ygg {
+
 template <typename T>
 using InitializerList = std::initializer_list<T>;
+
+} // namespace ygg

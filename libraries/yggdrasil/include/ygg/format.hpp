@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "lib/span.hpp"
-#include "lib/string_view.hpp"
+#include "ygg/span.hpp"
+#include "ygg/string_view.hpp"
 
-namespace fmt {
+namespace ygg::fmt {
 
 namespace detail {
 
@@ -130,4 +130,4 @@ void format(void (*write_character)(char), const StringView fmt, Args &&...args)
     detail::do_format(write_character, fmt, arguments);
 }
 
-} // namespace fmt
+} // namespace ygg::fmt

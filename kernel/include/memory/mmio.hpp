@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "lib/assert.hpp"
-#include "lib/types.hpp"
+#include <ygg/assert.hpp>
+#include <ygg/types.hpp>
 
 namespace mmio {
 
@@ -32,7 +32,7 @@ T in(const u64 addr)
         return *ptr;
     }
     default:
-        assert(false);
+        ASSERT(false);
     }
 }
 
@@ -61,7 +61,7 @@ void out(const u64 addr, const T value)
         break;
     }
     default:
-        assert(false);
+        ASSERT(false);
     }
 }
 
