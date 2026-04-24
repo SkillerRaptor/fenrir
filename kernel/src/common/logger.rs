@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::{print, println};
+use crate::{common::writer, print, println};
 
 use log::{Level, LevelFilter, Log, Metadata, Record};
 
@@ -37,6 +37,8 @@ impl Log for Logger {
 }
 
 pub fn initialize() {
+    writer::initialize();
+
     let log_level = if cfg!(debug_assertions) {
         LevelFilter::Trace
     } else {

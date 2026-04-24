@@ -10,7 +10,8 @@ use core::{
 };
 
 use flanterm_sys::{flanterm_context, flanterm_fb_init, flanterm_write};
-use limine::request::FramebufferRequest;
+
+use crate::common::boot;
 
 static mut FLANTERM_CTX: *mut flanterm_context = ptr::null_mut();
 
@@ -51,17 +52,8 @@ pub fn _print(args: Arguments) {
     writer.write_fmt(args).unwrap();
 }
 
-#[used]
-#[unsafe(link_section = ".limine_requests")]
-static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
-
 pub fn initialize() {
-    let framebuffer = FRAMEBUFFER_REQUEST
-        .response()
-        .unwrap()
-        .framebuffers()
-        .first()
-        .unwrap();
+    let framebuffer = boot::get_framebuffers().first().unwrap();
 
     unsafe {
         FLANTERM_CTX = flanterm_fb_init(
