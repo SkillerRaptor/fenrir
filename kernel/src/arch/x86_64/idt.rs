@@ -8,7 +8,11 @@ use core::mem;
 
 use bitflags::bitflags;
 
-use crate::arch::x86_64::{cpu, registers::Registers};
+use crate::{
+    arch::x86_64::{cpu, registers::Registers},
+    print,
+    println,
+};
 
 bitflags! {
     struct Attribute: u8 {
@@ -82,7 +86,41 @@ impl Descriptor {
 
 static mut ENTRIES: [Entry; 256] = [Entry::default(); 256];
 static mut DESCRIPTOR: Descriptor = Descriptor::default();
-static mut HANDLERS: [Option<fn(&mut Registers)>; 256] = [None; 256];
+static mut HANDLERS: [Option<fn(&Registers)>; 256] = [None; 256];
+
+static EXCEPTIONS: [&'static str; 31] = [
+    "Divide-by-zero Error",
+    "Debug",
+    "Non-maskable Interrupt",
+    "Breakpoint",
+    "Overflow",
+    "Bound Range Exceeded",
+    "Invalid Opcode",
+    "Device Not Available",
+    "Double Fault",
+    "<invalid>",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack-Segment-Fault",
+    "General-Protection-Fault",
+    "Page Fault",
+    "<invalid>",
+    "x87 Floating-Point Exception",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD Floating-Point Exception",
+    "Virtualization Exception",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "<invalid>",
+    "Security Exception",
+];
 
 unsafe extern "C" {
     static interrupt_handlers: [*const u8; 256];
@@ -99,6 +137,30 @@ pub fn initialize() {
                 Attribute::KERNEL_PRIVILEGE | Attribute::PRESENT | Attribute::INTERRUPT_GATE,
             );
         }
+
+        HANDLERS[0] = Some(handle_exception);
+        HANDLERS[1] = Some(handle_exception);
+        HANDLERS[2] = Some(handle_exception);
+        HANDLERS[3] = Some(handle_exception);
+        HANDLERS[4] = Some(handle_exception);
+        HANDLERS[5] = Some(handle_exception);
+        HANDLERS[6] = Some(handle_exception);
+        HANDLERS[7] = Some(handle_exception);
+        HANDLERS[8] = Some(handle_exception);
+
+        HANDLERS[10] = Some(handle_exception);
+        HANDLERS[11] = Some(handle_exception);
+        HANDLERS[12] = Some(handle_exception);
+        HANDLERS[13] = Some(handle_exception);
+        HANDLERS[14] = Some(handle_exception);
+
+        HANDLERS[16] = Some(handle_exception);
+        HANDLERS[17] = Some(handle_exception);
+        HANDLERS[18] = Some(handle_exception);
+        HANDLERS[19] = Some(handle_exception);
+        HANDLERS[20] = Some(handle_exception);
+
+        HANDLERS[30] = Some(handle_exception);
 
         DESCRIPTOR = Descriptor::new(
             (mem::size_of::<[Entry; 256]>() - 1) as u16,
@@ -117,12 +179,132 @@ pub fn load() {
     }
 }
 
+fn handle_exception(registers: &Registers) {
+    log::error!("");
+    log::error!("{} occured!", EXCEPTIONS[registers.isr as usize]);
+
+    match registers.isr {
+        0x0e => {
+            log::error!("  at {:#016x}", cpu::read_cr2());
+
+            let error = registers.error;
+            log::error!(
+                "  because {}, {}, {}{}{}",
+                if error & (1 << 0) != 0 {
+                    "protection violation"
+                } else {
+                    "non-present page"
+                },
+                if error & (1 << 1) != 0 {
+                    "write access"
+                } else {
+                    "read access"
+                },
+                if error & (1 << 2) != 0 {
+                    "user-mode"
+                } else {
+                    "kernel-mode"
+                },
+                if error & (1 << 3) != 0 {
+                    ", reserved bit set in PTE"
+                } else {
+                    ""
+                },
+                if error & (1 << 4) != 0 {
+                    ", instruction fetch (NX fault)"
+                } else {
+                    ""
+                }
+            );
+        }
+
+        0x0a | 0x0b | 0x0c | 0x0d => 'block: {
+            if registers.error == 0 {
+                break 'block;
+            }
+
+            let table = (registers.error >> 1) & 0b11;
+            let index = (registers.error >> 3) & 0x1fff;
+
+            let table_name = match table {
+                0 => "GDT",
+                1 | 3 => "IDT",
+                2 => "LDT",
+                _ => unreachable!(),
+            };
+
+            log::error!("  in {} at at {}", table_name, index);
+        }
+        _ => {}
+    };
+    log::error!("");
+
+    log::error!("Registers:");
+    log::error!(
+        "  rax={:#018x} rbx={:#018x} rcx={:#018x} rdx={:#018x}",
+        registers.rax,
+        registers.rbx,
+        registers.rcx,
+        registers.rdx
+    );
+    log::error!(
+        "  rsi={:#018x} rdi={:#018x} rbp={:#018x} rsp={:#018x}",
+        registers.rsi,
+        registers.rdi,
+        registers.rbp,
+        registers.rsp
+    );
+    log::error!(
+        "   r8={:#018x}  r9={:#018x} r10={:#018x} r11={:#018x}",
+        registers.r8,
+        registers.r9,
+        registers.r10,
+        registers.r11
+    );
+    log::error!(
+        "  r12={:#018x} r13={:#018x} r14={:#018x} r15={:#018x}",
+        registers.r12,
+        registers.r13,
+        registers.r14,
+        registers.r15
+    );
+    log::error!(
+        "  rip={:#018x} rfl={:#018x}",
+        registers.rip,
+        registers.flags
+    );
+    log::error!("");
+
+    log::error!("Segments:");
+    log::error!("  cs={:#04x}", registers.cs);
+    log::error!("  ss={:#04x}", registers.ss);
+    log::error!("");
+
+    log::error!("Control Registers:");
+    log::error!(
+        "  cr0={:#018x}  cr2={:#018x}",
+        cpu::read_cr0(),
+        cpu::read_cr2()
+    );
+    log::error!(
+        "  cr3={:#018x}  cr4={:#018x}",
+        cpu::read_cr3(),
+        cpu::read_cr4()
+    );
+    log::error!("");
+
+    log::error!("Halting System...");
+    log::error!("");
+
+    cpu::hcf();
+}
+
 #[unsafe(no_mangle)]
 extern "C" fn interrupt_raise(registers: *mut Registers) {
-    let mut registers = unsafe { &mut *registers };
+    let registers = unsafe { &*registers };
 
     if let Some(handler) = unsafe { HANDLERS[registers.isr as usize] } {
-        handler(&mut registers);
+        handler(&registers);
     }
 
     // TODO: Implement EOI
