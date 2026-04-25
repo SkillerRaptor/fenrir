@@ -13,7 +13,7 @@ mod common;
 use core::panic::PanicInfo;
 
 use crate::{
-    arch::x86_64::{cpu, gdt},
+    arch::x86_64::{cpu, gdt, idt},
     common::{boot, logger},
 };
 
@@ -41,6 +41,9 @@ unsafe extern "C" fn kmain() -> ! {
     println!("");
 
     gdt::initialize();
+    idt::initialize();
+
+    cpu::enable_interrupts();
 
     log::info!("Hello, World!");
 

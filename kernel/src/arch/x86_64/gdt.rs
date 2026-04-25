@@ -41,7 +41,7 @@ struct Entry {
 }
 
 impl Entry {
-    const fn new(base: u32, limit: u32, access: AccessAttribute, flags: FlagAttribute) -> Self {
+    fn new(base: u32, limit: u32, access: AccessAttribute, flags: FlagAttribute) -> Self {
         Self {
             limit_low: limit as u16,
             base_low: base as u16,
@@ -65,14 +65,14 @@ impl Entry {
 }
 
 #[repr(C, packed)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 struct Descriptor {
     size: u16,
     address: u64,
 }
 
 impl Descriptor {
-    const fn new(size: u16, address: u64) -> Self {
+    fn new(size: u16, address: u64) -> Self {
         Self { size, address }
     }
 
