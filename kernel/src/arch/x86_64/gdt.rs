@@ -173,7 +173,7 @@ pub fn initialize() {
 
     load();
 
-    log::info!(target: "gdt", "Initialized!");
+    log::info!("GDT: Initialized");
 }
 
 pub fn load() {

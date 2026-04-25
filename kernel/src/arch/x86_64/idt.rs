@@ -108,7 +108,7 @@ pub fn initialize() {
 
     load();
 
-    log::info!(target: "idt", "Initialized!");
+    log::info!("IDT: Initialized");
 }
 
 pub fn load() {

@@ -31,7 +31,6 @@ impl Log for Logger {
         }
 
         print!("\x1b[0m: ");
-        print!("\x1b[38;2;60;60;60m{} ", record.target());
         println!("\x1b[0m{}", record.args());
     }
 
