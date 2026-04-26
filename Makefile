@@ -6,12 +6,20 @@
 
 .SUFFIXES:
 
+BUILD ?= debug
+
+ifeq ($(BUILD), release)
+    CARGO_TARGET_DIR := release
+else
+    CARGO_TARGET_DIR := debug
+endif
+
 .PHONY: all
 all: fenrir.iso
 
 .PHONY: kernel
 kernel: flanterm
-	$(MAKE) -C kernel
+	$(MAKE) -C kernel BUILD=$(BUILD)
 
 flanterm:
 ifeq ($(wildcard ./kernel/bindings/flanterm/flanterm),)
@@ -27,7 +35,8 @@ endif
 
 fenrir.iso: limine kernel
 	mkdir -p ./iso_root/boot
-	cp -v ./kernel/target/x86_64-fenrir/debug/kernel ./iso_root/boot/
+	cp -v ./kernel/target/x86_64-fenrir/$(CARGO_TARGET_DIR)/kernel ./iso_root/boot/
+	cp -v ./kernel/target/x86_64-fenrir/$(CARGO_TARGET_DIR)/kernel_symbols.map ./iso_root/boot/
 
 	mkdir -p ./iso_root/boot/limine
 	cp -v ./limine.conf ./iso_root/boot/limine/
@@ -49,6 +58,7 @@ fenrir.iso: limine kernel
 run: fenrir.iso
 	qemu-system-x86_64 \
 		-M q35,smm=off \
+		-accel tcg \
 		-boot d \
 		-cdrom fenrir.iso \
 		--no-reboot \

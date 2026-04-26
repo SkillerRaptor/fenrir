@@ -8,6 +8,7 @@ use limine::{
     BaseRevision,
     RequestsEndMarker,
     RequestsStartMarker,
+    file::File,
     firmware::{
         FIRMWARE_TYPE_EFI32,
         FIRMWARE_TYPE_EFI64,
@@ -16,6 +17,7 @@ use limine::{
     },
     framebuffer::Framebuffer,
     memmap::Entry,
+    module::{INTERNAL_MODULE_REQUIRED, InternalModule},
     request::{
         BootloaderInfoRequest,
         ExecutableAddressRequest,
@@ -23,6 +25,7 @@ use limine::{
         FramebufferRequest,
         HhdmRequest,
         MemmapRequest,
+        ModulesRequest,
     },
 };
 
@@ -49,6 +52,14 @@ static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
 #[used]
 #[unsafe(link_section = ".limine_requests")]
 static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
+static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[&InternalModule::new(
+    c"kernel_symbols.map",
+    c"kernel_symbols",
+    INTERNAL_MODULE_REQUIRED,
+)]);
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
@@ -102,4 +113,8 @@ pub fn get_hhdm_offset() -> u64 {
 
 pub fn get_memory_map() -> &'static [&'static Entry] {
     MEMORY_MAP_REQUEST.response().unwrap().entries()
+}
+
+pub fn get_modules() -> &'static [&'static File] {
+    MODULES_REQUEST.response().unwrap().modules()
 }

@@ -7,17 +7,18 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 mod arch;
 mod common;
 mod memory;
 mod sync;
 
-extern crate alloc;
 use core::panic::PanicInfo;
 
 use crate::{
     arch::x86_64::{cpu, gdt, idt},
-    common::{boot, logger},
+    common::{boot, logger, stacktrace},
     memory::{pmm, vmm},
 };
 
@@ -50,6 +51,8 @@ unsafe extern "C" fn kmain() -> ! {
     pmm::initialize();
     vmm::initialize();
 
+    stacktrace::initialize();
+
     cpu::enable_interrupts();
 
     log::info!("Hello, World!");
@@ -60,6 +63,10 @@ unsafe extern "C" fn kmain() -> ! {
 #[panic_handler]
 fn rust_panic(info: &PanicInfo) -> ! {
     log::error!("Panic at {}: {}", info.location().unwrap(), info.message());
+    log::error!("");
+
+    log::error!("Stacktrace:");
+    stacktrace::print(50);
 
     cpu::hcf();
 }
