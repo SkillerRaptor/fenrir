@@ -12,6 +12,12 @@ pub fn halt() {
     }
 }
 
+pub fn pause() {
+    unsafe {
+        asm!("pause", options(nomem, nostack, preserves_flags));
+    }
+}
+
 pub fn enable_interrupts() {
     unsafe {
         asm!("sti", options(nomem, nostack, preserves_flags));

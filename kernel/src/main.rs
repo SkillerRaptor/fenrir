@@ -9,12 +9,17 @@
 
 mod arch;
 mod common;
+mod memory;
+mod sync;
 
+extern crate alloc;
+use alloc::boxed::Box;
 use core::panic::PanicInfo;
 
 use crate::{
     arch::x86_64::{cpu, gdt, idt},
     common::{boot, logger},
+    memory::pmm,
 };
 
 #[unsafe(no_mangle)]
@@ -43,6 +48,8 @@ unsafe extern "C" fn kmain() -> ! {
     gdt::initialize();
     idt::initialize();
 
+    pmm::initialize();
+
     cpu::enable_interrupts();
 
     log::info!("Hello, World!");
@@ -51,6 +58,8 @@ unsafe extern "C" fn kmain() -> ! {
 }
 
 #[panic_handler]
-fn rust_panic(_info: &PanicInfo) -> ! {
+fn rust_panic(info: &PanicInfo) -> ! {
+    log::error!("Panic at {}: {}", info.location().unwrap(), info.message());
+
     cpu::hcf();
 }

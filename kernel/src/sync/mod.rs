@@ -4,7 +4,4 @@
 // SPDX-License-Identifier: MIT
 //
 
-pub mod boot;
-pub mod logger;
-pub mod math;
-pub mod writer;
+pub mod spinlock;

@@ -15,7 +15,14 @@ use limine::{
         FIRMWARE_TYPE_X86BIOS,
     },
     framebuffer::Framebuffer,
-    request::{BootloaderInfoRequest, FirmwareTypeRequest, FramebufferRequest},
+    memmap::Entry,
+    request::{
+        BootloaderInfoRequest,
+        FirmwareTypeRequest,
+        FramebufferRequest,
+        HhdmRequest,
+        MemmapRequest,
+    },
 };
 
 #[used]
@@ -33,6 +40,14 @@ static FIRMWARE_TYPE_REQUEST: FirmwareTypeRequest = FirmwareTypeRequest::new();
 #[used]
 #[unsafe(link_section = ".limine_requests")]
 static FRAMEBUFFER_REQUEST: FramebufferRequest = FramebufferRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
+static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
+static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
 
 #[used]
 #[unsafe(link_section = ".limine_requests_start")]
@@ -66,4 +81,12 @@ pub fn get_firmware_type() -> &'static str {
 
 pub fn get_framebuffers() -> &'static [&'static Framebuffer] {
     FRAMEBUFFER_REQUEST.response().unwrap().framebuffers()
+}
+
+pub fn get_hhdm_offset() -> u64 {
+    HHDM_REQUEST.response().unwrap().offset
+}
+
+pub fn get_memory_map() -> &'static [&'static Entry] {
+    MEMORY_MAP_REQUEST.response().unwrap().entries()
 }

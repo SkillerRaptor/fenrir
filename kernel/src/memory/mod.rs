@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-pub mod boot;
-pub mod logger;
-pub mod math;
-pub mod writer;
+pub mod allocator;
+pub mod bitmap;
+pub mod pmm;
+
+pub const PAGE_SIZE: u64 = 4096;
