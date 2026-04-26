@@ -160,7 +160,7 @@ dependencies = [
 [[package]]
 name = "limine"
 version = "0.6.3"
-source = "git+https://github.com/jasondyoungberg/limine-rs.git?branch=0.6.x#6745598851e7239c4fdcfeff8ff734282c3b6438"
+source = "git+https://github.com/SkillerRaptor/limine-rs.git#967f226c58418d33d11355e4911678884148789c"
 
 [[package]]
 name = "log"

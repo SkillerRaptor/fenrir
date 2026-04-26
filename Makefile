@@ -29,8 +29,10 @@ endif
 limine:
 	mkdir -p ./third_party
 ifeq ($(wildcard ./third_party/limine),)
-		git clone https://github.com/Limine-Bootloader/Limine.git ./third_party/limine --branch=v11.x-binary --depth=1
-		$(MAKE) -C ./third_party/limine
+	$(eval LIMINE_TAG := $(shell curl -s https://api.github.com/repos/limine-bootloader/limine/releases/latest | grep '"tag_name"' | cut -d'"' -f4))
+	curl -L https://github.com/limine-bootloader/limine/releases/download/$(LIMINE_TAG)/limine-binary.tar.gz \
+		| tar -xz -C ./third_party --transform 's/^limine-binary/limine/'
+	$(MAKE) -C ./third_party/limine
 endif
 
 fenrir.iso: limine kernel

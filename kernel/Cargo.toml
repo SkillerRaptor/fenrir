@@ -15,7 +15,7 @@ edition = "2024"
 
 [dependencies]
 bitflags = "2.11"
-limine = { git = "https://github.com/jasondyoungberg/limine-rs.git", branch = "0.6.x" }
+limine = { git = "https://github.com/SkillerRaptor/limine-rs.git" }
 log = "0.4"
 
 flanterm-sys = { path = "./bindings/flanterm" }
