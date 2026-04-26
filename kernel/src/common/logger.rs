@@ -12,9 +12,11 @@ use crate::{
     common::{boot, writer},
     print,
     println,
+    sync::spinlock::SpinLock,
 };
 
 static LOGGER: Logger = Logger;
+static LOCK: SpinLock<()> = SpinLock::new(());
 static mut TSC_FREQUENCY: u64 = 0;
 static mut TSC_BOOT: u64 = 0;
 
@@ -60,6 +62,8 @@ impl Log for Logger {
         if !self.enabled(record.metadata()) {
             return;
         }
+
+        let _guard = LOCK.lock();
 
         let timestamp = get_timestamp();
         print!(

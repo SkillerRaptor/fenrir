@@ -15,6 +15,7 @@ mod arch;
 mod common;
 mod drivers;
 mod memory;
+mod scheduler;
 mod sync;
 
 use core::panic::PanicInfo;
@@ -24,6 +25,7 @@ use crate::{
     arch::x86_64::{cpu, gdt, idt},
     common::{boot, logger, stacktrace},
     memory::{pmm, vmm},
+    scheduler::smp,
 };
 
 #[unsafe(no_mangle)]
@@ -61,7 +63,7 @@ unsafe extern "C" fn kmain() -> ! {
     hpet::initialize();
     apic::initialize();
 
-    cpu::enable_interrupts();
+    smp::initialize();
 
     log::info!("Hello, World!");
 

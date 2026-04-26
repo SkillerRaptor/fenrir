@@ -18,6 +18,7 @@ use limine::{
     framebuffer::Framebuffer,
     memmap::Entry,
     module::{INTERNAL_MODULE_REQUIRED, InternalModule},
+    mp::MpInfo,
     request::{
         BootloaderInfoRequest,
         ExecutableAddressRequest,
@@ -26,6 +27,7 @@ use limine::{
         HhdmRequest,
         MemmapRequest,
         ModulesRequest,
+        MpRequest,
         RsdpRequest,
         TscFrequencyRequest,
     },
@@ -57,6 +59,10 @@ static HHDM_REQUEST: HhdmRequest = HhdmRequest::new();
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
+static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
 static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[&InternalModule::new(
     c"kernel_symbols.map",
     c"kernel_symbols",
@@ -65,7 +71,7 @@ static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[&InternalMod
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
-static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
+static MP_REQUEST: MpRequest = MpRequest::new(0);
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
@@ -127,6 +133,14 @@ pub fn get_memory_map() -> &'static [&'static Entry] {
 
 pub fn get_modules() -> &'static [&'static File] {
     MODULES_REQUEST.response().unwrap().modules()
+}
+
+pub fn get_bsp_lapic_id() -> u32 {
+    MP_REQUEST.response().unwrap().bsp_lapic_id
+}
+
+pub fn get_mp_infos() -> &'static [&'static MpInfo] {
+    MP_REQUEST.response().unwrap().cpus()
 }
 
 pub fn get_rsdp_address() -> u64 {

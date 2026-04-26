@@ -65,7 +65,7 @@ pub fn initialize() {
     log::info!("APIC: Initialized");
 }
 
-fn enable_lapic() {
+pub fn enable_lapic() {
     const APIC_SOFTWARE_ENABLE: u32 = 1 << 8;
     const SPURIOUS_VECTOR: u32 = 0xff;
 

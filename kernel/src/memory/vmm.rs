@@ -152,6 +152,11 @@ pub fn switch_to_page_map(page_map: &PageMap) {
     }
 }
 
+pub fn switch_to_kernel_page_map() {
+    let kernel_page_map = KERNEL_PAGE_MAP.lock();
+    switch_to_page_map(unsafe { kernel_page_map.as_deref().unwrap() });
+}
+
 fn get_next_level(pml: u64, entry: u16) -> u64 {
     let pml_address = (pml + boot::get_hhdm_offset()) as *mut u64;
     let pml_entry = unsafe { pml_address.add(entry as usize) };
