@@ -7,5 +7,6 @@
 pub mod allocator;
 pub mod bitmap;
 pub mod pmm;
+pub mod vmm;
 
 pub const PAGE_SIZE: u64 = 4096;

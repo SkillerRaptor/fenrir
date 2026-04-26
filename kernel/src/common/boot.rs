@@ -18,6 +18,7 @@ use limine::{
     memmap::Entry,
     request::{
         BootloaderInfoRequest,
+        ExecutableAddressRequest,
         FirmwareTypeRequest,
         FramebufferRequest,
         HhdmRequest,
@@ -32,6 +33,10 @@ static BASE_REVISION: BaseRevision = BaseRevision::new();
 #[used]
 #[unsafe(link_section = ".limine_requests")]
 static BOOTLOADER_INFO_REQUEST: BootloaderInfoRequest = BootloaderInfoRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
+static EXECUTABLE_ADDRESS_REQUEST: ExecutableAddressRequest = ExecutableAddressRequest::new();
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
@@ -67,6 +72,14 @@ pub fn get_bootloader_name() -> &'static str {
 
 pub fn get_bootloader_version() -> &'static str {
     BOOTLOADER_INFO_REQUEST.response().unwrap().version()
+}
+
+pub fn get_executable_physical_base() -> u64 {
+    EXECUTABLE_ADDRESS_REQUEST.response().unwrap().physical_base
+}
+
+pub fn get_executable_virtual_base() -> u64 {
+    EXECUTABLE_ADDRESS_REQUEST.response().unwrap().virtual_base
 }
 
 pub fn get_firmware_type() -> &'static str {

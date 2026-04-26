@@ -13,13 +13,12 @@ mod memory;
 mod sync;
 
 extern crate alloc;
-use alloc::boxed::Box;
 use core::panic::PanicInfo;
 
 use crate::{
     arch::x86_64::{cpu, gdt, idt},
     common::{boot, logger},
-    memory::pmm,
+    memory::{pmm, vmm},
 };
 
 #[unsafe(no_mangle)]
@@ -49,6 +48,7 @@ unsafe extern "C" fn kmain() -> ! {
     idt::initialize();
 
     pmm::initialize();
+    vmm::initialize();
 
     cpu::enable_interrupts();
 
