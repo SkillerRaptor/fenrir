@@ -17,7 +17,7 @@ mod sync;
 use core::panic::PanicInfo;
 
 use crate::{
-    arch::x86_64::{cpu, gdt, idt},
+    arch::x86_64::{cpu, gdt, idt, pic},
     common::{boot, logger, stacktrace},
     memory::{pmm, vmm},
 };
@@ -46,6 +46,7 @@ unsafe extern "C" fn kmain() -> ! {
     println!("");
 
     gdt::initialize();
+    pic::disable();
     idt::initialize();
 
     pmm::initialize();
