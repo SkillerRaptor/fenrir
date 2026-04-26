@@ -139,6 +139,7 @@ dependencies = [
  "limine",
  "log",
  "nasm-rs",
+ "uacpi-sys",
 ]
 
 [[package]]
@@ -284,6 +285,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "uacpi-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
 ]
 
 [[package]]

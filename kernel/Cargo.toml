@@ -19,6 +19,7 @@ limine = { git = "https://github.com/SkillerRaptor/limine-rs.git" }
 log = "0.4"
 
 flanterm-sys = { path = "./bindings/flanterm" }
+uacpi-sys = { path = "./bindings/uacpi" }
 
 [build-dependencies]
 nasm-rs = { version = "0.3", features = ["parallel"] }

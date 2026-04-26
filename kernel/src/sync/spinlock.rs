@@ -39,6 +39,10 @@ impl<T> SpinLock<T> {
 
         SpinLockGuard { spin_lock: self }
     }
+
+    pub unsafe fn force_unlock(&self) {
+        self.lock.store(false, Ordering::Release);
+    }
 }
 
 pub struct SpinLockGuard<'a, T> {

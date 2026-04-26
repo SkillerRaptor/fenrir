@@ -6,9 +6,11 @@
 
 #![no_std]
 #![no_main]
+#![feature(cstr_display)]
 
 extern crate alloc;
 
+mod acpi;
 mod arch;
 mod common;
 mod drivers;
@@ -54,6 +56,8 @@ unsafe extern "C" fn kmain() -> ! {
     vmm::initialize();
 
     stacktrace::initialize();
+
+    acpi::initialize();
 
     cpu::enable_interrupts();
 

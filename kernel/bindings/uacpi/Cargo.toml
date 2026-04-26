@@ -1,0 +1,14 @@
+#-------------------------------------------------------------------------------------------
+# Copyright (c) 2026-present, SkillerRaptor
+#
+# SPDX-License-Identifier: MIT
+#-------------------------------------------------------------------------------------------
+
+[package]
+name = "uacpi-sys"
+version = "0.1.0"
+edition = "2024"
+
+[build-dependencies]
+bindgen = "0.72"
+cc = "1.2"

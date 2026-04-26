@@ -18,12 +18,17 @@ endif
 all: fenrir.iso
 
 .PHONY: kernel
-kernel: flanterm
+kernel: flanterm uacpi
 	$(MAKE) -C kernel BUILD=$(BUILD)
 
 flanterm:
 ifeq ($(wildcard ./kernel/bindings/flanterm/flanterm),)
 		git clone https://github.com/mintsuki/flanterm.git ./kernel/bindings/flanterm/flanterm --branch=trunk --depth=1
+endif
+
+uacpi:
+ifeq ($(wildcard ./kernel/bindings/uacpi/uacpi),)
+		git clone https://github.com/uACPI/uACPI ./kernel/bindings/uacpi/uacpi --branch=master --depth=1
 endif
 
 limine:
@@ -73,4 +78,4 @@ run: fenrir.iso
 .PHONY: clean
 clean:
 	$(MAKE) -C kernel clean
-	rm -rf ./third_party/limine/ ./kernel/bindings/flanterm/flanterm/ ./iso_root/ fenrir.iso
+	rm -rf ./third_party/limine/ ./kernel/bindings/flanterm/flanterm/ ./kernel/bindings/uacpi/uacpi/ ./iso_root/ fenrir.iso

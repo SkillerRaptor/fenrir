@@ -200,3 +200,13 @@ pub fn map(page_map: &PageMap, physical_addr: u64, virtual_addr: u64, attributes
         );
     }
 }
+
+pub fn map_kernel(physical_addr: u64, virtual_addr: u64, attributes: Attribute) {
+    let kernel_page_map = KERNEL_PAGE_MAP.lock();
+    map(
+        kernel_page_map.as_deref().unwrap(),
+        physical_addr,
+        virtual_addr,
+        attributes,
+    );
+}
