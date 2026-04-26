@@ -12,7 +12,7 @@ use crate::{
     acpi::apic,
     arch::x86_64::{cpu, gdt, idt},
     common::boot,
-    memory::{PAGE_SIZE, pmm, vmm},
+    memory::vmm,
 };
 
 static ONLINE_COUNT: AtomicU8 = AtomicU8::new(1);

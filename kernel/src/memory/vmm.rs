@@ -154,7 +154,7 @@ pub fn switch_to_page_map(page_map: &PageMap) {
 
 pub fn switch_to_kernel_page_map() {
     let kernel_page_map = KERNEL_PAGE_MAP.lock();
-    switch_to_page_map(unsafe { kernel_page_map.as_deref().unwrap() });
+    switch_to_page_map(kernel_page_map.as_deref().unwrap());
 }
 
 fn get_next_level(pml: u64, entry: u16) -> u64 {
