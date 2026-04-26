@@ -4,11 +4,50 @@
 // SPDX-License-Identifier: MIT
 //
 
+use core::arch::asm;
+
 use log::{Level, LevelFilter, Log, Metadata, Record};
 
-use crate::{common::writer, print, println};
+use crate::{
+    common::{boot, writer},
+    print,
+    println,
+};
 
 static LOGGER: Logger = Logger;
+static mut TSC_FREQUENCY: u64 = 0;
+static mut TSC_BOOT: u64 = 0;
+
+struct Timestamp {
+    seconds: u64,
+    milliseconds: u64,
+}
+
+fn get_tsc() -> u64 {
+    let mut low = 0u32;
+    let mut high = 0u32;
+    unsafe {
+        asm!(
+            "rdtsc",
+            out("eax") low,
+            out("edx") high,
+            options(nomem, nostack));
+    }
+
+    return ((high as u64) << 32) | (low as u64);
+}
+
+fn get_timestamp() -> Timestamp {
+    let elapsed = get_tsc() - unsafe { TSC_BOOT };
+    let seconds = elapsed / unsafe { TSC_FREQUENCY };
+    let remainder = elapsed % unsafe { TSC_FREQUENCY };
+    let milliseconds = (remainder * 1000) / unsafe { TSC_FREQUENCY };
+
+    Timestamp {
+        seconds,
+        milliseconds,
+    }
+}
 
 struct Logger;
 
@@ -21,6 +60,12 @@ impl Log for Logger {
         if !self.enabled(record.metadata()) {
             return;
         }
+
+        let timestamp = get_timestamp();
+        print!(
+            " \x1b[38;2;30;30;30m{}.{:03} ",
+            timestamp.seconds, timestamp.milliseconds
+        );
 
         match record.level() {
             Level::Info => print!("\x1b[38;2;0;128;0minfo"),
@@ -38,6 +83,11 @@ impl Log for Logger {
 }
 
 pub fn initialize() {
+    unsafe {
+        TSC_BOOT = get_tsc();
+        TSC_FREQUENCY = boot::get_tsc_frequency();
+    }
+
     writer::initialize();
 
     let log_level = if cfg!(debug_assertions) {

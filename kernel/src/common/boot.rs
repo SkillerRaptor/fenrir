@@ -26,6 +26,7 @@ use limine::{
         HhdmRequest,
         MemmapRequest,
         ModulesRequest,
+        TscFrequencyRequest,
     },
 };
 
@@ -64,6 +65,10 @@ static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[&InternalMod
 #[used]
 #[unsafe(link_section = ".limine_requests")]
 static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
+
+#[used]
+#[unsafe(link_section = ".limine_requests")]
+static TSC_FREQUENCY_REQUEST: TscFrequencyRequest = TscFrequencyRequest::new();
 
 #[used]
 #[unsafe(link_section = ".limine_requests_start")]
@@ -117,4 +122,8 @@ pub fn get_memory_map() -> &'static [&'static Entry] {
 
 pub fn get_modules() -> &'static [&'static File] {
     MODULES_REQUEST.response().unwrap().modules()
+}
+
+pub fn get_tsc_frequency() -> u64 {
+    TSC_FREQUENCY_REQUEST.response().unwrap().frequency
 }
