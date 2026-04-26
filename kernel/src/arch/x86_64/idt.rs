@@ -8,11 +8,7 @@ use core::mem;
 
 use bitflags::bitflags;
 
-use crate::{
-    arch::x86_64::{cpu, registers::Registers},
-    print,
-    println,
-};
+use crate::arch::x86_64::{cpu, registers::Registers};
 
 bitflags! {
     struct Attribute: u8 {
