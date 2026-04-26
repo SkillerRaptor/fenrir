@@ -20,6 +20,7 @@ mod sync;
 use core::panic::PanicInfo;
 
 use crate::{
+    acpi::hpet,
     arch::x86_64::{cpu, gdt, idt, pic},
     common::{boot, logger, stacktrace},
     memory::{pmm, vmm},
@@ -58,6 +59,7 @@ unsafe extern "C" fn kmain() -> ! {
     stacktrace::initialize();
 
     acpi::initialize();
+    hpet::initialize();
 
     cpu::enable_interrupts();
 

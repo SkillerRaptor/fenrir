@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+pub mod hpet;
 mod uacpi;
 
 use core::ffi::CStr;
