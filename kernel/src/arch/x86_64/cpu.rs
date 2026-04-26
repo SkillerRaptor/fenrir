@@ -76,3 +76,34 @@ pub fn read_cr4() -> u64 {
 
     value
 }
+
+pub fn write_msr(msr: u32, value: u64) {
+    let high = (value >> 32) & 0xffffffff;
+    let low = (value >> 0) & 0xffffffff;
+
+    unsafe {
+        asm!("wrmsr",
+            in("ecx") msr,
+            in("eax") low,
+            in("edx") high,
+            options(nostack, preserves_flags)
+        );
+    }
+}
+
+pub fn read_msr(msr: u32) -> u64 {
+    let mut high = 0;
+    let mut low = 0;
+
+    unsafe {
+        asm!(
+            "rdmsr",
+            in("ecx") msr,
+            out("eax") low,
+            out("edx") high,
+            options(nomem, nostack, preserves_flags)
+        );
+    }
+
+    ((high as u64) << 32) | (low as u64)
+}

@@ -8,7 +8,10 @@ use core::mem;
 
 use bitflags::bitflags;
 
-use crate::arch::x86_64::{cpu, registers::Registers};
+use crate::{
+    acpi::apic,
+    arch::x86_64::{cpu, registers::Registers},
+};
 
 bitflags! {
     struct Attribute: u8 {
@@ -175,6 +178,12 @@ pub fn load() {
     }
 }
 
+pub fn set_handler(isr: u8, handler: fn(&Registers)) {
+    unsafe {
+        HANDLERS[isr as usize] = Some(handler);
+    }
+}
+
 fn handle_exception(registers: &Registers) {
     log::error!("");
     log::error!("{} occured!", EXCEPTIONS[registers.isr as usize]);
@@ -303,6 +312,5 @@ extern "C" fn interrupt_raise(registers: *mut Registers) {
         handler(&registers);
     }
 
-    // TODO: Implement EOI
-    cpu::hcf();
+    apic::send_eoi();
 }

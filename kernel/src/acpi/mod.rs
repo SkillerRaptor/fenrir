@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+pub mod apic;
 pub mod hpet;
 mod uacpi;
 
