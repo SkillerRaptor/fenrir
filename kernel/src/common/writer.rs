@@ -11,7 +11,7 @@ use core::{
 
 use flanterm_sys::{flanterm_context, flanterm_fb_init, flanterm_write};
 
-use crate::common::boot;
+use crate::{common::boot, drivers::serial};
 
 static mut FLANTERM_CTX: *mut flanterm_context = ptr::null_mut();
 
@@ -23,10 +23,13 @@ impl Write for Writer {
             if byte == b'\n' {
                 unsafe {
                     flanterm_write(FLANTERM_CTX, b"\r\n".as_ptr() as *const i8, 2);
+                    serial::write('\r');
+                    serial::write('\n');
                 }
             } else {
                 unsafe {
                     flanterm_write(FLANTERM_CTX, &byte as *const u8 as *const i8, 1);
+                    serial::write(byte as char);
                 }
             }
         }
@@ -53,6 +56,8 @@ pub fn _print(args: Arguments) {
 }
 
 pub fn initialize() {
+    serial::initialize();
+
     let framebuffer = boot::get_framebuffers().first().unwrap();
 
     unsafe {

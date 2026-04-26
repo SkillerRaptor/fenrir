@@ -11,6 +11,7 @@ extern crate alloc;
 
 mod arch;
 mod common;
+mod drivers;
 mod memory;
 mod sync;
 
