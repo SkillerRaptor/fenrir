@@ -45,11 +45,7 @@ pub fn initialize() {
         uacpi_table_unref(&raw mut table);
     }
 
-    vmm::map_kernel(
-        physical_address,
-        physical_address + boot::get_hhdm_offset(),
-        Attribute::WRITE,
-    );
+    vmm::map_into_kernel(physical_address, Attribute::WRITE);
 
     unsafe {
         VIRTUAL_ADDRESS = physical_address + boot::get_hhdm_offset();

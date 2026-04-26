@@ -94,11 +94,7 @@ unsafe extern "C" fn uacpi_kernel_map(addr: uacpi_phys_addr, len: uacpi_size) ->
     let aligned_length = math::align_up(len as u64 + address_diff, PAGE_SIZE);
 
     for offset in (0..aligned_length).step_by(PAGE_SIZE as usize) {
-        vmm::map_kernel(
-            aligned_address + offset,
-            aligned_address + offset + boot::get_hhdm_offset(),
-            Attribute::WRITE,
-        );
+        vmm::map_into_kernel(aligned_address + offset, Attribute::WRITE);
     }
 
     (addr + boot::get_hhdm_offset()) as *mut c_void

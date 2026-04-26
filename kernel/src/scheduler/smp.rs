@@ -44,7 +44,7 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
 
     gdt::load();
     idt::load();
-    vmm::switch_to_kernel_page_map();
+    vmm::switch_to_page_map(vmm::get_kernel_page_map());
 
     apic::enable_lapic();
 

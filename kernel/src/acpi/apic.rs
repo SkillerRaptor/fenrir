@@ -40,11 +40,7 @@ pub fn initialize() {
         BASE_LAPIC_ADDRESS = lapic_physical_address + boot::get_hhdm_offset();
     }
 
-    vmm::map_kernel(
-        lapic_physical_address,
-        unsafe { BASE_LAPIC_ADDRESS },
-        Attribute::WRITE,
-    );
+    vmm::map_into_kernel(lapic_physical_address, Attribute::WRITE);
 
     log::debug!(
         "HPET: Mapping MMIO {:#018x} -> {:#018x}",

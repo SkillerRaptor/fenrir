@@ -5,7 +5,7 @@
 //
 
 use alloc::boxed::Box;
-use core::arch::asm;
+use core::{arch::asm, ptr};
 
 use bitflags::bitflags;
 use limine::memmap::{
@@ -19,7 +19,6 @@ use limine::memmap::{
 use crate::{
     common::{boot, math},
     memory::{PAGE_SIZE, pmm},
-    sync::spinlock::SpinLock,
 };
 
 bitflags! {
@@ -38,11 +37,17 @@ pub struct PageMap {
 
 const ADDRESS_MASK: u64 = ((1u64 << 36) - 1) << 12;
 
-static KERNEL_PAGE_MAP: SpinLock<Option<Box<PageMap>>> = SpinLock::new(None);
+static mut KERNEL_PAGE_MAP: *mut PageMap = ptr::null_mut();
+
+unsafe extern "C" {
+    static __kernel_start: u8;
+    static __kernel_end: u8;
+}
 
 pub fn initialize() {
-    let mut kernel_page_map = KERNEL_PAGE_MAP.lock();
-    *kernel_page_map = Some(create_page_map());
+    unsafe {
+        KERNEL_PAGE_MAP = Box::into_raw(create_page_map());
+    }
 
     let memory_map = boot::get_memory_map();
 
@@ -75,7 +80,7 @@ pub fn initialize() {
 
         for page in (entry_start..entry_end).step_by(PAGE_SIZE as usize) {
             map(
-                kernel_page_map.as_deref().unwrap(),
+                unsafe { &*KERNEL_PAGE_MAP },
                 page,
                 page + boot::get_hhdm_offset(),
                 Attribute::WRITE,
@@ -92,11 +97,6 @@ pub fn initialize() {
         mapped_bytes / 1024,
         mapped_bytes / 1024 / 1024,
     );
-
-    unsafe extern "C" {
-        static __kernel_start: u8;
-        static __kernel_end: u8;
-    }
 
     let kernel_virtual_start =
         math::align_down(unsafe { &__kernel_start as *const u8 as u64 }, PAGE_SIZE);
@@ -118,7 +118,7 @@ pub fn initialize() {
 
     for page in (kernel_virtual_start..kernel_virtual_end).step_by(PAGE_SIZE as usize) {
         map(
-            kernel_page_map.as_deref().unwrap(),
+            unsafe { &*KERNEL_PAGE_MAP },
             page - virtual_base + physical_base,
             page,
             Attribute::WRITE,
@@ -131,7 +131,7 @@ pub fn initialize() {
     );
 
     log::debug!("VMM: Switching to kernel page map...");
-    switch_to_page_map(kernel_page_map.as_deref().unwrap());
+    switch_to_page_map(unsafe { &*KERNEL_PAGE_MAP });
 
     log::info!("VMM: Initialized");
 }
@@ -150,11 +150,6 @@ pub fn switch_to_page_map(page_map: &PageMap) {
             options(nostack)
         );
     }
-}
-
-pub fn switch_to_kernel_page_map() {
-    let kernel_page_map = KERNEL_PAGE_MAP.lock();
-    switch_to_page_map(kernel_page_map.as_deref().unwrap());
 }
 
 fn get_next_level(pml: u64, entry: u16) -> u64 {
@@ -206,12 +201,15 @@ pub fn map(page_map: &PageMap, physical_addr: u64, virtual_addr: u64, attributes
     }
 }
 
-pub fn map_kernel(physical_addr: u64, virtual_addr: u64, attributes: Attribute) {
-    let kernel_page_map = KERNEL_PAGE_MAP.lock();
+pub fn map_into_kernel(physical_address: u64, attributes: Attribute) {
     map(
-        kernel_page_map.as_deref().unwrap(),
-        physical_addr,
-        virtual_addr,
+        unsafe { &*KERNEL_PAGE_MAP },
+        physical_address,
+        physical_address + boot::get_hhdm_offset(),
         attributes,
     );
+}
+
+pub fn get_kernel_page_map() -> &'static PageMap {
+    unsafe { &*KERNEL_PAGE_MAP }
 }
