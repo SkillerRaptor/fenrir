@@ -27,19 +27,13 @@ pub fn initialize() {
 
     let mut symbols = SYMBOLS.lock();
     for line in symbol_text.lines() {
-        if line.len() < 19 {
+        if line.len() < 16 {
             continue;
         }
 
         let (address_string, rest) = line.split_at(16);
 
         let mut chars = rest.chars();
-        if chars.next() != Some(' ') {
-            continue;
-        }
-
-        chars.next();
-
         if chars.next() != Some(' ') {
             continue;
         }

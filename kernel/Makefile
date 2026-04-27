@@ -19,7 +19,7 @@ TARGET_DIR := target/x86_64-fenrir/$(BUILD)
 .PHONY: all
 all:
 	RUSTFLAGS="-C relocation-model=static" cargo build $(CARGO_FLAGS)
-	nm -Cn $(TARGET_DIR)/kernel | grep -e ' t ' -e ' T ' > $(TARGET_DIR)/kernel_symbols.map
+	nm -Cn $(TARGET_DIR)/kernel | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > $(TARGET_DIR)/kernel_symbols.map
 
 .PHONY: clean
 clean:
