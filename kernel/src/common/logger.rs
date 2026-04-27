@@ -67,7 +67,7 @@ impl Log for Logger {
 
         let timestamp = get_timestamp();
         print!(
-            " \x1b[38;2;30;30;30m{}.{:03} ",
+            " \x1b[38;2;80;80;80m{}.{:03} ",
             timestamp.seconds, timestamp.milliseconds
         );
 
