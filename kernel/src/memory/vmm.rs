@@ -4,8 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use alloc::boxed::Box;
-use core::{arch::asm, ptr};
+use core::arch::asm;
 
 use bitflags::bitflags;
 use limine::memmap::{
@@ -30,14 +29,13 @@ bitflags! {
     }
 }
 
+#[repr(transparent)]
 #[derive(Clone, Copy)]
-pub struct PageMap {
-    top_level: u64,
-}
+pub struct PageMap(u64);
 
 const ADDRESS_MASK: u64 = ((1u64 << 36) - 1) << 12;
 
-static mut KERNEL_PAGE_MAP: *mut PageMap = ptr::null_mut();
+static mut KERNEL_PAGE_MAP: PageMap = PageMap(0);
 
 unsafe extern "C" {
     static __kernel_start: u8;
@@ -46,7 +44,7 @@ unsafe extern "C" {
 
 pub fn initialize() {
     unsafe {
-        KERNEL_PAGE_MAP = Box::into_raw(create_page_map());
+        KERNEL_PAGE_MAP = create_page_map();
     }
 
     let memory_map = boot::get_memory_map();
@@ -80,7 +78,7 @@ pub fn initialize() {
 
         for page in (entry_start..entry_end).step_by(PAGE_SIZE as usize) {
             map(
-                unsafe { &*KERNEL_PAGE_MAP },
+                unsafe { KERNEL_PAGE_MAP },
                 page,
                 page + boot::get_hhdm_offset(),
                 Attribute::WRITE,
@@ -118,7 +116,7 @@ pub fn initialize() {
 
     for page in (kernel_virtual_start..kernel_virtual_end).step_by(PAGE_SIZE as usize) {
         map(
-            unsafe { &*KERNEL_PAGE_MAP },
+            unsafe { KERNEL_PAGE_MAP },
             page - virtual_base + physical_base,
             page,
             Attribute::WRITE,
@@ -131,22 +129,20 @@ pub fn initialize() {
     );
 
     log::debug!("VMM: Switching to kernel page map...");
-    switch_to_page_map(unsafe { &*KERNEL_PAGE_MAP });
+    switch_to_page_map(unsafe { KERNEL_PAGE_MAP });
 
     log::info!("VMM: Initialized");
 }
 
-pub fn create_page_map() -> Box<PageMap> {
-    Box::new(PageMap {
-        top_level: pmm::allocate(1, true) as u64,
-    })
+pub fn create_page_map() -> PageMap {
+    PageMap(pmm::allocate(1, true) as u64)
 }
 
-pub fn switch_to_page_map(page_map: &PageMap) {
+pub fn switch_to_page_map(page_map: PageMap) {
     unsafe {
         asm!(
             "mov cr3, {}",
-            in(reg) page_map.top_level,
+            in(reg) page_map.0,
             options(nostack)
         );
     }
@@ -169,9 +165,9 @@ fn get_next_level(pml: u64, entry: u16) -> u64 {
     (unsafe { pml_entry.read() } & ADDRESS_MASK)
 }
 
-fn get_pte(page_map: &PageMap, virtual_addr: u64) -> *mut u64 {
+fn get_pte(page_map: PageMap, virtual_addr: u64) -> *mut u64 {
     let pml4_entry = ((virtual_addr >> 39) & 0x1ff) as u16;
-    let pml4 = page_map.top_level;
+    let pml4 = page_map.0;
 
     let pdpt_entry = ((virtual_addr >> 30) & 0x1ff) as u16;
     let pdpt = get_next_level(pml4, pml4_entry);
@@ -188,7 +184,7 @@ fn get_pte(page_map: &PageMap, virtual_addr: u64) -> *mut u64 {
     entry
 }
 
-pub fn map(page_map: &PageMap, physical_addr: u64, virtual_addr: u64, attributes: Attribute) {
+pub fn map(page_map: PageMap, physical_addr: u64, virtual_addr: u64, attributes: Attribute) {
     let aligned_physical_addr = math::align_down(physical_addr, PAGE_SIZE);
     let aligned_virtual_addr = math::align_down(virtual_addr, PAGE_SIZE);
 
@@ -203,13 +199,13 @@ pub fn map(page_map: &PageMap, physical_addr: u64, virtual_addr: u64, attributes
 
 pub fn map_into_kernel(physical_address: u64, attributes: Attribute) {
     map(
-        unsafe { &*KERNEL_PAGE_MAP },
+        unsafe { KERNEL_PAGE_MAP },
         physical_address,
         physical_address + boot::get_hhdm_offset(),
         attributes,
     );
 }
 
-pub fn get_kernel_page_map() -> &'static PageMap {
-    unsafe { &*KERNEL_PAGE_MAP }
+pub fn get_kernel_page_map() -> PageMap {
+    unsafe { KERNEL_PAGE_MAP }
 }
