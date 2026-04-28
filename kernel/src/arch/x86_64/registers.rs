@@ -5,6 +5,7 @@
 //
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct Registers {
     pub r15: u64,
     pub r14: u64,
