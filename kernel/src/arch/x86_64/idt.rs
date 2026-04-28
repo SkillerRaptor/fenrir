@@ -11,6 +11,7 @@ use bitflags::bitflags;
 use crate::{
     acpi::apic,
     arch::x86_64::{cpu, registers::Registers},
+    common::once::Once,
 };
 
 bitflags! {
@@ -74,20 +75,14 @@ impl Descriptor {
     fn new(size: u16, address: u64) -> Self {
         Self { size, address }
     }
-
-    const fn default() -> Self {
-        Self {
-            size: 0,
-            address: 0,
-        }
-    }
 }
 
-static mut ENTRIES: [Entry; 256] = [Entry::default(); 256];
-static mut DESCRIPTOR: Descriptor = Descriptor::default();
+static ENTRIES: Once<[Entry; 256]> = Once::new();
+static DESCRIPTOR: Once<Descriptor> = Once::new();
+
 static mut HANDLERS: [Option<fn(&Registers)>; 256] = [None; 256];
 
-static EXCEPTIONS: [&'static str; 31] = [
+const EXCEPTIONS: [&'static str; 31] = [
     "Divide-by-zero Error",
     "Debug",
     "Non-maskable Interrupt",
@@ -129,13 +124,15 @@ unsafe extern "C" {
 
 pub fn initialize() {
     unsafe {
-        let entries = &raw mut ENTRIES;
-        for i in 0..256 {
-            (*entries)[i] = Entry::new(
+        let mut entries = [Entry::default(); 256];
+        for (i, entry) in entries.iter_mut().enumerate() {
+            *entry = Entry::new(
                 interrupt_handlers[i],
                 Attribute::KERNEL_PRIVILEGE | Attribute::PRESENT | Attribute::INTERRUPT_GATE,
             );
         }
+
+        ENTRIES.initialize(entries);
 
         HANDLERS[0] = Some(handle_exception);
         HANDLERS[1] = Some(handle_exception);
@@ -161,10 +158,10 @@ pub fn initialize() {
 
         HANDLERS[30] = Some(handle_exception);
 
-        DESCRIPTOR = Descriptor::new(
+        DESCRIPTOR.initialize(Descriptor::new(
             (mem::size_of::<[Entry; 256]>() - 1) as u16,
             (&raw const ENTRIES as *const _) as u64,
-        );
+        ));
     }
 
     load();
@@ -174,7 +171,7 @@ pub fn initialize() {
 
 pub fn load() {
     unsafe {
-        load_idt(&raw const DESCRIPTOR);
+        load_idt(DESCRIPTOR.get_ptr());
     }
 }
 

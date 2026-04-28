@@ -9,7 +9,7 @@ use core::arch::asm;
 use log::{Level, LevelFilter, Log, Metadata, Record};
 
 use crate::{
-    common::{boot, writer},
+    common::{boot, once::Once, writer},
     print,
     println,
     sync::spinlock::SpinLock,
@@ -17,8 +17,9 @@ use crate::{
 
 static LOGGER: Logger = Logger;
 static LOCK: SpinLock<()> = SpinLock::new(());
-static mut TSC_FREQUENCY: u64 = 0;
-static mut TSC_BOOT: u64 = 0;
+
+static TSC_FREQUENCY: Once<u64> = Once::new();
+static TSC_BOOT: Once<u64> = Once::new();
 
 struct Timestamp {
     seconds: u64,
@@ -40,10 +41,10 @@ fn get_tsc() -> u64 {
 }
 
 fn get_timestamp() -> Timestamp {
-    let elapsed = get_tsc() - unsafe { TSC_BOOT };
-    let seconds = elapsed / unsafe { TSC_FREQUENCY };
-    let remainder = elapsed % unsafe { TSC_FREQUENCY };
-    let milliseconds = (remainder * 1000) / unsafe { TSC_FREQUENCY };
+    let elapsed = get_tsc() - TSC_BOOT.get();
+    let seconds = elapsed / TSC_FREQUENCY.get();
+    let remainder = elapsed % TSC_FREQUENCY.get();
+    let milliseconds = (remainder * 1000) / TSC_FREQUENCY.get();
 
     Timestamp {
         seconds,
@@ -88,8 +89,8 @@ impl Log for Logger {
 
 pub fn initialize() {
     unsafe {
-        TSC_BOOT = get_tsc();
-        TSC_FREQUENCY = boot::get_tsc_frequency();
+        TSC_BOOT.initialize(get_tsc());
+        TSC_FREQUENCY.initialize(boot::get_tsc_frequency());
     }
 
     writer::initialize();

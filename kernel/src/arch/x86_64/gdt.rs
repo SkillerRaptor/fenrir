@@ -8,6 +8,8 @@ use core::mem;
 
 use bitflags::bitflags;
 
+use crate::common::once::Once;
+
 bitflags! {
     struct AccessAttribute: u8 {
         const NULL = 0;
@@ -51,17 +53,6 @@ impl Entry {
             base_high: (base >> 24) as u8,
         }
     }
-
-    const fn default() -> Self {
-        Self {
-            limit_low: 0,
-            base_low: 0,
-            base_middle: 0,
-            access: 0,
-            limit_high_flags: 0,
-            base_high: 0,
-        }
-    }
 }
 
 #[repr(C, packed)]
@@ -75,17 +66,10 @@ impl Descriptor {
     fn new(size: u16, address: u64) -> Self {
         Self { size, address }
     }
-
-    const fn default() -> Self {
-        Self {
-            size: 0,
-            address: 0,
-        }
-    }
 }
 
-static mut ENTRIES: [Entry; 7] = [Entry::default(); 7];
-static mut DESCRIPTOR: Descriptor = Descriptor::default();
+static ENTRIES: Once<[Entry; 7]> = Once::new();
+static DESCRIPTOR: Once<Descriptor> = Once::new();
 
 unsafe extern "C" {
     fn load_gdt(descriptor: *const Descriptor);
@@ -95,7 +79,7 @@ unsafe extern "C" {
 
 pub fn initialize() {
     unsafe {
-        ENTRIES = [
+        ENTRIES.initialize([
             Entry::new(
                 0x00000000,
                 0x00000000,
@@ -163,12 +147,12 @@ pub fn initialize() {
                     | AccessAttribute::ACCESS,
                 FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
             ),
-        ];
+        ]);
 
-        DESCRIPTOR = Descriptor::new(
+        DESCRIPTOR.initialize(Descriptor::new(
             (mem::size_of::<[Entry; 7]>() - 1) as u16,
             (&raw const ENTRIES as *const _) as u64,
-        );
+        ));
     }
 
     load();
@@ -178,7 +162,7 @@ pub fn initialize() {
 
 pub fn load() {
     unsafe {
-        load_gdt(&raw const DESCRIPTOR);
+        load_gdt(DESCRIPTOR.get_ptr());
         reload_segments();
     }
 }

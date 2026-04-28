@@ -7,7 +7,7 @@
 use crate::{
     acpi::hpet,
     arch::x86_64::{cpu, pic},
-    common::{boot, mmio},
+    common::{boot, mmio, once::Once},
     memory::vmm::{self, Attribute},
 };
 
@@ -29,7 +29,7 @@ pub const TIMER_ISR: u32 = 0x20;
 const TIMER_DIVIDE_VALUE: u32 = 0b011; // NOTE: Divide by 16
 const TIMER_PERIODIC_MODE: u32 = 0b01 << 17;
 
-static mut BASE_LAPIC_ADDRESS: u64 = 0;
+static BASE_LAPIC_ADDRESS: Once<u64> = Once::new();
 
 pub fn initialize() {
     pic::disable();
@@ -37,7 +37,7 @@ pub fn initialize() {
     let lapic_physical_address = cpu::read_msr(APIC_BASE_MSR) & 0xfffff000;
 
     unsafe {
-        BASE_LAPIC_ADDRESS = lapic_physical_address + boot::get_hhdm_offset();
+        BASE_LAPIC_ADDRESS.initialize(lapic_physical_address + boot::get_hhdm_offset());
     }
 
     vmm::map_into_kernel(lapic_physical_address, Attribute::WRITE);
@@ -45,7 +45,7 @@ pub fn initialize() {
     log::debug!(
         "HPET: Mapping MMIO {:#018x} -> {:#018x}",
         lapic_physical_address,
-        unsafe { BASE_LAPIC_ADDRESS }
+        BASE_LAPIC_ADDRESS.get()
     );
 
     const APIC_GLOBAL_ENABLE: u64 = 1 << 11;
@@ -67,19 +67,19 @@ pub fn enable_lapic() {
 
     unsafe {
         mmio::write::<u32>(
-            BASE_LAPIC_ADDRESS + SPURIOUS_INTERRUPT_VECTOR_REGISTER,
-            mmio::read::<u32>(BASE_LAPIC_ADDRESS + SPURIOUS_INTERRUPT_VECTOR_REGISTER)
+            BASE_LAPIC_ADDRESS.get() + SPURIOUS_INTERRUPT_VECTOR_REGISTER,
+            mmio::read::<u32>(BASE_LAPIC_ADDRESS.get() + SPURIOUS_INTERRUPT_VECTOR_REGISTER)
                 | APIC_SOFTWARE_ENABLE
                 | SPURIOUS_VECTOR,
         );
 
         mmio::write::<u32>(
-            BASE_LAPIC_ADDRESS + TIMER_DIVIDE_CONFIGURATION_REGISTER,
+            BASE_LAPIC_ADDRESS.get() + TIMER_DIVIDE_CONFIGURATION_REGISTER,
             TIMER_DIVIDE_VALUE,
         );
 
         mmio::write::<u32>(
-            BASE_LAPIC_ADDRESS + TIMER_INITIAL_COUNTER_REGISTER,
+            BASE_LAPIC_ADDRESS.get() + TIMER_INITIAL_COUNTER_REGISTER,
             0xffffffff,
         );
     }
@@ -87,24 +87,27 @@ pub fn enable_lapic() {
     hpet::sleep(20);
 
     unsafe {
-        mmio::write::<u32>(BASE_LAPIC_ADDRESS + TIMER_REGISTER, REGISTER_MASK);
+        mmio::write::<u32>(BASE_LAPIC_ADDRESS.get() + TIMER_REGISTER, REGISTER_MASK);
 
         let ticks =
-            0xffffffff - mmio::read::<u32>(BASE_LAPIC_ADDRESS + TIMER_CURRENT_COUNT_REGISTER);
+            0xffffffff - mmio::read::<u32>(BASE_LAPIC_ADDRESS.get() + TIMER_CURRENT_COUNT_REGISTER);
         mmio::write::<u32>(
-            BASE_LAPIC_ADDRESS + TIMER_REGISTER,
+            BASE_LAPIC_ADDRESS.get() + TIMER_REGISTER,
             TIMER_PERIODIC_MODE | TIMER_ISR,
         );
         mmio::write::<u32>(
-            BASE_LAPIC_ADDRESS + TIMER_DIVIDE_CONFIGURATION_REGISTER,
+            BASE_LAPIC_ADDRESS.get() + TIMER_DIVIDE_CONFIGURATION_REGISTER,
             TIMER_DIVIDE_VALUE,
         );
-        mmio::write::<u32>(BASE_LAPIC_ADDRESS + TIMER_INITIAL_COUNTER_REGISTER, ticks);
+        mmio::write::<u32>(
+            BASE_LAPIC_ADDRESS.get() + TIMER_INITIAL_COUNTER_REGISTER,
+            ticks,
+        );
     }
 }
 
 pub fn send_eoi() {
     unsafe {
-        mmio::write::<u32>(BASE_LAPIC_ADDRESS + END_OF_INTERRUPT_REGISTER, 0);
+        mmio::write::<u32>(BASE_LAPIC_ADDRESS.get() + END_OF_INTERRUPT_REGISTER, 0);
     }
 }

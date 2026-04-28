@@ -8,5 +8,6 @@ pub mod boot;
 pub mod logger;
 pub mod math;
 pub mod mmio;
+pub mod once;
 pub mod stacktrace;
 pub mod writer;

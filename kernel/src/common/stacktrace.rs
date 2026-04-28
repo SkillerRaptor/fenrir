@@ -6,14 +6,14 @@
 
 use alloc::{string::String, vec::Vec};
 
-use crate::{common::boot, sync::spinlock::SpinLock};
+use crate::common::{boot, once::Once};
 
 struct Symbol {
     name: String,
     address: u64,
 }
 
-static SYMBOLS: SpinLock<Vec<Symbol>> = SpinLock::new(Vec::new());
+static SYMBOLS: Once<Vec<Symbol>> = Once::new();
 
 pub fn initialize() {
     let symbol_map_file = boot::get_modules()[0];
@@ -25,7 +25,7 @@ pub fn initialize() {
 
     let symbol_text = str::from_utf8(symbol_map_file.data()).unwrap();
 
-    let mut symbols = SYMBOLS.lock();
+    let mut symbols = Vec::new();
     for line in symbol_text.lines() {
         if line.len() < 16 {
             continue;
@@ -53,7 +53,11 @@ pub fn initialize() {
         });
     }
 
-    log::debug!("Stacktrace: Loaded {} symbols", symbols.len());
+    unsafe {
+        SYMBOLS.initialize(symbols);
+    }
+
+    log::debug!("Stacktrace: Loaded {} symbols", SYMBOLS.get().len());
 
     log::info!("Stacktrace: Initialized");
 }
@@ -65,20 +69,18 @@ struct StackFrame {
 }
 
 fn find_symbol<'a>(rip: u64) -> Option<&'a Symbol> {
-    let symbols = SYMBOLS.lock();
-    if symbols.is_empty() {
+    if SYMBOLS.get().is_empty() {
         return None;
     }
 
-    let index = symbols.partition_point(|symbol| symbol.address <= rip);
+    let index = SYMBOLS
+        .get()
+        .partition_point(|symbol| symbol.address <= rip);
     if index == 0 {
         return None;
     }
 
-    unsafe {
-        let symbol = &symbols[index - 1] as *const Symbol;
-        Some(&*symbol)
-    }
+    Some(&SYMBOLS.get()[index - 1])
 }
 
 pub fn print(max_frames: u64) {

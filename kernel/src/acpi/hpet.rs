@@ -17,7 +17,7 @@ use uacpi_sys::{
 };
 
 use crate::{
-    common::{boot, mmio},
+    common::{boot, mmio, once::Once},
     memory::vmm::{self, Attribute},
 };
 
@@ -25,8 +25,8 @@ const GENERAL_CAPABILITIES_REGISTER: u64 = 0x000;
 const GENERAL_CONFIGURATION_REGISTER: u64 = 0x010;
 const MAIN_COUNTER_REGISTER: u64 = 0x0f0;
 
-static mut VIRTUAL_ADDRESS: u64 = 0;
-static mut CLOCK_PERIOD: u32 = 0;
+static VIRTUAL_ADDRESS: Once<u64> = Once::new();
+static CLOCK_PERIOD: Once<u32> = Once::new();
 
 pub fn initialize() {
     let mut table = uacpi_table::default();
@@ -48,35 +48,33 @@ pub fn initialize() {
     vmm::map_into_kernel(physical_address, Attribute::WRITE);
 
     unsafe {
-        VIRTUAL_ADDRESS = physical_address + boot::get_hhdm_offset();
+        VIRTUAL_ADDRESS.initialize(physical_address + boot::get_hhdm_offset());
     }
 
     log::debug!(
         "HPET: Mapping MMIO {:#018x} -> {:#018x}",
         physical_address,
-        unsafe { VIRTUAL_ADDRESS }
+        VIRTUAL_ADDRESS.get()
     );
 
     unsafe {
-        CLOCK_PERIOD = mmio::read::<u32>(VIRTUAL_ADDRESS + GENERAL_CAPABILITIES_REGISTER + 0x04);
+        CLOCK_PERIOD.initialize((read(GENERAL_CAPABILITIES_REGISTER) >> 32 & 0xffffffff) as u32);
     }
 
     log::debug!(
         "HPET: Clock period configured with {}ns",
-        unsafe { CLOCK_PERIOD } / 1000000
+        CLOCK_PERIOD.get() / 1000000
     );
 
-    unsafe {
-        mmio::write::<u64>(
-            VIRTUAL_ADDRESS + GENERAL_CONFIGURATION_REGISTER,
-            mmio::read::<u64>(VIRTUAL_ADDRESS + GENERAL_CONFIGURATION_REGISTER) & !(1u64 << 0),
-        );
-        mmio::write::<u64>(VIRTUAL_ADDRESS + MAIN_COUNTER_REGISTER, 0);
-        mmio::write::<u64>(
-            VIRTUAL_ADDRESS + GENERAL_CONFIGURATION_REGISTER,
-            mmio::read::<u64>(VIRTUAL_ADDRESS + GENERAL_CONFIGURATION_REGISTER) | 0b1,
-        );
-    }
+    write(
+        GENERAL_CONFIGURATION_REGISTER,
+        read(GENERAL_CONFIGURATION_REGISTER) & !(1u64 << 0),
+    );
+    write(MAIN_COUNTER_REGISTER, 0);
+    write(
+        GENERAL_CONFIGURATION_REGISTER,
+        read(GENERAL_CONFIGURATION_REGISTER) | 0b1,
+    );
 
     log::debug!("HPET: Reset and enabled timer");
 
@@ -86,10 +84,18 @@ pub fn initialize() {
 pub fn sleep(ms: u64) {
     assert!(ms > 0);
 
-    unsafe {
-        let target_ticks = mmio::read::<u64>(VIRTUAL_ADDRESS + MAIN_COUNTER_REGISTER)
-            + (ms * 1000000000000) / CLOCK_PERIOD as u64;
+    let target_ticks =
+        read(MAIN_COUNTER_REGISTER) + (ms * 1000000000000) / *CLOCK_PERIOD.get() as u64;
 
-        while mmio::read::<u64>(VIRTUAL_ADDRESS + MAIN_COUNTER_REGISTER) < target_ticks {}
+    while read(MAIN_COUNTER_REGISTER) < target_ticks {}
+}
+
+fn write(offset: u64, value: u64) {
+    unsafe {
+        mmio::write(VIRTUAL_ADDRESS.get() + offset, value);
     }
+}
+
+fn read(offset: u64) -> u64 {
+    unsafe { mmio::read::<u64>(VIRTUAL_ADDRESS.get() + offset) }
 }

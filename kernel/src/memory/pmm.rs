@@ -4,10 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::{
-    ptr,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use core::ptr;
 
 use limine::memmap::{
     MEMMAP_ACPI_NVS,
@@ -22,12 +19,12 @@ use limine::memmap::{
 };
 
 use crate::{
-    common::{boot, math},
+    common::{boot, math, once::Once},
     memory::{PAGE_SIZE, bitmap::Bitmap},
     sync::spinlock::SpinLock,
 };
 
-static HIGHEST_PAGE: AtomicU64 = AtomicU64::new(0);
+static HIGHEST_PAGE: Once<u64> = Once::new();
 static BITMAP: SpinLock<Bitmap> = SpinLock::new(Bitmap::default());
 
 pub fn initialize() {
@@ -35,6 +32,7 @@ pub fn initialize() {
 
     log::debug!("PMM: Scanning {} memory map entries", memory_map.len());
 
+    let mut highest_page = 0;
     for entry in memory_map {
         let ty = match entry.type_ {
             MEMMAP_USABLE => "Usable",
@@ -62,12 +60,16 @@ pub fn initialize() {
 
         let end_of_page = entry.base + entry.length;
 
-        if end_of_page > HIGHEST_PAGE.load(Ordering::SeqCst) {
-            HIGHEST_PAGE.store(end_of_page, Ordering::SeqCst);
+        if end_of_page > highest_page {
+            highest_page = end_of_page;
         }
     }
 
-    let size = math::div_round_up(HIGHEST_PAGE.load(Ordering::SeqCst), PAGE_SIZE);
+    unsafe {
+        HIGHEST_PAGE.initialize(highest_page);
+    }
+
+    let size = math::div_round_up(*HIGHEST_PAGE.get(), PAGE_SIZE);
 
     for entry in memory_map {
         if entry.type_ != MEMMAP_USABLE {
@@ -141,7 +143,7 @@ pub fn allocate(pages: u64, clear: bool) -> *mut u8 {
     let mut current_pages = 0;
     let mut bitmap = BITMAP.lock();
 
-    let total = HIGHEST_PAGE.load(Ordering::Relaxed) / PAGE_SIZE;
+    let total = HIGHEST_PAGE.get() / PAGE_SIZE;
     for i in 0..total {
         if bitmap.get(i) {
             current_pages = 0;
