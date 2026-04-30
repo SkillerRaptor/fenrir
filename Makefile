@@ -10,27 +10,32 @@ BUILD ?= debug
 
 ifeq ($(BUILD), release)
     CARGO_TARGET_DIR := release
+    CARGO_FLAGS := --release
 else
     CARGO_TARGET_DIR := debug
+    CARGO_FLAGS :=
 endif
+
+TARGET_DIR := ./target/x86_64-fenrir/$(BUILD)
 
 .PHONY: all
 all: fenrir.iso
 
+.PHONY: bindings
+bindings:
+ifeq ($(wildcard ./third_party/flanterm),)
+		git clone https://github.com/mintsuki/flanterm.git ./third_party/flanterm --branch=trunk --depth=1
+endif
+ifeq ($(wildcard ./third_party/uacpi),)
+		git clone https://github.com/uACPI/uACPI ./third_party/uacpi --branch=master --depth=1
+endif
+
 .PHONY: kernel
-kernel: flanterm uacpi
-	$(MAKE) -C kernel BUILD=$(BUILD)
+kernel: bindings
+	RUSTFLAGS="-C relocation-model=static" cargo build --bin kernel $(CARGO_FLAGS)
+	nm -Cn $(TARGET_DIR)/kernel | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > $(TARGET_DIR)/kernel_symbols.map
 
-flanterm:
-ifeq ($(wildcard ./kernel/bindings/flanterm/flanterm),)
-		git clone https://github.com/mintsuki/flanterm.git ./kernel/bindings/flanterm/flanterm --branch=trunk --depth=1
-endif
-
-uacpi:
-ifeq ($(wildcard ./kernel/bindings/uacpi/uacpi),)
-		git clone https://github.com/uACPI/uACPI ./kernel/bindings/uacpi/uacpi --branch=master --depth=1
-endif
-
+.PHONY: limine
 limine:
 	mkdir -p ./third_party
 ifeq ($(wildcard ./third_party/limine),)
@@ -40,10 +45,11 @@ ifeq ($(wildcard ./third_party/limine),)
 	$(MAKE) -C ./third_party/limine
 endif
 
+.PHONY: fenrir.iso
 fenrir.iso: limine kernel
 	mkdir -p ./iso_root/boot
-	cp -v ./kernel/target/x86_64-fenrir/$(CARGO_TARGET_DIR)/kernel ./iso_root/boot/
-	cp -v ./kernel/target/x86_64-fenrir/$(CARGO_TARGET_DIR)/kernel_symbols.map ./iso_root/boot/
+	cp -v $(TARGET_DIR)/kernel ./iso_root/boot/
+	cp -v $(TARGET_DIR)/kernel_symbols.map ./iso_root/boot/
 
 	mkdir -p ./iso_root/boot/limine
 	cp -v ./limine.conf ./iso_root/boot/limine/
@@ -77,5 +83,5 @@ run: fenrir.iso
 
 .PHONY: clean
 clean:
-	$(MAKE) -C kernel clean
-	rm -rf ./third_party/limine/ ./kernel/bindings/flanterm/flanterm/ ./kernel/bindings/uacpi/uacpi/ ./iso_root/ fenrir.iso
+	cargo clean
+	rm -rf ./third_party/ ./iso_root/ fenrir.iso

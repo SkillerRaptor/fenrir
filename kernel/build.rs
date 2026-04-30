@@ -5,6 +5,7 @@
 //
 
 use std::{
+    env,
     error::Error,
     ffi::OsString,
     fs::{self, DirEntry},
@@ -34,33 +35,44 @@ fn visit_directory(directory: &Path, callback: &mut dyn FnMut(&DirEntry)) -> io:
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    visit_directory(Path::new("src"), &mut |entry: &DirEntry| {
-        let path = entry.path();
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-        let object_os = path.file_name().expect("Failed to get file name");
-        let object_file = object_os.to_str().expect("Invalid UTF-8 for file name");
+    visit_directory(
+        Path::new(&format!("{}/src", manifest_dir)),
+        &mut |entry: &DirEntry| {
+            let path = entry.path();
 
-        match path.extension() {
-            Some(extension) if extension.eq(&OsString::from("asm")) => {
-                let mut build = nasm_rs::Build::new();
+            let object_os = path.file_name().expect("Failed to get file name");
+            let object_file = object_os.to_str().expect("Invalid UTF-8 for file name");
 
-                build
-                    .file(&path)
-                    .flag("-felf64")
-                    .target("x86_64-unknown-none")
-                    .compile(object_file)
-                    .expect("Failed to compile assembly");
+            match path.extension() {
+                Some(extension) if extension.eq(&OsString::from("asm")) => {
+                    let mut build = nasm_rs::Build::new();
 
-                println!("cargo:rustc-link-lib=static={}", object_file);
-                println!("cargo:rerun-if-changed={}", object_file);
+                    build
+                        .file(&path)
+                        .flag("-felf64")
+                        .target("x86_64-unknown-none")
+                        .compile(object_file)
+                        .expect("Failed to compile assembly");
+
+                    println!("cargo:rustc-link-lib=static={}", object_file);
+                    println!("cargo:rerun-if-changed={}", object_file);
+                }
+
+                _ => (),
             }
+        },
+    )?;
 
-            _ => (),
-        }
-    })?;
-
-    println!("cargo:rustc-link-arg=-T./linker_scripts/x86_64.ld");
-    println!("cargo:rerun-if-changed=./linker_scripts/x86_64.ld");
+    println!(
+        "cargo:rustc-link-arg=-T{}/linker_scripts/x86_64.ld",
+        manifest_dir
+    );
+    println!(
+        "cargo:rerun-if-changed={}/linker_scripts/x86_64.ld",
+        manifest_dir
+    );
 
     Ok(())
 }

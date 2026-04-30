@@ -13,10 +13,10 @@ fn main() {
 
     build
         .files([
-            "flanterm/src/flanterm.c",
-            "flanterm/src/flanterm_backends/fb.c",
+            "../../third_party/flanterm/src/flanterm.c",
+            "../../third_party/flanterm/src/flanterm_backends/fb.c",
         ])
-        .includes(["flanterm"])
+        .includes(["../../third_party/flanterm/"])
         .pic(false)
         .flag("-ffreestanding")
         .flag("-nostdlib")
@@ -30,8 +30,8 @@ fn main() {
         .derive_default(true)
         .derive_debug(true)
         .prepend_enum_name(false)
-        .clang_args(["-I", "flanterm/src", "-ffreestanding"])
-        .header("src/wrapper.h")
+        .clang_args(["-I", "../../third_party/flanterm/src/", "-ffreestanding"])
+        .header("./src/wrapper.h")
         .generate()
         .expect("Unable to generate bindings!");
 
