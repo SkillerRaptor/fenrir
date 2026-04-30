@@ -8,7 +8,10 @@ use core::mem;
 
 use bitflags::bitflags;
 
-use crate::common::once::Once;
+use crate::{
+    arch::x86_64::cpu::{self, Core},
+    common::once::Once,
+};
 
 bitflags! {
     struct AccessAttribute: u8 {
@@ -156,6 +159,9 @@ pub fn initialize() {
     }
 
     load();
+
+    // NOTE: Setting gs for bsp after reloading segments again
+    cpu::set_current_core(Core::by_id(0));
 
     log::info!("GDT: Initialized");
 }
