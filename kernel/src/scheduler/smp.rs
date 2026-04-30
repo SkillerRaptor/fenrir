@@ -10,7 +10,11 @@ use limine::mp::MpInfo;
 
 use crate::{
     acpi::apic,
-    arch::x86_64::{cpu, gdt, idt},
+    arch::x86_64::{
+        cpu::{self, Core},
+        gdt,
+        idt,
+    },
     common::boot,
     memory::vmm,
 };
@@ -18,6 +22,8 @@ use crate::{
 static ONLINE_COUNT: AtomicU8 = AtomicU8::new(1);
 
 pub fn initialize() {
+    cpu::initialize_cores();
+
     let mp_infos = boot::get_mp_infos();
     log::debug!("SMP: Found {} available cores", mp_infos.len());
 
@@ -46,9 +52,10 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
     idt::load();
     vmm::switch_to_page_map(vmm::get_kernel_page_map());
 
+    cpu::set_current_core(Core::by_id(info.extra_argument() as usize));
+
     apic::enable_lapic();
 
-    log::debug!("Started Core #{} successfully", info.extra_argument());
     ONLINE_COUNT.fetch_add(1, Ordering::Release);
 
     cpu::hcf();

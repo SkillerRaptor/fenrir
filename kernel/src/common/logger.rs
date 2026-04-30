@@ -9,6 +9,7 @@ use core::arch::asm;
 use log::{Level, LevelFilter, Log, Metadata, Record};
 
 use crate::{
+    arch::x86_64::cpu::Core,
     common::{boot, once::Once, writer},
     print,
     println,
@@ -64,6 +65,9 @@ impl Log for Logger {
             return;
         }
 
+        let core = Core::current();
+        core.enter_critical();
+
         let _guard = LOCK.lock();
 
         let timestamp = get_timestamp();
@@ -82,6 +86,8 @@ impl Log for Logger {
 
         print!("\x1b[0m: ");
         println!("\x1b[0m{}", record.args());
+
+        core.leave_critical();
     }
 
     fn flush(&self) {}

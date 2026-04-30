@@ -17,9 +17,6 @@ pub struct SpinLock<T> {
     data: UnsafeCell<T>,
 }
 
-unsafe impl<T> Send for SpinLock<T> where T: Send {}
-unsafe impl<T> Sync for SpinLock<T> where T: Send {}
-
 impl<T> SpinLock<T> {
     pub const fn new(data: T) -> SpinLock<T> {
         SpinLock {
@@ -45,6 +42,9 @@ impl<T> SpinLock<T> {
     }
 }
 
+unsafe impl<T: Send> Send for SpinLock<T> {}
+unsafe impl<T: Send> Sync for SpinLock<T> {}
+
 pub struct SpinLockGuard<'a, T> {
     spin_lock: &'a SpinLock<T>,
 }
@@ -64,6 +64,10 @@ impl<'a, T> DerefMut for SpinLockGuard<'a, T> {
 
 impl<'a, T> Drop for SpinLockGuard<'a, T> {
     fn drop(&mut self) {
-        self.spin_lock.lock.store(false, Ordering::Release);
+        unsafe {
+            self.spin_lock.force_unlock();
+        }
     }
 }
+
+impl<'a, T> !Send for SpinLockGuard<'a, T> {}

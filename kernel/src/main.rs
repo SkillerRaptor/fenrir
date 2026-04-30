@@ -6,7 +6,9 @@
 
 #![no_std]
 #![no_main]
+#![feature(atomic_ptr_null)]
 #![feature(cstr_display)]
+#![feature(negative_impls)]
 
 extern crate alloc;
 
@@ -36,6 +38,7 @@ unsafe extern "C" fn kmain() -> ! {
         cpu::halt();
     }
 
+    cpu::initialize_bsp();
     logger::initialize();
 
     println!("");

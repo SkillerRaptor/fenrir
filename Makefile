@@ -72,7 +72,7 @@ run: fenrir.iso
 		--no-shutdown \
 		-m 256M \
 		-serial stdio \
-		-smp 4 \
+		-smp 8 \
 		-d int
 
 .PHONY: clean
