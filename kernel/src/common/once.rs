@@ -27,10 +27,6 @@ impl<T> Once<T> {
         unsafe { (*self.data.get()).assume_init_ref() }
     }
 
-    pub fn get_mut(&self) -> &mut T {
-        unsafe { (*self.data.get()).assume_init_mut() }
-    }
-
     pub unsafe fn get_ptr(&self) -> *const T {
         unsafe { (*self.data.get()).as_ptr() }
     }

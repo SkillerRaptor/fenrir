@@ -5,18 +5,16 @@
 //
 
 use alloc::{boxed::Box, vec::Vec};
-use core::{arch::asm, mem::offset_of, sync::atomic::AtomicPtr};
+use core::{
+    arch::asm,
+    mem::offset_of,
+    ptr,
+    sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
+};
 
 use crate::common::{boot, once::Once};
 
-static mut BSP_CORE: Core = Core {
-    this: AtomicPtr::null(),
-    id: 0,
-    lapic_id: 0,
-    critical_depth: 0,
-    were_interrupts_enabled: false,
-};
-
+static BSP_CORE: Once<Core> = Once::new();
 static CORES: Once<Box<[Core]>> = Once::new();
 
 #[repr(C)]
@@ -26,13 +24,13 @@ pub struct Core {
     pub id: u32,
     pub lapic_id: u32,
 
-    pub critical_depth: u32,
-    pub were_interrupts_enabled: bool,
+    pub critical_depth: AtomicU32,
+    pub were_interrupts_enabled: AtomicBool,
 }
 
 impl Core {
-    pub fn current() -> &'static mut Self {
-        let core: *mut Self;
+    pub fn current() -> &'static Self {
+        let core: *const Self;
         unsafe {
             asm!(
                 "mov {core}, gs:[{offset}]",
@@ -42,32 +40,33 @@ impl Core {
             );
         }
 
-        unsafe { &mut *core }
+        unsafe { &*core }
     }
 
-    pub fn by_id(id: usize) -> &'static mut Self {
+    pub fn by_id(id: usize) -> &'static Self {
         if id == 0 {
-            unsafe { &mut *&raw mut BSP_CORE }
+            BSP_CORE.get()
         } else {
-            &mut CORES.get_mut()[id - 1]
+            &CORES.get()[id - 1]
         }
     }
 
-    pub fn enter_critical(&mut self) {
+    pub fn enter_critical(&self) {
         let were_interrupts_enabled = are_interrupts_enabled();
         disable_interrupts();
 
-        self.critical_depth += 1;
-        self.were_interrupts_enabled = were_interrupts_enabled;
+        if self.critical_depth.fetch_add(1, Ordering::Relaxed) == 0 {
+            self.were_interrupts_enabled
+                .store(were_interrupts_enabled, Ordering::Relaxed);
+        }
     }
 
-    pub fn leave_critical(&mut self) {
-        assert!(self.critical_depth > 0);
+    pub fn leave_critical(&self) {
+        let critical_depth = self.critical_depth.fetch_sub(1, Ordering::Relaxed);
+        assert!(critical_depth > 0);
 
-        self.critical_depth -= 1;
-
-        if self.critical_depth == 0 && self.were_interrupts_enabled {
-            self.were_interrupts_enabled = false;
+        if critical_depth == 1 && self.were_interrupts_enabled.load(Ordering::Relaxed) {
+            self.were_interrupts_enabled.store(false, Ordering::Relaxed);
             enable_interrupts();
         }
     }
@@ -75,15 +74,18 @@ impl Core {
 
 pub fn initialize_bsp() {
     unsafe {
-        BSP_CORE = Core {
-            this: AtomicPtr::new(&raw mut BSP_CORE),
+        BSP_CORE.initialize(Core {
+            this: AtomicPtr::new(ptr::null_mut()),
             id: 0,
             lapic_id: boot::get_bsp_lapic_id(),
-            critical_depth: 0,
-            were_interrupts_enabled: false,
-        };
+            critical_depth: AtomicU32::new(0),
+            were_interrupts_enabled: AtomicBool::new(false),
+        });
 
-        set_current_core(&raw mut BSP_CORE);
+        let ptr = BSP_CORE.get() as *const Core as *mut Core;
+        BSP_CORE.get().this.store(ptr, Ordering::Relaxed);
+
+        set_current_core(BSP_CORE.get());
     }
 }
 
@@ -100,8 +102,8 @@ pub fn initialize_cores() {
             this: AtomicPtr::default(),
             id: i as u32,
             lapic_id: core.lapic_id,
-            critical_depth: 0,
-            were_interrupts_enabled: false,
+            critical_depth: AtomicU32::new(0),
+            were_interrupts_enabled: AtomicBool::new(false),
         });
     }
 
@@ -116,7 +118,7 @@ pub fn initialize_cores() {
     }
 }
 
-pub fn set_current_core(core: *mut Core) {
+pub fn set_current_core(core: *const Core) {
     let address = core as u64;
     set_gs_base(address);
     set_kernel_gs_base(address);
