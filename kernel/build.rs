@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .expect("Failed to compile assembly");
 
                     println!("cargo:rustc-link-lib=static={}", object_file);
-                    println!("cargo:rerun-if-changed={}", object_file);
+                    println!("cargo:rerun-if-changed={}", path.display());
                 }
 
                 _ => (),
