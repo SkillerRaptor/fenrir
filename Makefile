@@ -39,7 +39,6 @@ kernel_build: $(FLANTERM_GIT) $(UACPI_GIT)
 	RUSTFLAGS="-C relocation-model=static" cargo build --bin kernel $(CARGO_FLAGS)
 
 $(KERNEL_DIRTY): kernel_build
-	RUSTFLAGS="-C relocation-model=static" cargo build --bin kernel $(CARGO_FLAGS)
 	@if [ ! -f $(KERNEL_DIRTY) ] || [ $(KERNEL_BIN) -nt $(KERNEL_DIRTY) ]; then \
 		nm -Cn $(KERNEL_BIN) | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > $(KERNEL_SYMBOLS); \
 		touch $(KERNEL_DIRTY); \
