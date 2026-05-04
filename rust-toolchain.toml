@@ -5,4 +5,5 @@
 #-------------------------------------------------------------------------------------------
 
 [toolchain]
-channel = "nightly"
+channel = "nightly-2026-01-01"
+components = ["rust-src", "rustfmt", "clippy"]

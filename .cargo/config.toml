@@ -8,6 +8,5 @@
 target = "./toolchains/x86_64-fenrir.json"
 
 [unstable]
-json-target-spec = true
 build-std = ["alloc", "core"]
 build-std-features = ["compiler-builtins-mem"]
