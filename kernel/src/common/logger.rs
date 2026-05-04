@@ -61,6 +61,16 @@ impl Log for Logger {
     }
 
     fn log(&self, record: &Record) {
+        const GREEN: &str = "\x1b[38;2;0;128;0m";
+        const YELLOW: &str = "\x1b[38;2;255;215;0m";
+        const RED: &str = "\x1b[38;2;255;0;0m";
+        const BLUE: &str = "\x1b[38;2;0;0;255m";
+        const MAGENTA: &str = "\x1b[38;2;170;68;255m";
+
+        const GRAY: &str = "\x1b[38;2;60;60;60m";
+        const ITALIC: &str = "\x1b[3m";
+        const RESET: &str = "\x1b[0m";
+
         if !self.enabled(record.metadata()) {
             return;
         }
@@ -72,20 +82,26 @@ impl Log for Logger {
 
         let timestamp = get_timestamp();
         print!(
-            " \x1b[38;2;80;80;80m{}.{:03} ",
-            timestamp.seconds, timestamp.milliseconds
+            " {}{}.{:03} ",
+            GRAY, timestamp.seconds, timestamp.milliseconds
         );
 
         match record.level() {
-            Level::Info => print!("\x1b[38;2;0;128;0minfo"),
-            Level::Warn => print!("\x1b[38;2;255;215;0mwarn"),
-            Level::Error => print!("\x1b[38;2;255;0;0merror"),
-            Level::Debug => print!("\x1b[38;2;0;0;255mdebug"),
-            Level::Trace => print!("\x1b[38;2;170;68;255mtrace"),
+            Level::Info => print!("{}info", GREEN),
+            Level::Warn => print!("{}warn", YELLOW),
+            Level::Error => print!("{}error", RED),
+            Level::Debug => print!("{}debug", BLUE),
+            Level::Trace => print!("{}trace", MAGENTA),
         }
 
-        print!("\x1b[0m: ");
-        println!("\x1b[0m{}", record.args());
+        print!("{}: ", RESET);
+
+        let path_offset = "kernel/src/".len();
+        let file = &record.file().unwrap()[path_offset..];
+        let line = record.line().unwrap();
+        print!("{}{}<{}:{}> ", GRAY, ITALIC, file, line);
+
+        println!("{}{}", RESET, record.args());
 
         core.leave_critical();
     }
