@@ -6,8 +6,13 @@
 
 use alloc::sync::Arc;
 
-use crate::{arch::x86_64::registers::Registers, scheduler::process::Process};
+use crate::{
+    arch::x86_64::registers::Registers,
+    memory::{PAGE_SIZE, pmm},
+    scheduler::process::Process,
+};
 
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ThreadState {
     Idle,
@@ -22,13 +27,19 @@ pub struct ThreadId(pub u32);
 pub struct Thread {
     pub id: ThreadId,
     pub state: ThreadState,
-
     pub registers: Registers,
-    pub stack: *const u8,
+    pub stack: *mut u8,
     pub stack_size: usize,
-
     pub process: Arc<Process>,
 }
 
 unsafe impl Send for Thread {}
 unsafe impl Sync for Thread {}
+
+impl Drop for Thread {
+    fn drop(&mut self) {
+        if !self.stack.is_null() {
+            pmm::free(self.stack, self.stack_size as u64 / PAGE_SIZE);
+        }
+    }
+}

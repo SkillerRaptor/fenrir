@@ -10,7 +10,9 @@ pub mod thread;
 
 use alloc::{collections::BTreeMap, sync::Arc, vec::Vec};
 use core::{
+    arch::asm,
     mem,
+    ptr,
     sync::atomic::{AtomicU32, Ordering},
 };
 
@@ -52,13 +54,6 @@ pub fn initialize() {
     log::info!("Scheduler: Initialized");
 }
 
-pub fn reschedule() -> ! {
-    loop {
-        cpu::enable_interrupts();
-        cpu::halt();
-    }
-}
-
 pub fn create_process(page_map: PageMap) -> Arc<Process> {
     let id = ProcessId(NEXT_PROCESS_ID.fetch_add(1, Ordering::Relaxed));
 
@@ -82,7 +77,8 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
 
     let id = ThreadId(NEXT_THREAD_ID.fetch_add(1, Ordering::Relaxed));
 
-    let stack = pmm::allocate(1, true) as u64;
+    let stack_size = PAGE_SIZE;
+    let stack = pmm::allocate(stack_size / PAGE_SIZE, true) as u64;
     vmm::map(
         page_map,
         stack,
@@ -114,11 +110,11 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
             rip: entry as u64,
             cs,
             flags: (1 << 9) | (1 << 1),
-            rsp: stack + boot::get_hhdm_offset() + PAGE_SIZE,
+            rsp: stack + boot::get_hhdm_offset() + stack_size,
             ss: cs + 0x08,
         },
-        stack: stack as *const u8,
-        stack_size: PAGE_SIZE as usize,
+        stack: stack as *mut u8,
+        stack_size: stack_size as usize,
         process: process.clone(),
     });
 
@@ -128,9 +124,26 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
     thread
 }
 
-pub fn schedule_thread(thread: &Arc<Thread>) {
+pub fn add_thread_to_current(thread: &Arc<Thread>) {
     let core = Core::current();
     core.thread_queue.lock().push_back(thread.clone());
+}
+
+pub fn add_thread_to_least_loaded(thread: &Arc<Thread>) {
+    let core = Core::all()
+        .min_by_key(|core| {
+            let has_running_thread = !core.current_thread.load(Ordering::Acquire).is_null();
+            core.thread_queue.lock().len() + if has_running_thread { 1 } else { 0 }
+        })
+        .unwrap();
+    core.thread_queue.lock().push_back(thread.clone());
+}
+
+pub fn reschedule() -> ! {
+    loop {
+        cpu::enable_interrupts();
+        cpu::halt();
+    }
 }
 
 unsafe extern "C" {
@@ -138,56 +151,61 @@ unsafe extern "C" {
 }
 
 fn schedule(registers: &Registers) {
-    apic::send_eoi();
-
     let core = Core::current();
 
     let current_thread = core.current_thread.load(Ordering::Acquire);
-    if !current_thread.is_null() && unsafe { (*current_thread).state } == ThreadState::Dead {
-        // TODO: Add thread reaping
-    }
-
-    if core.thread_queue.lock().is_empty() {
-        if !current_thread.is_null() {
-            return;
-        }
-
-        let idle_thread = core.idle_thread.load(Ordering::Acquire);
-        let idle_registers = unsafe { &(*idle_thread).registers };
-
-        unsafe { switch_process(&raw const *idle_registers) };
-    }
-
-    let next_thread = core.thread_queue.lock().pop_front().unwrap();
-    let next_thread = Arc::into_raw(next_thread.clone()) as *mut Thread;
-
-    core.current_thread.store(next_thread, Ordering::Release);
+    let next_thread = core.thread_queue.lock().pop_front();
 
     if !current_thread.is_null() {
         unsafe {
             (*current_thread).state = ThreadState::Idle;
             (*current_thread).registers = *registers;
         }
-    }
 
-    unsafe {
-        if current_thread.is_null()
-            || (&(*current_thread)).process.id != (&(*next_thread)).process.id
-        {
-            vmm::switch_to_page_map((&(*next_thread)).process.page_map);
-        }
-
-        (*next_thread).state = ThreadState::Busy;
-    }
-
-    if !current_thread.is_null() {
-        core.thread_queue.lock().push_back({
-            let current_thread = unsafe { Arc::from_raw(current_thread) };
-            let clone = current_thread.clone();
+        let current_thread = unsafe { Arc::from_raw(current_thread) };
+        if current_thread.state == ThreadState::Dead {
+            // TODO: Add thread reaping
+        } else if next_thread.is_some() {
+            core.thread_queue.lock().push_back(current_thread);
+        } else {
+            let current_thread_ptr = Arc::as_ptr(&current_thread) as *mut Thread;
+            unsafe {
+                (*current_thread_ptr).state = ThreadState::Idle;
+            }
+            core.current_thread
+                .store(current_thread_ptr, Ordering::Release);
             mem::forget(current_thread);
-            clone
-        });
+
+            apic::send_eoi();
+            unsafe { switch_process(&raw const (*current_thread_ptr).registers) };
+        }
     }
 
-    unsafe { switch_process(&raw const (*next_thread).registers) };
+    let Some(next_thread) = next_thread else {
+        core.current_thread
+            .store(ptr::null_mut(), Ordering::Release);
+
+        let idle_thread = core.idle_thread.load(Ordering::Acquire);
+
+        apic::send_eoi();
+        unsafe { switch_process(&raw const (*idle_thread).registers) };
+    };
+
+    if current_thread.is_null()
+        || unsafe { (&(*current_thread)).process.id != next_thread.process.id }
+    {
+        vmm::switch_to_page_map(next_thread.process.page_map);
+    }
+
+    let next_thread_ptr = Arc::as_ptr(&next_thread) as *mut Thread;
+    unsafe {
+        (*next_thread_ptr).state = ThreadState::Busy;
+    }
+
+    core.current_thread
+        .store(next_thread_ptr, Ordering::Release);
+    mem::forget(next_thread);
+
+    apic::send_eoi();
+    unsafe { switch_process(&raw const (*next_thread_ptr).registers) };
 }

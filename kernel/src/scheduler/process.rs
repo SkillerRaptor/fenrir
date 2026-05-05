@@ -15,7 +15,6 @@ pub struct ProcessId(pub u32);
 pub struct Process {
     pub id: ProcessId,
     pub page_map: PageMap,
-
     pub threads: SpinLock<Vec<Arc<Thread>>>,
 }
 

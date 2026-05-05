@@ -7,6 +7,7 @@
 use alloc::{boxed::Box, collections::VecDeque, sync::Arc, vec::Vec};
 use core::{
     arch::asm,
+    iter,
     mem::offset_of,
     ptr,
     sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
@@ -58,6 +59,12 @@ impl Core {
         } else {
             &CORES.get()[id - 1]
         }
+    }
+
+    pub fn all() -> impl Iterator<Item = &'static Self> {
+        let bsp = iter::once(BSP_CORE.get());
+        let cores = CORES.get().iter();
+        bsp.chain(cores)
     }
 
     pub fn enter_critical(&self) {

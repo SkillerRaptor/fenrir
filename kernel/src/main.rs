@@ -70,7 +70,7 @@ unsafe extern "C" fn kmain() -> ! {
     smp::initialize();
 
     let thread = scheduler::create_kernel_thread(kthread);
-    scheduler::schedule_thread(&thread);
+    scheduler::add_thread_to_current(&thread);
 
     scheduler::reschedule();
 }

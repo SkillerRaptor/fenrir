@@ -66,7 +66,7 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
     let core = Core::current();
     core.idle_thread.store(
         Arc::into_raw(scheduler::create_kernel_thread(thread_idle)) as *mut _,
-        Ordering::Relaxed,
+        Ordering::Release,
     );
 
     apic::enable_lapic();
