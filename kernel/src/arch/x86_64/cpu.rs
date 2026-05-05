@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, collections::VecDeque, sync::Arc, vec::Vec};
 use core::{
     arch::asm,
     mem::offset_of,
@@ -12,7 +12,11 @@ use core::{
     sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
 };
 
-use crate::common::{boot, once::Once};
+use crate::{
+    common::{boot, once::Once},
+    scheduler::thread::Thread,
+    sync::spinlock::SpinLock,
+};
 
 static BSP_CORE: Once<Core> = Once::new();
 static CORES: Once<Box<[Core]>> = Once::new();
@@ -26,6 +30,11 @@ pub struct Core {
 
     pub critical_depth: AtomicU32,
     pub were_interrupts_enabled: AtomicBool,
+
+    // NOTE: Scheduler stuff
+    pub idle_thread: AtomicPtr<Thread>,
+    pub current_thread: AtomicPtr<Thread>,
+    pub thread_queue: SpinLock<VecDeque<Arc<Thread>>>,
 }
 
 impl Core {
@@ -80,6 +89,9 @@ pub fn initialize_bsp() {
             lapic_id: boot::get_bsp_lapic_id(),
             critical_depth: AtomicU32::new(0),
             were_interrupts_enabled: AtomicBool::new(false),
+            idle_thread: AtomicPtr::new(ptr::null_mut()),
+            current_thread: AtomicPtr::new(ptr::null_mut()),
+            thread_queue: SpinLock::new(VecDeque::new()),
         });
 
         let ptr = BSP_CORE.get() as *const Core as *mut Core;
@@ -99,11 +111,14 @@ pub fn initialize_cores() {
         }
 
         cores.push(Core {
-            this: AtomicPtr::default(),
+            this: AtomicPtr::new(ptr::null_mut()),
             id: i as u32,
             lapic_id: core.lapic_id,
             critical_depth: AtomicU32::new(0),
             were_interrupts_enabled: AtomicBool::new(false),
+            idle_thread: AtomicPtr::new(ptr::null_mut()),
+            current_thread: AtomicPtr::new(ptr::null_mut()),
+            thread_queue: SpinLock::new(VecDeque::new()),
         });
     }
 

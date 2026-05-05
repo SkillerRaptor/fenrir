@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::arch::asm;
+use core::{arch::asm, sync::atomic::Ordering};
 
 use log::{Level, LevelFilter, Log, Metadata, Record};
 
@@ -100,6 +100,19 @@ impl Log for Logger {
         let file = &record.file().unwrap()[path_offset..];
         let line = record.line().unwrap();
         print!("{}{}<{}:{}> ", GRAY, ITALIC, file, line);
+
+        let current_thread = core.current_thread.load(Ordering::Relaxed);
+        if !current_thread.is_null() {
+            unsafe {
+                print!(
+                    "{}{}({}:{}) ",
+                    GRAY,
+                    ITALIC,
+                    (&(*current_thread)).process.id.0,
+                    (*current_thread).id.0
+                );
+            }
+        }
 
         println!("{}{}", RESET, record.args());
 

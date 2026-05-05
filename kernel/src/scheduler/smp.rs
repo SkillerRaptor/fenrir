@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+use alloc::sync::Arc;
 use core::sync::atomic::{AtomicU8, Ordering};
 
 use limine::mp::MpInfo;
@@ -17,6 +18,7 @@ use crate::{
     },
     common::boot,
     memory::vmm,
+    scheduler,
 };
 
 static ONLINE_COUNT: AtomicU8 = AtomicU8::new(1);
@@ -45,6 +47,13 @@ pub fn initialize() {
     log::info!("SMP: Initialized");
 }
 
+fn thread_idle() {
+    loop {
+        cpu::enable_interrupts();
+        cpu::pause();
+    }
+}
+
 extern "C" fn core_init(info: &MpInfo) -> ! {
     cpu::disable_interrupts();
 
@@ -54,9 +63,15 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
 
     cpu::set_current_core(Core::by_id(info.extra_argument() as usize));
 
+    let core = Core::current();
+    core.idle_thread.store(
+        Arc::into_raw(scheduler::create_kernel_thread(thread_idle)) as *mut _,
+        Ordering::Relaxed,
+    );
+
     apic::enable_lapic();
 
     ONLINE_COUNT.fetch_add(1, Ordering::Release);
 
-    cpu::hcf();
+    scheduler::reschedule();
 }

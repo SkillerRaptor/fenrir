@@ -6,6 +6,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(box_as_ptr)]
 #![feature(cstr_display)]
 #![feature(negative_impls)]
 
@@ -65,11 +66,19 @@ unsafe extern "C" fn kmain() -> ! {
     hpet::initialize();
     apic::initialize();
 
+    scheduler::initialize();
     smp::initialize();
 
-    log::info!("Hello, World!");
+    let thread = scheduler::create_kernel_thread(kthread);
+    scheduler::schedule_thread(&thread);
 
-    cpu::hcf();
+    scheduler::reschedule();
+}
+
+fn kthread() {
+    log::info!("Fenrir successfully booted!");
+
+    scheduler::reschedule();
 }
 
 #[panic_handler]

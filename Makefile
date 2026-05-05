@@ -82,8 +82,7 @@ run: fenrir.iso
 		--no-shutdown \
 		-m 256M \
 		-serial stdio \
-		-smp 8 \
-		-d int
+		-smp 4
 
 clean:
 	cargo clean
