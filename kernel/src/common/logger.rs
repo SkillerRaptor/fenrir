@@ -101,6 +101,8 @@ impl Log for Logger {
         let line = record.line().unwrap();
         print!("{}{}<{}:{}> ", GRAY, ITALIC, file, line);
 
+        print!("{}{}[#{}] ", GRAY, ITALIC, core.id);
+
         let current_thread = core.current_thread.load(Ordering::Relaxed);
         if !current_thread.is_null() {
             unsafe {
