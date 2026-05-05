@@ -8,10 +8,7 @@ use core::mem;
 
 use bitflags::bitflags;
 
-use crate::{
-    arch::x86_64::cpu::{self, Core},
-    common::once::Once,
-};
+use crate::arch::x86_64::cpu::Core;
 
 bitflags! {
     struct AccessAttribute: u8 {
@@ -35,7 +32,27 @@ bitflags! {
 }
 
 #[repr(C, packed)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
+struct Tss {
+    reserved_0: u32,
+    rsp_0: u64,
+    rsp_1: u64,
+    rsp_2: u64,
+    reserved_1: u64,
+    ist_1: u64,
+    ist_2: u64,
+    ist_3: u64,
+    ist_4: u64,
+    ist_5: u64,
+    ist_6: u64,
+    ist_7: u64,
+    reserved_2: u64,
+    reserved_3: u16,
+    io_offset: u16,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy, Default)]
 struct Entry {
     limit_low: u16,
     base_low: u16,
@@ -59,7 +76,48 @@ impl Entry {
 }
 
 #[repr(C, packed)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
+struct TssEntry {
+    limit_low: u16,
+    base_low: u16,
+    base_middle_1: u8,
+    access: u8,
+    limit_high_flags: u8,
+    base_middle_2: u8,
+    base_high: u32,
+    reserved: u32,
+}
+
+impl TssEntry {
+    fn new(address: u64) -> Self {
+        const LIMIT: usize = mem::size_of::<Tss>();
+        Self {
+            limit_low: LIMIT as u16,
+            base_low: address as u16,
+            base_middle_1: (address >> 16) as u8,
+            access: (AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::EXECUTABLE
+                | AccessAttribute::ACCESS)
+                .bits(),
+            limit_high_flags: (FlagAttribute::PAGE_GRANULARITY.bits() << 4) & 0xf0
+                | ((LIMIT >> 16) as u8) & 0x0f,
+            base_middle_2: (address >> 24) as u8,
+            base_high: (address >> 32) as u32,
+            reserved: 0,
+        }
+    }
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy, Default)]
+struct Table {
+    entries: [Entry; 9],
+    tss_entry: TssEntry,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy, Default)]
 struct Descriptor {
     size: u16,
     address: u64,
@@ -71,104 +129,144 @@ impl Descriptor {
     }
 }
 
-static ENTRIES: Once<[Entry; 7]> = Once::new();
-static DESCRIPTOR: Once<Descriptor> = Once::new();
+#[repr(C, packed)]
+#[derive(Clone, Copy, Default)]
+pub struct Gdt {
+    tss: Tss,
+    table: Table,
+    descriptor: Descriptor,
+}
 
 unsafe extern "C" {
     fn load_gdt(descriptor: *const Descriptor);
+    fn load_tss();
 
     fn reload_segments();
 }
 
-pub fn initialize() {
+pub fn load(core: &Core) {
+    let gdt = unsafe { &mut *core.gdt.get() };
+
+    gdt.tss = Tss {
+        reserved_0: 0,
+        rsp_0: unsafe { *core.kernel_rsp.get() },
+        rsp_1: 0,
+        rsp_2: 0,
+        reserved_1: 0,
+        ist_1: 0,
+        ist_2: 0,
+        ist_3: 0,
+        ist_4: 0,
+        ist_5: 0,
+        ist_6: 0,
+        ist_7: 0,
+        reserved_2: 0,
+        reserved_3: 0,
+        io_offset: 0,
+    };
+
+    gdt.table.entries = [
+        Entry::new(
+            0x00000000,
+            0x00000000,
+            AccessAttribute::NULL,
+            FlagAttribute::NULL,
+        ),
+        Entry::new(
+            0x00000000,
+            0x0000ffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::EXECUTABLE
+                | AccessAttribute::READ_WRITE,
+            FlagAttribute::NULL,
+        ),
+        Entry::new(
+            0x00000000,
+            0x0000ffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::NULL,
+        ),
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::EXECUTABLE
+                | AccessAttribute::READ_WRITE,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::SIZE_32,
+        ),
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::SIZE_32,
+        ),
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::EXECUTABLE
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
+        ),
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::KERNEL_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
+        ),
+        // NOTE: User segments are in reversed order
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::USER_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
+        ),
+        Entry::new(
+            0x00000000,
+            0xffffffff,
+            AccessAttribute::PRESENT
+                | AccessAttribute::USER_PRIVILEGE
+                | AccessAttribute::CODE_DATA
+                | AccessAttribute::EXECUTABLE
+                | AccessAttribute::READ_WRITE
+                | AccessAttribute::ACCESS,
+            FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
+        ),
+    ];
+
+    gdt.table.tss_entry = TssEntry::new((&gdt.tss as *const _) as u64);
+
+    gdt.descriptor = Descriptor::new(
+        (mem::size_of::<Table>() - 1) as u16,
+        (&raw const gdt.table as *const _) as u64,
+    );
+
     unsafe {
-        ENTRIES.initialize([
-            Entry::new(
-                0x00000000,
-                0x00000000,
-                AccessAttribute::NULL,
-                FlagAttribute::NULL,
-            ),
-            Entry::new(
-                0x00000000,
-                0x0000ffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::EXECUTABLE
-                    | AccessAttribute::READ_WRITE,
-                FlagAttribute::NULL,
-            ),
-            Entry::new(
-                0x00000000,
-                0x0000ffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::READ_WRITE
-                    | AccessAttribute::ACCESS,
-                FlagAttribute::NULL,
-            ),
-            Entry::new(
-                0x00000000,
-                0xffffffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::EXECUTABLE
-                    | AccessAttribute::READ_WRITE,
-                FlagAttribute::PAGE_GRANULARITY | FlagAttribute::SIZE_32,
-            ),
-            Entry::new(
-                0x00000000,
-                0xffffffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::READ_WRITE
-                    | AccessAttribute::ACCESS,
-                FlagAttribute::PAGE_GRANULARITY | FlagAttribute::SIZE_32,
-            ),
-            Entry::new(
-                0x00000000,
-                0xffffffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::EXECUTABLE
-                    | AccessAttribute::READ_WRITE
-                    | AccessAttribute::ACCESS,
-                FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
-            ),
-            Entry::new(
-                0x00000000,
-                0xffffffff,
-                AccessAttribute::PRESENT
-                    | AccessAttribute::KERNEL_PRIVILEGE
-                    | AccessAttribute::CODE_DATA
-                    | AccessAttribute::READ_WRITE
-                    | AccessAttribute::ACCESS,
-                FlagAttribute::PAGE_GRANULARITY | FlagAttribute::LONG_MODE,
-            ),
-        ]);
-
-        DESCRIPTOR.initialize(Descriptor::new(
-            (mem::size_of::<[Entry; 7]>() - 1) as u16,
-            (&raw const ENTRIES as *const _) as u64,
-        ));
-    }
-
-    load();
-
-    // NOTE: Setting gs for bsp after reloading segments again
-    cpu::set_current_core(Core::by_id(0));
-
-    log::info!("GDT: Initialized");
-}
-
-pub fn load() {
-    unsafe {
-        load_gdt(DESCRIPTOR.get_ptr());
+        load_gdt(&gdt.descriptor);
         reload_segments();
+        load_tss();
     }
 }

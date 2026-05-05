@@ -7,6 +7,7 @@
 use alloc::{boxed::Box, collections::VecDeque, sync::Arc, vec::Vec};
 use core::{
     arch::asm,
+    cell::UnsafeCell,
     iter,
     mem::offset_of,
     ptr,
@@ -14,6 +15,7 @@ use core::{
 };
 
 use crate::{
+    arch::x86_64::gdt::{self, Gdt},
     common::{boot, once::Once},
     scheduler::thread::Thread,
     sync::spinlock::SpinLock,
@@ -29,6 +31,11 @@ pub struct Core {
     pub id: u32,
     pub lapic_id: u32,
 
+    pub kernel_rsp: UnsafeCell<u64>,
+    pub user_rsp: UnsafeCell<u64>,
+
+    pub gdt: UnsafeCell<Gdt>,
+
     pub critical_depth: AtomicU32,
     pub were_interrupts_enabled: AtomicBool,
 
@@ -37,6 +44,8 @@ pub struct Core {
     pub current_thread: AtomicPtr<Thread>,
     pub thread_queue: SpinLock<VecDeque<Arc<Thread>>>,
 }
+
+unsafe impl Sync for Core {}
 
 impl Core {
     pub fn current() -> &'static Self {
@@ -67,6 +76,11 @@ impl Core {
         bsp.chain(cores)
     }
 
+    pub fn init_gdt(&self) {
+        gdt::load(self);
+        set_current_core(self as *const _)
+    }
+
     pub fn enter_critical(&self) {
         let were_interrupts_enabled = are_interrupts_enabled();
         disable_interrupts();
@@ -94,6 +108,9 @@ pub fn initialize_bsp() {
             this: AtomicPtr::new(ptr::null_mut()),
             id: 0,
             lapic_id: boot::get_bsp_lapic_id(),
+            kernel_rsp: UnsafeCell::new(0),
+            user_rsp: UnsafeCell::new(0),
+            gdt: UnsafeCell::new(Gdt::default()),
             critical_depth: AtomicU32::new(0),
             were_interrupts_enabled: AtomicBool::new(false),
             idle_thread: AtomicPtr::new(ptr::null_mut()),
@@ -121,6 +138,9 @@ pub fn initialize_cores() {
             this: AtomicPtr::new(ptr::null_mut()),
             id: i as u32,
             lapic_id: core.lapic_id,
+            kernel_rsp: UnsafeCell::new(0),
+            user_rsp: UnsafeCell::new(0),
+            gdt: UnsafeCell::new(Gdt::default()),
             critical_depth: AtomicU32::new(0),
             were_interrupts_enabled: AtomicBool::new(false),
             idle_thread: AtomicPtr::new(ptr::null_mut()),

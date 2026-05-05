@@ -13,11 +13,10 @@ use crate::{
     acpi::apic,
     arch::x86_64::{
         cpu::{self, Core},
-        gdt,
         idt,
     },
     common::boot,
-    memory::vmm,
+    memory::{PAGE_SIZE, pmm, vmm},
     scheduler,
 };
 
@@ -30,7 +29,15 @@ pub fn initialize() {
     log::debug!("SMP: Found {} available cores", mp_infos.len());
 
     for (i, info) in mp_infos.iter().enumerate() {
+        let stack = pmm::allocate(1, true) as u64 + PAGE_SIZE + boot::get_hhdm_offset();
+
+        let core = Core::by_id(i);
+        unsafe {
+            *core.kernel_rsp.get() = stack;
+        }
+
         if i as u32 == boot::get_bsp_lapic_id() {
+            core.init_gdt();
             continue;
         }
 
@@ -57,13 +64,12 @@ fn thread_idle() {
 extern "C" fn core_init(info: &MpInfo) -> ! {
     cpu::disable_interrupts();
 
-    gdt::load();
-    idt::load();
+    let core = Core::by_id(info.extra_argument() as usize);
+    core.init_gdt();
+
     vmm::switch_to_page_map(vmm::get_kernel_page_map());
+    idt::load();
 
-    cpu::set_current_core(Core::by_id(info.extra_argument() as usize));
-
-    let core = Core::current();
     core.idle_thread.store(
         Arc::into_raw(scheduler::create_kernel_thread(thread_idle)) as *mut _,
         Ordering::Release,
