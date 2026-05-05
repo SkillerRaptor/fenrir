@@ -10,7 +10,6 @@ pub mod thread;
 
 use alloc::{collections::BTreeMap, sync::Arc, vec::Vec};
 use core::{
-    arch::asm,
     mem,
     ptr,
     sync::atomic::{AtomicU32, Ordering},
