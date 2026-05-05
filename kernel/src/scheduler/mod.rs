@@ -71,6 +71,10 @@ pub fn create_kernel_thread(entry: fn()) -> Arc<Thread> {
     create_thread(KERNEL_PROCESS.get(), 0x28, entry)
 }
 
+pub fn create_user_thread(process: &Arc<Process>, entry: fn()) -> Arc<Thread> {
+    create_thread(process, 0x40 | 0x03, entry)
+}
+
 fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
     let page_map = process.page_map;
 
@@ -78,11 +82,22 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
 
     let stack_size = PAGE_SIZE;
     let stack = pmm::allocate(stack_size / PAGE_SIZE, true) as u64;
+    let virtual_stack = stack
+        + if cs == 0x28 {
+            boot::get_hhdm_offset()
+        } else {
+            0
+        };
     vmm::map(
         page_map,
         stack,
-        stack + boot::get_hhdm_offset(),
-        Attribute::WRITE,
+        virtual_stack,
+        Attribute::WRITE
+            | if cs == 0x28 {
+                Attribute::NULL
+            } else {
+                Attribute::USER
+            },
     );
 
     let thread = Arc::new(Thread {
@@ -109,8 +124,8 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
             rip: entry as u64,
             cs,
             flags: (1 << 9) | (1 << 1),
-            rsp: stack + boot::get_hhdm_offset() + stack_size,
-            ss: cs + 0x08,
+            rsp: virtual_stack + stack_size,
+            ss: if cs == 0x28 { cs + 0x08 } else { cs - 0x08 },
         },
         stack: stack as *mut u8,
         stack_size: stack_size as usize,

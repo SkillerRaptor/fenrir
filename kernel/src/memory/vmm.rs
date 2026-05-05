@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::arch::asm;
+use core::{arch::asm, mem};
 
 use bitflags::bitflags;
 use limine::memmap::{
@@ -135,7 +135,28 @@ pub fn initialize() {
 }
 
 pub fn create_page_map() -> PageMap {
-    PageMap(pmm::allocate(1, true) as u64)
+    let page_map = PageMap(pmm::allocate(1, true) as u64);
+
+    // NOTE: This copies the higher half of the kernel page map
+    if unsafe { KERNEL_PAGE_MAP.0 } != 0 {
+        let hhdm_offset = boot::get_hhdm_offset();
+        for i in 256..512 {
+            let offset = i * mem::size_of::<u64>() as u64;
+            let kernel_entry_address =
+                (unsafe { KERNEL_PAGE_MAP.0 } + offset + hhdm_offset) as *const u64;
+
+            let kernel_entry = unsafe { kernel_entry_address.read() };
+            let attributes = Attribute::from_bits_truncate((kernel_entry & 0x0fff) as u16);
+            if attributes.contains(Attribute::PRESENT) {
+                let new_entry_address = (page_map.0 + offset + hhdm_offset) as *mut u64;
+                unsafe {
+                    new_entry_address.write(kernel_entry);
+                }
+            }
+        }
+    }
+
+    page_map
 }
 
 pub fn switch_to_page_map(page_map: PageMap) {
