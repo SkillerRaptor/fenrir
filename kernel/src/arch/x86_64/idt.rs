@@ -235,7 +235,7 @@ fn handle_exception(registers: &Registers) {
                 _ => unreachable!(),
             };
 
-            log::error!("  in {} at at {}", table_name, index);
+            log::error!("  in {} at {}", table_name, index);
         }
         _ => {}
     };
