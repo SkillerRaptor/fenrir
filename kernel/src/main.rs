@@ -24,7 +24,7 @@ use core::panic::PanicInfo;
 
 use crate::{
     acpi::{apic, hpet},
-    arch::x86_64::{cpu, gdt, idt},
+    arch::x86_64::{cpu, idt},
     common::{boot, logger, stacktrace},
     memory::{pmm, vmm},
     scheduler::smp,
@@ -54,7 +54,6 @@ unsafe extern "C" fn kmain() -> ! {
     println!("   Firmware: {}", boot::get_firmware_type());
     println!("");
 
-    gdt::initialize();
     idt::initialize();
 
     pmm::initialize();
