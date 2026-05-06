@@ -36,6 +36,7 @@ clean = find_program('scripts/clean.sh', required: true)
 clone_flanterm = find_program('scripts/clone_flanterm.sh', required: true)
 clone_uacpi = find_program('scripts/clone_uacpi.sh', required: true)
 download_limine = find_program('scripts/download_limine.sh', required: true)
+generate_initramfs = find_program('scripts/generate_initramfs.sh', required: true)
 generate_iso = find_program('scripts/generate_iso.sh', required: true)
 
 #-------------------------------------------------------------------------------------------
@@ -111,7 +112,26 @@ kernel_target = custom_target(
 #-------------------------------------------------------------------------------------------
 # Userland
 #-------------------------------------------------------------------------------------------
+initramfs_files = []
+
 subdir('userland')
+
+#-------------------------------------------------------------------------------------------
+# Initramfs
+#-------------------------------------------------------------------------------------------
+initramfs = custom_target(
+    'initramfs',
+    input: initramfs_files,
+    output: 'initramfs.tar',
+    command: [
+        generate_initramfs,
+        '@OUTPUT@',
+        meson.project_build_root() / 'initramfs',
+    ]
+    + initramfs_files,
+    console: true,
+    build_by_default: true,
+)
 
 #-------------------------------------------------------------------------------------------
 # Iso
@@ -121,7 +141,7 @@ limine_dir = meson.project_source_root() / 'third_party/limine'
 iso_image = custom_target(
     'fenrir.iso',
     output: 'fenrir.iso',
-    depends: [kernel_target, limine_stamp],
+    depends: [kernel_target, initramfs, limine_stamp],
     command: [
         generate_iso,
         xorriso.full_path(),
@@ -129,6 +149,7 @@ iso_image = custom_target(
         '@OUTPUT@',
         kernel_bin,
         kernel_symbols,
+        initramfs,
     ],
     build_by_default: true,
 )

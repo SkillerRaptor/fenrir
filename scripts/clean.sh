@@ -13,8 +13,6 @@ rm -rf \
     "$SOURCE_ROOT/iso_root" \
     "$SOURCE_ROOT/target"
 
-rm -f \
-    "$BUILD_ROOT/flanterm.stamp" \
-    "$BUILD_ROOT/uacpi.stamp" \
-    "$BUILD_ROOT/limine.stamp" \
-    "$BUILD_ROOT/kernel.stamp"
+rm -rf "$BUILD_ROOT/staging"
+
+find "$BUILD_ROOT" -name '*.stamp' -delete

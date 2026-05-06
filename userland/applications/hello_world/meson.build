@@ -9,7 +9,7 @@ src = ['src/main.c']
 sources = files(src)
 includes = include_directories('include')
 
-executable(
+hello_world = executable(
     'hello_world',
     sources: sources,
     include_directories: includes,
@@ -17,3 +17,5 @@ executable(
     cpp_args: cpp_args,
     link_args: link_args,
 )
+
+initramfs_files += hello_world
