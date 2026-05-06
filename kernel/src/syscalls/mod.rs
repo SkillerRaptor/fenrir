@@ -4,7 +4,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::arch::x86_64::cpu;
+use core::sync::atomic::Ordering;
+
+use crate::{
+    arch::x86_64::cpu::{self, Core},
+    scheduler::{self, thread::ThreadState},
+};
 
 const STAR_MSR: u32 = 0xc0000081;
 const LSTAR_MSR: u32 = 0xc0000082;
@@ -45,5 +50,19 @@ pub fn initialize() {
 
 #[unsafe(no_mangle)]
 fn syscall_handler(registers: *mut Registers) {
-    log::info!("Received syscall: {}", unsafe { (*registers).rax });
+    log::debug!("Received syscall: {}", unsafe { (*registers).rax });
+
+    match unsafe { (*registers).rax } {
+        1 => {
+            let core = Core::current();
+            core.enter_critical();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            unsafe {
+                *(*thread).state.lock() = ThreadState::Dead;
+            }
+            core.leave_critical();
+            scheduler::reschedule();
+        }
+        _ => {}
+    }
 }

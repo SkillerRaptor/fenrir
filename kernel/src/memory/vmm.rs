@@ -230,3 +230,8 @@ pub fn map_into_kernel(physical_address: u64, attributes: Attribute) {
 pub fn get_kernel_page_map() -> PageMap {
     unsafe { KERNEL_PAGE_MAP }
 }
+
+pub fn virtual_to_physical(page_map: PageMap, virtual_address: u64) -> u64 {
+    let entry = get_pte(page_map, virtual_address);
+    unsafe { (*entry & ADDRESS_MASK) + (virtual_address & 0xfff) }
+}

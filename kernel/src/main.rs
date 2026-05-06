@@ -16,18 +16,30 @@ mod acpi;
 mod arch;
 mod common;
 mod drivers;
+mod filesystem;
 mod memory;
 mod scheduler;
 mod sync;
 mod syscalls;
 
-use core::panic::PanicInfo;
+use core::{mem, panic::PanicInfo, ptr};
+
+use elf::{
+    ElfBytes,
+    abi::{PF_W, PT_LOAD},
+    endian::LittleEndian,
+};
 
 use crate::{
     acpi::{apic, hpet},
     arch::x86_64::{cpu, idt},
-    common::{boot, logger, stacktrace},
-    memory::{pmm, vmm},
+    common::{boot, logger, math, stacktrace},
+    filesystem::ustar,
+    memory::{
+        PAGE_SIZE,
+        pmm,
+        vmm::{self, Attribute},
+    },
     scheduler::smp,
 };
 
@@ -79,6 +91,53 @@ unsafe extern "C" fn kmain() -> ! {
 
 fn kthread() {
     log::info!("Fenrir successfully booted!");
+
+    let initramfs = boot::get_modules()[1];
+    let hello_world_bytes = ustar::lookup(initramfs.data(), "./hello_world").unwrap();
+    let elf = ElfBytes::<LittleEndian>::minimal_parse(hello_world_bytes).unwrap();
+
+    let user_page_map = vmm::create_page_map();
+    for program_header in elf
+        .segments()
+        .unwrap()
+        .iter()
+        .filter(|program_header| program_header.p_type == PT_LOAD)
+    {
+        let virtual_start = math::align_down(program_header.p_vaddr, PAGE_SIZE);
+        let virtual_end =
+            math::align_up(program_header.p_vaddr + program_header.p_memsz, PAGE_SIZE);
+        let page_count = (virtual_end - virtual_start) / PAGE_SIZE;
+
+        for i in 0..page_count {
+            let physical_address = pmm::allocate(1, true) as u64;
+            let virtual_address = virtual_start + i * PAGE_SIZE;
+
+            let mut attributes = Attribute::USER;
+            if (program_header.p_flags & PF_W) == PF_W {
+                attributes |= Attribute::WRITE;
+            }
+
+            vmm::map(user_page_map, physical_address, virtual_address, attributes);
+        }
+
+        let offset = program_header.p_offset as usize;
+        let size = program_header.p_filesz as usize;
+
+        let src = &hello_world_bytes[offset..offset + size];
+        let dst = (vmm::virtual_to_physical(user_page_map, program_header.p_vaddr)
+            + boot::get_hhdm_offset()) as *mut u8;
+
+        unsafe {
+            ptr::copy_nonoverlapping(src.as_ptr(), dst, size);
+        }
+    }
+
+    log::info!("Creating user process...");
+
+    let user_process = scheduler::create_process(user_page_map);
+    let user_thread =
+        scheduler::create_user_thread(&user_process, unsafe { mem::transmute(elf.ehdr.e_entry) });
+    scheduler::add_thread_to_least_loaded(&user_thread);
 
     scheduler::reschedule();
 }

@@ -102,7 +102,7 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
 
     let thread = Arc::new(Thread {
         id,
-        state: ThreadState::Idle,
+        state: SpinLock::new(ThreadState::Idle),
         registers: Registers {
             r15: 0,
             r14: 0,
@@ -172,20 +172,19 @@ fn schedule(registers: &Registers) {
 
     if !current_thread.is_null() {
         unsafe {
-            (*current_thread).state = ThreadState::Idle;
             (*current_thread).registers = *registers;
         }
 
         let current_thread = unsafe { Arc::from_raw(current_thread) };
-        if current_thread.state == ThreadState::Dead {
+        if *current_thread.state.lock() == ThreadState::Dead {
             // TODO: Add thread reaping
+            core.current_thread
+                .store(ptr::null_mut(), Ordering::Release);
         } else if next_thread.is_some() {
+            *current_thread.state.lock() = ThreadState::Idle;
             core.thread_queue.lock().push_back(current_thread);
         } else {
             let current_thread_ptr = Arc::as_ptr(&current_thread) as *mut Thread;
-            unsafe {
-                (*current_thread_ptr).state = ThreadState::Idle;
-            }
             core.current_thread
                 .store(current_thread_ptr, Ordering::Release);
             mem::forget(current_thread);
@@ -213,7 +212,7 @@ fn schedule(registers: &Registers) {
 
     let next_thread_ptr = Arc::as_ptr(&next_thread) as *mut Thread;
     unsafe {
-        (*next_thread_ptr).state = ThreadState::Busy;
+        *(*next_thread_ptr).state.lock() = ThreadState::Busy;
     }
 
     core.current_thread

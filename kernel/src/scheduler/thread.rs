@@ -10,6 +10,7 @@ use crate::{
     arch::x86_64::registers::Registers,
     memory::{PAGE_SIZE, pmm},
     scheduler::process::Process,
+    sync::spinlock::SpinLock,
 };
 
 #[repr(u8)]
@@ -26,7 +27,7 @@ pub struct ThreadId(pub u32);
 
 pub struct Thread {
     pub id: ThreadId,
-    pub state: ThreadState,
+    pub state: SpinLock<ThreadState>,
     pub registers: Registers,
     pub stack: *mut u8,
     pub stack_size: usize,

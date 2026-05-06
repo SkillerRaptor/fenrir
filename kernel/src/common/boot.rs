@@ -63,11 +63,14 @@ static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
-static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[&InternalModule::new(
-    c"kernel_symbols.map",
-    c"kernel_symbols",
-    INTERNAL_MODULE_REQUIRED,
-)]);
+static MODULES_REQUEST: ModulesRequest = ModulesRequest::new_rev1(&[
+    &InternalModule::new(
+        c"kernel_symbols.map",
+        c"kernel_symbols",
+        INTERNAL_MODULE_REQUIRED,
+    ),
+    &InternalModule::new(c"initramfs.tar", c"initramfs", INTERNAL_MODULE_REQUIRED),
+]);
 
 #[used]
 #[unsafe(link_section = ".limine_requests")]
