@@ -156,5 +156,6 @@ run_target(
         clean,
         cargo.full_path(),
         meson.project_source_root(),
+        meson.project_build_root(),
     ],
 )
