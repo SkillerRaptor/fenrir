@@ -21,6 +21,7 @@ use crate::{
 };
 
 bitflags! {
+    #[derive(Clone, Copy)]
     pub struct Attribute: u16 {
         const NULL = 0;
         const PRESENT = 1 << 0;

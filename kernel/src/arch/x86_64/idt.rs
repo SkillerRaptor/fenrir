@@ -15,6 +15,7 @@ use crate::{
 };
 
 bitflags! {
+    #[derive(Clone, Copy)]
     struct Attribute: u8 {
         const NULL = 0;
         const TRAP_GATE = 1 << 3 | 1 << 2 | 1 << 1 | 1 << 0;

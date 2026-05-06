@@ -11,6 +11,7 @@ use bitflags::bitflags;
 use crate::arch::x86_64::cpu::Core;
 
 bitflags! {
+    #[derive(Clone, Copy)]
     struct AccessAttribute: u8 {
         const NULL = 0;
         const ACCESS = 1 << 0;
@@ -23,6 +24,7 @@ bitflags! {
         const PRESENT = 1 << 7;
     }
 
+    #[derive(Clone, Copy)]
     struct FlagAttribute: u8 {
         const NULL = 0;
         const LONG_MODE = 1 << 1;
