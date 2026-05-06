@@ -108,15 +108,15 @@ fn kthread() {
             math::align_up(program_header.p_vaddr + program_header.p_memsz, PAGE_SIZE);
         let page_count = (virtual_end - virtual_start) / PAGE_SIZE;
 
+        let physical_start = pmm::allocate(page_count, true) as u64;
+        let mut attributes = Attribute::USER;
+        if (program_header.p_flags & PF_W) == PF_W {
+            attributes |= Attribute::WRITE;
+        }
+
         for i in 0..page_count {
-            let physical_address = pmm::allocate(1, true) as u64;
+            let physical_address = physical_start + i * PAGE_SIZE;
             let virtual_address = virtual_start + i * PAGE_SIZE;
-
-            let mut attributes = Attribute::USER;
-            if (program_header.p_flags & PF_W) == PF_W {
-                attributes |= Attribute::WRITE;
-            }
-
             vmm::map(user_page_map, physical_address, virtual_address, attributes);
         }
 
@@ -124,11 +124,11 @@ fn kthread() {
         let size = program_header.p_filesz as usize;
 
         let src = &hello_world_bytes[offset..offset + size];
-        let dst = (vmm::virtual_to_physical(user_page_map, program_header.p_vaddr)
-            + boot::get_hhdm_offset()) as *mut u8;
+        let dst = (physical_start + boot::get_hhdm_offset()) as *mut u8;
 
+        let page_offset = (program_header.p_vaddr - virtual_start) as usize;
         unsafe {
-            ptr::copy_nonoverlapping(src.as_ptr(), dst, size);
+            ptr::copy_nonoverlapping(src.as_ptr(), dst.add(page_offset), size);
         }
     }
 
