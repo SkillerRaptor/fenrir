@@ -1,0 +1,12 @@
+#-------------------------------------------------------------------------------------------
+# Copyright (c) 2026-present, SkillerRaptor
+#
+# SPDX-License-Identifier: MIT
+#-------------------------------------------------------------------------------------------
+
+option(
+    'build_type',
+    type: 'combo',
+    choices: ['debug', 'release'],
+    value: 'debug',
+)
