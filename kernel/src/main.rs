@@ -19,6 +19,7 @@ mod drivers;
 mod memory;
 mod scheduler;
 mod sync;
+mod syscalls;
 
 use core::panic::PanicInfo;
 
