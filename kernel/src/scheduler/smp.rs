@@ -39,6 +39,7 @@ pub fn initialize() {
 
         if i as u32 == boot::get_bsp_lapic_id() {
             core.init_gdt();
+            cpu::enable_sse();
             continue;
         }
 
@@ -77,6 +78,7 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
     );
 
     syscalls::initialize();
+    cpu::enable_sse();
 
     apic::enable_lapic();
 

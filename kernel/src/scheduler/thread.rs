@@ -25,10 +25,14 @@ pub enum ThreadState {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ThreadId(pub u32);
 
+#[repr(C, align(16))]
+pub struct FxState(pub [u8; 512]);
+
 pub struct Thread {
     pub id: ThreadId,
     pub state: SpinLock<ThreadState>,
     pub registers: Registers,
+    pub fx_state: FxState,
     pub stack: *mut u8,
     pub stack_size: usize,
     pub process: Arc<Process>,

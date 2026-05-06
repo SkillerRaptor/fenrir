@@ -17,7 +17,7 @@ use core::{
 use crate::{
     arch::x86_64::gdt::{self, Gdt},
     common::{boot, once::Once},
-    scheduler::thread::Thread,
+    scheduler::thread::{FxState, Thread},
     sync::spinlock::SpinLock,
 };
 
@@ -197,6 +197,16 @@ pub fn hcf() -> ! {
     }
 }
 
+pub fn write_cr0(value: u64) {
+    unsafe {
+        asm!(
+            "mov cr0, {}",
+            in(reg) value,
+            options(nostack)
+        );
+    }
+}
+
 pub fn read_cr0() -> u64 {
     let value;
 
@@ -209,6 +219,16 @@ pub fn read_cr0() -> u64 {
     }
 
     value
+}
+
+pub fn write_cr2(value: u64) {
+    unsafe {
+        asm!(
+            "mov cr2, {}",
+            in(reg) value,
+            options(nostack)
+        );
+    }
 }
 
 pub fn read_cr2() -> u64 {
@@ -225,6 +245,16 @@ pub fn read_cr2() -> u64 {
     value
 }
 
+pub fn write_cr3(value: u64) {
+    unsafe {
+        asm!(
+            "mov cr3, {}",
+            in(reg) value,
+            options(nostack)
+        );
+    }
+}
+
 pub fn read_cr3() -> u64 {
     let value;
 
@@ -239,6 +269,16 @@ pub fn read_cr3() -> u64 {
     value
 }
 
+pub fn write_cr4(value: u64) {
+    unsafe {
+        asm!(
+            "mov cr4, {}",
+            in(reg) value,
+            options(nostack)
+        );
+    }
+}
+
 pub fn read_cr4() -> u64 {
     let value;
 
@@ -251,6 +291,44 @@ pub fn read_cr4() -> u64 {
     }
 
     value
+}
+
+pub fn enable_sse() {
+    // TODO: Check fxsr feature
+
+    let mut cr0 = read_cr0();
+    cr0 &= !(1 << 2);
+    cr0 |= 1 << 1;
+    write_cr0(cr0);
+
+    let mut cr4 = read_cr4();
+    cr4 |= 1 << 9;
+    cr4 |= 1 << 10;
+    write_cr4(cr4);
+
+    unsafe {
+        asm!("fninit", options(nostack));
+    }
+}
+
+pub fn fxsave(region: &mut FxState) {
+    unsafe {
+        asm!(
+            "fxsave64 [{}]",
+            in(reg) region as *mut FxState,
+            options(nostack)
+        );
+    }
+}
+
+pub fn fxrstor(region: &FxState) {
+    unsafe {
+        asm!(
+            "fxrstor64 [{}]",
+            in(reg) region as *const FxState,
+            options(nostack)
+        );
+    }
 }
 
 pub fn flags() -> u64 {

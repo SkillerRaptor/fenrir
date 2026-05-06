@@ -30,7 +30,7 @@ use crate::{
     },
     scheduler::{
         process::{Process, ProcessId},
-        thread::{Thread, ThreadId, ThreadState},
+        thread::{FxState, Thread, ThreadId, ThreadState},
     },
     sync::spinlock::SpinLock,
 };
@@ -127,6 +127,7 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
             rsp: virtual_stack + stack_size,
             ss: if cs == 0x28 { cs + 0x08 } else { cs - 0x08 },
         },
+        fx_state: FxState([0; 512]),
         stack: stack as *mut u8,
         stack_size: stack_size as usize,
         process: process.clone(),
@@ -173,6 +174,7 @@ fn schedule(registers: &Registers) {
     if !current_thread.is_null() {
         unsafe {
             (*current_thread).registers = *registers;
+            cpu::fxsave(&mut (*current_thread).fx_state);
         }
 
         let current_thread = unsafe { Arc::from_raw(current_thread) };
@@ -213,6 +215,7 @@ fn schedule(registers: &Registers) {
     let next_thread_ptr = Arc::as_ptr(&next_thread) as *mut Thread;
     unsafe {
         *(*next_thread_ptr).state.lock() = ThreadState::Busy;
+        cpu::fxrstor(&mut (*next_thread_ptr).fx_state);
     }
 
     core.current_thread
