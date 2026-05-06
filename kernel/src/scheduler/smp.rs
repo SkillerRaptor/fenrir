@@ -18,6 +18,7 @@ use crate::{
     common::boot,
     memory::{PAGE_SIZE, pmm, vmm},
     scheduler,
+    syscalls,
 };
 
 static ONLINE_COUNT: AtomicU8 = AtomicU8::new(1);
@@ -74,6 +75,8 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
         Arc::into_raw(scheduler::create_kernel_thread(thread_idle)) as *mut _,
         Ordering::Release,
     );
+
+    syscalls::initialize();
 
     apic::enable_lapic();
 

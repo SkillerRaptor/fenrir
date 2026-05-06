@@ -68,6 +68,8 @@ unsafe extern "C" fn kmain() -> ! {
     scheduler::initialize();
     smp::initialize();
 
+    syscalls::initialize();
+
     let thread = scheduler::create_kernel_thread(kthread);
     scheduler::add_thread_to_current(&thread);
 
