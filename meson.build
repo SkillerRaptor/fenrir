@@ -104,6 +104,7 @@ kernel_target = custom_target(
         kernel_symbols,
     ]
     + cargo_flags,
+    console: true,
     build_by_default: true,
 )
 
