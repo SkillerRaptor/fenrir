@@ -12,7 +12,7 @@ use alloc::{collections::BTreeMap, sync::Arc, vec::Vec};
 use core::{
     mem,
     ptr,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::atomic::{AtomicU32, AtomicU64, Ordering},
 };
 
 use crate::{
@@ -60,6 +60,8 @@ pub fn create_process(page_map: PageMap) -> Arc<Process> {
         id,
         page_map,
         threads: SpinLock::new(Vec::new()),
+        heap_start: AtomicU64::new(0),
+        heap_end: AtomicU64::new(0),
     });
 
     PROCESSES.lock().insert(id, process.clone());

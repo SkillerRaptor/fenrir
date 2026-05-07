@@ -4,10 +4,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::sync::atomic::Ordering;
+use core::{slice, sync::atomic::Ordering};
 
 use crate::{
     arch::x86_64::cpu::{self, Core},
+    common::{boot, math},
+    memory::{
+        PAGE_SIZE,
+        pmm,
+        vmm::{self, Attribute},
+    },
+    print,
     scheduler::{self, thread::ThreadState},
 };
 
@@ -49,10 +56,10 @@ pub fn initialize() {
 }
 
 #[unsafe(no_mangle)]
-fn syscall_handler(registers: *mut Registers) {
-    log::debug!("Received syscall: {}", unsafe { (*registers).rax });
+fn syscall_handler(registers_ptr: *mut Registers) {
+    let registers = unsafe { &*registers_ptr };
 
-    match unsafe { (*registers).rax } {
+    match registers.rax {
         1 => {
             let core = Core::current();
             core.enter_critical();
@@ -63,6 +70,50 @@ fn syscall_handler(registers: *mut Registers) {
             core.leave_critical();
             scheduler::reschedule();
         }
-        _ => {}
+        2 => {
+            let ptr = registers.rdi as u64;
+            let length = registers.rsi as usize;
+
+            let core = Core::current();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            let page_map = unsafe { (*(*thread).process).page_map };
+
+            let physical_address = vmm::virtual_to_physical(page_map, ptr);
+            let kernel_ptr = (physical_address + boot::get_hhdm_offset()) as *const u8;
+
+            let bytes = unsafe { slice::from_raw_parts(kernel_ptr, length) };
+            print!("{}", unsafe { str::from_utf8_unchecked(bytes) });
+        }
+        3 => {
+            let size = registers.rdi;
+
+            let core = Core::current();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            let process = unsafe { &(*thread).process };
+
+            let old_heap_end = process.heap_end.load(Ordering::Acquire);
+            let new_heap_end = math::align_up(old_heap_end + size, PAGE_SIZE);
+
+            let page_count = (new_heap_end - old_heap_end) / PAGE_SIZE;
+            let physical_base = pmm::allocate(page_count, false) as u64;
+
+            for i in 0..page_count {
+                let physical_address = physical_base + i * PAGE_SIZE;
+                let virtual_address = old_heap_end + i * PAGE_SIZE;
+                vmm::map(
+                    process.page_map,
+                    physical_address,
+                    virtual_address,
+                    Attribute::WRITE | Attribute::USER,
+                );
+            }
+
+            process.heap_end.store(new_heap_end, Ordering::Release);
+
+            unsafe {
+                (*registers_ptr).rax = old_heap_end;
+            }
+        }
+        _ => log::debug!("Received syscall: {}", registers.rax),
     }
 }

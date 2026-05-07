@@ -22,7 +22,7 @@ mod scheduler;
 mod sync;
 mod syscalls;
 
-use core::{mem, panic::PanicInfo, ptr};
+use core::{mem, panic::PanicInfo, ptr, sync::atomic::Ordering};
 
 use elf::{
     ElfBytes,
@@ -96,6 +96,7 @@ fn kthread() {
     let hello_world_bytes = ustar::lookup(initramfs.data(), "./hello_world").unwrap();
     let elf = ElfBytes::<LittleEndian>::minimal_parse(hello_world_bytes).unwrap();
 
+    let mut highest_address = 0;
     let user_page_map = vmm::create_page_map();
     for program_header in elf
         .segments()
@@ -130,11 +131,22 @@ fn kthread() {
         unsafe {
             ptr::copy_nonoverlapping(src.as_ptr(), dst.add(page_offset), size);
         }
+
+        if highest_address <= virtual_end {
+            highest_address = virtual_end;
+        }
     }
 
     log::info!("Creating user process...");
 
     let user_process = scheduler::create_process(user_page_map);
+    user_process
+        .heap_start
+        .store(highest_address, Ordering::Release);
+    user_process
+        .heap_end
+        .store(highest_address, Ordering::Release);
+
     let user_thread =
         scheduler::create_user_thread(&user_process, unsafe { mem::transmute(elf.ehdr.e_entry) });
     scheduler::add_thread_to_least_loaded(&user_thread);
