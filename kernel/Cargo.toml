@@ -10,10 +10,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bitflags = "2.11"
+bitflags = { version = "2.11", default-features = false }
 elf = { version = "0.8", default-features = false, features = ["alloc"] }
 limine = { git = "https://github.com/SkillerRaptor/limine-rs.git" }
-log = "0.4"
+log = { version = "0.4", default-features = false }
 
 flanterm-sys = { path = "../bindings/flanterm" }
 uacpi-sys = { path = "../bindings/uacpi" }
