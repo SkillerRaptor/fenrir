@@ -147,8 +147,13 @@ fn kthread() {
         .heap_end
         .store(highest_address, Ordering::Release);
 
-    let user_thread =
-        scheduler::create_user_thread(&user_process, unsafe { mem::transmute(elf.ehdr.e_entry) });
+    let user_thread = scheduler::create_user_thread(
+        &user_process,
+        unsafe { mem::transmute(elf.ehdr.e_entry) },
+        elf.ehdr.e_phoff,
+        elf.ehdr.e_phentsize as u64,
+        elf.ehdr.e_phnum as u64,
+    );
     scheduler::add_thread_to_least_loaded(&user_thread);
 
     scheduler::reschedule();

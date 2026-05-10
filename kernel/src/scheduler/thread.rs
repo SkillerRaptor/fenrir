@@ -33,6 +33,7 @@ pub struct Thread {
     pub state: SpinLock<ThreadState>,
     pub registers: Registers,
     pub fx_state: FxState,
+    pub fs_base: u64,
     pub stack: *mut u8,
     pub stack_size: usize,
     pub process: Arc<Process>,

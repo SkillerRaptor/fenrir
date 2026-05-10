@@ -23,3 +23,5 @@ tar \
     -cf "$OUTPUT" \
     -C "$STAGING" \
     .
+
+rm -rf "$BUILD_ROOT/staging"

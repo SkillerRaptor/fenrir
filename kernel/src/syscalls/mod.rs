@@ -83,6 +83,10 @@ fn syscall_handler(registers_ptr: *mut Registers) {
 
             let bytes = unsafe { slice::from_raw_parts(kernel_ptr, length) };
             print!("{}", unsafe { str::from_utf8_unchecked(bytes) });
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
         }
         3 => {
             let size = registers.rdi;
@@ -114,6 +118,20 @@ fn syscall_handler(registers_ptr: *mut Registers) {
                 (*registers_ptr).rax = old_heap_end;
             }
         }
-        _ => log::debug!("Received syscall: {}", registers.rax),
+        4 => {
+            let pointer = registers.rdi;
+            cpu::set_fs_base(pointer);
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        _ => {
+            log::warn!("Unhandled syscall: {}", registers.rax);
+
+            unsafe {
+                (*registers_ptr).rax = u64::MAX;
+            }
+        }
     }
 }

@@ -1,0 +1,818 @@
+diff --git a/meson.build b/meson.build
+index 662ba916..38d52123 100644
+--- a/meson.build
++++ b/meson.build
+@@ -290,6 +290,10 @@ elif host_machine.system() == 'zinnia'
+ 	internal_conf.set10('MLIBC_MMAP_ALLOCATE_DSO', true)
+ 	internal_conf.set10('MLIBC_MAP_FILE_WINDOWS', true)
+ 	subdir('sysdeps/zinnia')
++elif host_machine.system() == 'fenrir'
++	rtld_include_dirs += include_directories('sysdeps/fenrir/include')
++	libc_include_dirs += include_directories('sysdeps/fenrir/include')
++	subdir('sysdeps/fenrir')
+ # ANCHOR: demo-sysdeps
+ elif host_machine.system() == 'demo'
+ 	subdir('sysdeps/demo')
+diff --git a/sysdeps/fenrir/generic/entry.cpp b/sysdeps/fenrir/generic/entry.cpp
+new file mode 100644
+index 00000000..71cf340c
+--- /dev/null
++++ b/sysdeps/fenrir/generic/entry.cpp
+@@ -0,0 +1,21 @@
++/*
++ * Copyright (c) 2026-present, SkillerRaptor
++ *
++ * SPDX-License-Identifier: MIT
++ */
++
++#include <mlibc/elf/startup.h>
++#include <stdint.h>
++#include <stdlib.h>
++
++extern "C" void __dlapi_enter(uintptr_t *);
++
++extern char **environ;
++
++extern "C" void
++__mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[])) {
++	__dlapi_enter(entry_stack);
++
++	auto result = main_fn(mlibc::entry_stack.argc, mlibc::entry_stack.argv, environ);
++	exit(result);
++}
+diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
+new file mode 100644
+index 00000000..45d4054f
+--- /dev/null
++++ b/sysdeps/fenrir/generic/sysdeps.cpp
+@@ -0,0 +1,77 @@
++/*
++ * Copyright (c) 2026-present, SkillerRaptor
++ *
++ * SPDX-License-Identifier: MIT
++ */
++
++#include "mlibc/tcb.hpp"
++#include <abi-bits/errno.h>
++#include <bits/ensure.h>
++#include <fenrir/syscall.hpp>
++#include <mlibc/all-sysdeps.hpp>
++#include <string.h>
++
++#define SYS_EXIT 1
++#define SYS_WRITE 2
++#define SYS_ALLOC 3
++#define SYS_FS 4
++
++#define STUB()                                                                                     \
++	({                                                                                             \
++		__ensure(!"STUB function was called");                                                     \
++		__builtin_unreachable();                                                                   \
++	})
++
++namespace mlibc {
++
++void Sysdeps<LibcPanic>::operator()() {
++	sysdep<LibcLog>("!!! mlibc panic !!!\n");
++	sysdep<Exit>(-1);
++	__builtin_trap();
++}
++
++void Sysdeps<LibcLog>::operator()(const char *msg) { sysdep<Write>(0, msg, strlen(msg), nullptr); }
++
++int Sysdeps<Isatty>::operator()(int) { return 0; }
++
++int Sysdeps<Write>::operator()(int, void const *buf, size_t size, ssize_t *) {
++	syscall(SYS_WRITE, buf, size);
++	return 0;
++}
++
++int Sysdeps<TcbSet>::operator()(void *ptr) {
++	syscall(SYS_FS, ptr);
++	return 0;
++}
++
++int Sysdeps<AnonAllocate>::operator()(size_t size, void **ptr) {
++	*ptr = (void *)syscall(SYS_ALLOC, size);
++	return 0;
++}
++
++int Sysdeps<AnonFree>::operator()(void *, unsigned long) { return 0; }
++
++int Sysdeps<Seek>::operator()(int, off_t, int, off_t *) { return ESPIPE; }
++
++void Sysdeps<Exit>::operator()(int status) {
++	syscall(SYS_EXIT, status);
++	__builtin_unreachable();
++}
++
++int Sysdeps<Close>::operator()(int) { STUB(); }
++
++int Sysdeps<FutexWake>::operator()(int *, bool) { STUB(); }
++
++int Sysdeps<FutexWait>::operator()(int *, int, timespec const *) { STUB(); }
++
++int Sysdeps<Read>::operator()(int, void *, unsigned long, long *) { STUB(); }
++
++int Sysdeps<Open>::operator()(const char *, int, unsigned int, int *) { STUB(); }
++
++int Sysdeps<VmMap>::operator()(void *, size_t, int, int, int, off_t, void **) { STUB(); }
++
++int Sysdeps<VmUnmap>::operator()(void *, size_t) { STUB(); }
++
++int Sysdeps<ClockGet>::operator()(int, time_t *, long *) { STUB(); }
++
++} // namespace mlibc
+diff --git a/sysdeps/fenrir/include/abi-bits/access.h b/sysdeps/fenrir/include/abi-bits/access.h
+new file mode 120000
+index 00000000..cb839316
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/access.h
+@@ -0,0 +1 @@
++../../../../abis/linux/access.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/auxv.h b/sysdeps/fenrir/include/abi-bits/auxv.h
+new file mode 120000
+index 00000000..c43f8786
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/auxv.h
+@@ -0,0 +1 @@
++../../../../abis/linux/auxv.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/blkcnt_t.h b/sysdeps/fenrir/include/abi-bits/blkcnt_t.h
+new file mode 120000
+index 00000000..0b0ec270
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/blkcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/blkcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/blksize_t.h b/sysdeps/fenrir/include/abi-bits/blksize_t.h
+new file mode 120000
+index 00000000..7dc8d7cf
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/blksize_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/blksize_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/clockid_t.h b/sysdeps/fenrir/include/abi-bits/clockid_t.h
+new file mode 120000
+index 00000000..6a42da56
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/clockid_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/clockid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/dev_t.h b/sysdeps/fenrir/include/abi-bits/dev_t.h
+new file mode 120000
+index 00000000..bca881e9
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/dev_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/dev_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/errno.h b/sysdeps/fenrir/include/abi-bits/errno.h
+new file mode 120000
+index 00000000..6e507def
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/errno.h
+@@ -0,0 +1 @@
++../../../../abis/linux/errno.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/fcntl.h b/sysdeps/fenrir/include/abi-bits/fcntl.h
+new file mode 120000
+index 00000000..463e2c95
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/fcntl.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fcntl.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/fd_set.h b/sysdeps/fenrir/include/abi-bits/fd_set.h
+new file mode 120000
+index 00000000..b43142c4
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/fd_set.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fd_set.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/fsblkcnt_t.h b/sysdeps/fenrir/include/abi-bits/fsblkcnt_t.h
+new file mode 120000
+index 00000000..898dfb2f
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/fsblkcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fsblkcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/fsfilcnt_t.h b/sysdeps/fenrir/include/abi-bits/fsfilcnt_t.h
+new file mode 120000
+index 00000000..791755c9
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/fsfilcnt_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/fsfilcnt_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/gid_t.h b/sysdeps/fenrir/include/abi-bits/gid_t.h
+new file mode 120000
+index 00000000..abce6d69
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/gid_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/gid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/in.h b/sysdeps/fenrir/include/abi-bits/in.h
+new file mode 120000
+index 00000000..418d1d5c
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/in.h
+@@ -0,0 +1 @@
++../../../../abis/linux/in.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/ino_t.h b/sysdeps/fenrir/include/abi-bits/ino_t.h
+new file mode 120000
+index 00000000..4c20aca2
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/ino_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/ino_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/ipc.h b/sysdeps/fenrir/include/abi-bits/ipc.h
+new file mode 120000
+index 00000000..2c7ffc4c
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/ipc.h
+@@ -0,0 +1 @@
++../../../../abis/linux/ipc.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/limits.h b/sysdeps/fenrir/include/abi-bits/limits.h
+new file mode 120000
+index 00000000..6c88db2e
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/limits.h
+@@ -0,0 +1 @@
++../../../../abis/linux/limits.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/mode_t.h b/sysdeps/fenrir/include/abi-bits/mode_t.h
+new file mode 120000
+index 00000000..5d78fdfc
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/mode_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/mode_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/mqueue.h b/sysdeps/fenrir/include/abi-bits/mqueue.h
+new file mode 120000
+index 00000000..fa87b078
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/mqueue.h
+@@ -0,0 +1 @@
++../../../../abis/linux/mqueue.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/msg.h b/sysdeps/fenrir/include/abi-bits/msg.h
+new file mode 120000
+index 00000000..f402b493
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/msg.h
+@@ -0,0 +1 @@
++../../../../abis/linux/msg.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/nlink_t.h b/sysdeps/fenrir/include/abi-bits/nlink_t.h
+new file mode 120000
+index 00000000..bb3b625c
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/nlink_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/nlink_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/pid_t.h b/sysdeps/fenrir/include/abi-bits/pid_t.h
+new file mode 120000
+index 00000000..baa90f6a
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/pid_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/pid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/poll.h b/sysdeps/fenrir/include/abi-bits/poll.h
+new file mode 120000
+index 00000000..8ea6a0a3
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/poll.h
+@@ -0,0 +1 @@
++../../../../abis/linux/poll.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/resource.h b/sysdeps/fenrir/include/abi-bits/resource.h
+new file mode 120000
+index 00000000..88d74025
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/resource.h
+@@ -0,0 +1 @@
++../../../../abis/linux/resource.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/riscv-hwprobe.h b/sysdeps/fenrir/include/abi-bits/riscv-hwprobe.h
+new file mode 120000
+index 00000000..e6513250
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/riscv-hwprobe.h
+@@ -0,0 +1 @@
++../../../../abis/linux/riscv-hwprobe.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/rlim_t.h b/sysdeps/fenrir/include/abi-bits/rlim_t.h
+new file mode 120000
+index 00000000..e92eb5fb
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/rlim_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/rlim_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sa_family_t.h b/sysdeps/fenrir/include/abi-bits/sa_family_t.h
+new file mode 120000
+index 00000000..a75e2296
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sa_family_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sa_family_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/seek-whence.h b/sysdeps/fenrir/include/abi-bits/seek-whence.h
+new file mode 120000
+index 00000000..df7bccf0
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/seek-whence.h
+@@ -0,0 +1 @@
++../../../../abis/linux/seek-whence.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sem.h b/sysdeps/fenrir/include/abi-bits/sem.h
+new file mode 120000
+index 00000000..699d7afa
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sem.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sem.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/shm.h b/sysdeps/fenrir/include/abi-bits/shm.h
+new file mode 120000
+index 00000000..067d8c4f
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/shm.h
+@@ -0,0 +1 @@
++../../../../abis/linux/shm.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sig-limits.h b/sysdeps/fenrir/include/abi-bits/sig-limits.h
+new file mode 120000
+index 00000000..f829738e
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sig-limits.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sig-limits.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sigevent.h b/sysdeps/fenrir/include/abi-bits/sigevent.h
+new file mode 120000
+index 00000000..83d069b5
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sigevent.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sigevent.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/signal.h b/sysdeps/fenrir/include/abi-bits/signal.h
+new file mode 120000
+index 00000000..4dcb0b7c
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/signal.h
+@@ -0,0 +1 @@
++../../../../abis/linux/signal.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sigset_t.h b/sysdeps/fenrir/include/abi-bits/sigset_t.h
+new file mode 120000
+index 00000000..8b8e81e8
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sigset_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sigset_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sigval.h b/sysdeps/fenrir/include/abi-bits/sigval.h
+new file mode 120000
+index 00000000..ccd43a55
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sigval.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sigval.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/sockaddr_storage.h b/sysdeps/fenrir/include/abi-bits/sockaddr_storage.h
+new file mode 120000
+index 00000000..b3748654
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/sockaddr_storage.h
+@@ -0,0 +1 @@
++../../../../abis/linux/sockaddr_storage.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/socket.h b/sysdeps/fenrir/include/abi-bits/socket.h
+new file mode 120000
+index 00000000..f1dc016e
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/socket.h
+@@ -0,0 +1 @@
++../../../../abis/linux/socket.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/socklen_t.h b/sysdeps/fenrir/include/abi-bits/socklen_t.h
+new file mode 120000
+index 00000000..41f3b11f
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/socklen_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/socklen_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/stat.h b/sysdeps/fenrir/include/abi-bits/stat.h
+new file mode 120000
+index 00000000..1f63b41f
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/stat.h
+@@ -0,0 +1 @@
++../../../../abis/linux/stat.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/statvfs.h b/sysdeps/fenrir/include/abi-bits/statvfs.h
+new file mode 120000
+index 00000000..1fc80c2a
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/statvfs.h
+@@ -0,0 +1 @@
++../../../../abis/linux/statvfs.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/suseconds_t.h b/sysdeps/fenrir/include/abi-bits/suseconds_t.h
+new file mode 120000
+index 00000000..9ed65977
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/suseconds_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/suseconds_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/termios.h b/sysdeps/fenrir/include/abi-bits/termios.h
+new file mode 120000
+index 00000000..ee8f0b09
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/termios.h
+@@ -0,0 +1 @@
++../../../../abis/linux/termios.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/time.h b/sysdeps/fenrir/include/abi-bits/time.h
+new file mode 120000
+index 00000000..2a026257
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/time.h
+@@ -0,0 +1 @@
++../../../../abis/linux/time.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/uid_t.h b/sysdeps/fenrir/include/abi-bits/uid_t.h
+new file mode 120000
+index 00000000..b3067778
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/uid_t.h
+@@ -0,0 +1 @@
++../../../../abis/linux/uid_t.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/utmp-defines.h b/sysdeps/fenrir/include/abi-bits/utmp-defines.h
+new file mode 120000
+index 00000000..86176435
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/utmp-defines.h
+@@ -0,0 +1 @@
++../../../../abis/linux/utmp-defines.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/utmpx.h b/sysdeps/fenrir/include/abi-bits/utmpx.h
+new file mode 120000
+index 00000000..c6a26774
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/utmpx.h
+@@ -0,0 +1 @@
++../../../../abis/linux/utmpx.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/utsname.h b/sysdeps/fenrir/include/abi-bits/utsname.h
+new file mode 120000
+index 00000000..b2857547
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/utsname.h
+@@ -0,0 +1 @@
++../../../../abis/linux/utsname.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/vm-flags.h b/sysdeps/fenrir/include/abi-bits/vm-flags.h
+new file mode 120000
+index 00000000..bbe258cf
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/vm-flags.h
+@@ -0,0 +1 @@
++../../../../abis/linux/vm-flags.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/abi-bits/wait.h b/sysdeps/fenrir/include/abi-bits/wait.h
+new file mode 120000
+index 00000000..feb2840c
+--- /dev/null
++++ b/sysdeps/fenrir/include/abi-bits/wait.h
+@@ -0,0 +1 @@
++../../../../abis/linux/wait.h
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/include/fenrir/syscall.hpp b/sysdeps/fenrir/include/fenrir/syscall.hpp
+new file mode 100644
+index 00000000..5ee18204
+--- /dev/null
++++ b/sysdeps/fenrir/include/fenrir/syscall.hpp
+@@ -0,0 +1,124 @@
++#ifndef _MLIBC_SYSCALL_H
++#define _MLIBC_SYSCALL_H
++
++#include <stdint.h>
++
++inline int64_t syscall(uint64_t syscall_id) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++
++	asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "memory");
++
++	return return_value;
++}
++
++template <typename Arg0>
++int64_t syscall(uint64_t syscall_id, Arg0 a0) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++
++	asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "memory");
++
++	return return_value;
++}
++
++template <typename Arg0, typename Arg1>
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++
++	asm volatile("syscall"
++	             : "=r"(return_value)
++	             : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2)
++	             : "memory");
++
++	return return_value;
++}
++
++template <typename Arg0, typename Arg1, typename Arg2>
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
++
++	asm volatile("syscall"
++	             : "=r"(return_value)
++	             : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
++	             : "memory");
++
++	return return_value;
++}
++
++template <typename Arg0, typename Arg1, typename Arg2, typename Arg3>
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
++	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
++
++	asm volatile(
++	    "syscall"
++	    : "=r"(return_value)
++	    : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
++	    : "memory"
++	);
++
++	return return_value;
++}
++
++template <typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
++	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
++	register uint64_t _argument_5 asm("r8") = (uint64_t)a4;
++
++	asm volatile("syscall"
++	             : "=r"(return_value)
++	             : "r"(_syscall_id),
++	               "r"(_argument_1),
++	               "r"(_argument_2),
++	               "r"(_argument_3),
++	               "r"(_argument_4),
++	               "r"(_argument_5)
++	             : "memory");
++
++	return return_value;
++}
++
++template <typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4, Arg5 a5) {
++	register int64_t return_value asm("rax") = 0;
++	register uint64_t _syscall_id asm("rax") = syscall_id;
++	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
++	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
++	register uint64_t _argument_5 asm("r8") = (uint64_t)a4;
++	register uint64_t _argument_6 asm("r9") = (uint64_t)a5;
++
++	asm volatile("syscall"
++	             : "=r"(return_value)
++	             : "r"(_syscall_id),
++	               "r"(_argument_1),
++	               "r"(_argument_2),
++	               "r"(_argument_3),
++	               "r"(_argument_4),
++	               "r"(_argument_5),
++	               "r"(_argument_6)
++	             : "memory");
++
++	return return_value;
++}
++
++#endif /* _MLIBC_SYSCALL_H */
+diff --git a/sysdeps/fenrir/include/mlibc/sysdeps.hpp b/sysdeps/fenrir/include/mlibc/sysdeps.hpp
+new file mode 100644
+index 00000000..bc89cb2e
+--- /dev/null
++++ b/sysdeps/fenrir/include/mlibc/sysdeps.hpp
+@@ -0,0 +1,28 @@
++#pragma once
++
++#include <mlibc/sysdep-signatures.hpp>
++
++namespace mlibc {
++
++struct FenrirSysdepTags : LibcPanic,
++                          LibcLog,
++                          Isatty,
++                          Write,
++                          TcbSet,
++                          AnonAllocate,
++                          AnonFree,
++                          Seek,
++                          Exit,
++                          Close,
++                          FutexWake,
++                          FutexWait,
++                          Read,
++                          Open,
++                          VmMap,
++                          VmUnmap,
++                          ClockGet {};
++
++template <typename Tag>
++using Sysdeps = SysdepOf<FenrirSysdepTags, Tag>;
++
++} // namespace mlibc
+diff --git a/sysdeps/fenrir/meson.build b/sysdeps/fenrir/meson.build
+new file mode 100644
+index 00000000..d17251f4
+--- /dev/null
++++ b/sysdeps/fenrir/meson.build
+@@ -0,0 +1,92 @@
++#-------------------------------------------------------------------------------------------
++# Copyright (c) 2026-present, SkillerRaptor
++#
++# SPDX-License-Identifier: MIT
++#-------------------------------------------------------------------------------------------
++
++sysdep_supported_options = {
++	'posix': true,
++}
++
++rtld_sources += files(
++	'generic/sysdeps.cpp',
++)
++rtld_include_dirs += include_directories('include')
++
++libc_sources += files(
++	'generic/entry.cpp',
++	'generic/sysdeps.cpp',
++)
++libc_include_dirs += include_directories('include')
++
++if not no_headers
++	install_headers(
++		'include/abi-bits/access.h',
++		'include/abi-bits/auxv.h',
++		'include/abi-bits/blkcnt_t.h',
++		'include/abi-bits/blksize_t.h',
++		'include/abi-bits/clockid_t.h',
++		'include/abi-bits/dev_t.h',
++		'include/abi-bits/errno.h',
++		'include/abi-bits/fcntl.h',
++		'include/abi-bits/fd_set.h',
++		'include/abi-bits/fsblkcnt_t.h',
++		'include/abi-bits/fsfilcnt_t.h',
++		'include/abi-bits/gid_t.h',
++		'include/abi-bits/ino_t.h',
++		'include/abi-bits/in.h',
++		'include/abi-bits/ipc.h',
++		'include/abi-bits/limits.h',
++		'include/abi-bits/mode_t.h',
++		'include/abi-bits/mqueue.h',
++		'include/abi-bits/msg.h',
++		'include/abi-bits/nlink_t.h',
++		'include/abi-bits/pid_t.h',
++		'include/abi-bits/poll.h',
++		'include/abi-bits/resource.h',
++		'include/abi-bits/riscv-hwprobe.h',
++		'include/abi-bits/rlim_t.h',
++		'include/abi-bits/sa_family_t.h',
++		'include/abi-bits/seek-whence.h',
++		'include/abi-bits/sem.h',
++		'include/abi-bits/shm.h',
++		'include/abi-bits/sigevent.h',
++		'include/abi-bits/signal.h',
++		'include/abi-bits/sigset_t.h',
++		'include/abi-bits/sigval.h',
++		'include/abi-bits/sig-limits.h',
++		'include/abi-bits/sockaddr_storage.h',
++		'include/abi-bits/socket.h',
++		'include/abi-bits/socklen_t.h',
++		'include/abi-bits/statvfs.h',
++		'include/abi-bits/stat.h',
++		'include/abi-bits/suseconds_t.h',
++		'include/abi-bits/termios.h',
++		'include/abi-bits/time.h',
++		'include/abi-bits/uid_t.h',
++		'include/abi-bits/utmpx.h',
++		'include/abi-bits/utmp-defines.h',
++		'include/abi-bits/utsname.h',
++		'include/abi-bits/vm-flags.h',
++		'include/abi-bits/wait.h',
++		subdir: 'abi-bits',
++		follow_symlinks: true,
++	)
++endif
++
++if not headers_only
++	crt_files = ['crt1', 'crti', 'crtn']
++	foreach crt_name : crt_files
++		crt_file = crt_name + '.S'
++		crt_src = files(host_machine.cpu_family() / crt_file)
++		crt = custom_target(
++			crt_name,
++			build_by_default: true,
++			command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
++			input: crt_src,
++			output: crt_name + '.o',
++			install: true,
++			install_dir: get_option('libdir'),
++		)
++	endforeach
++endif
+\ No newline at end of file
+diff --git a/sysdeps/fenrir/x86_64/crt1.S b/sysdeps/fenrir/x86_64/crt1.S
+new file mode 100644
+index 00000000..9b77ee78
+--- /dev/null
++++ b/sysdeps/fenrir/x86_64/crt1.S
+@@ -0,0 +1,8 @@
++.section .text
++.global _start
++_start:
++	mov %rsp, %rdi
++	mov $main, %rsi
++	call __mlibc_entry
++.section .note.GNU-stack,"",%progbits
++
+diff --git a/sysdeps/fenrir/x86_64/crti.S b/sysdeps/fenrir/x86_64/crti.S
+new file mode 100644
+index 00000000..911b078d
+--- /dev/null
++++ b/sysdeps/fenrir/x86_64/crti.S
+@@ -0,0 +1,11 @@
++.section .init
++.global _init
++_init:
++	push %rax
++
++.section .fini
++.global _fini
++_fini:
++	push %rax
++.section .note.GNU-stack,"",%progbits
++
+diff --git a/sysdeps/fenrir/x86_64/crtn.S b/sysdeps/fenrir/x86_64/crtn.S
+new file mode 100644
+index 00000000..0187e50f
+--- /dev/null
++++ b/sysdeps/fenrir/x86_64/crtn.S
+@@ -0,0 +1,9 @@
++.section .init
++	pop %rax
++	ret
++
++.section .fini
++	pop %rax
++	ret
++.section .note.GNU-stack,"",%progbits
++

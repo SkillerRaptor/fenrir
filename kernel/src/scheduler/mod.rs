@@ -70,37 +70,89 @@ pub fn create_process(page_map: PageMap) -> Arc<Process> {
 }
 
 pub fn create_kernel_thread(entry: fn()) -> Arc<Thread> {
-    create_thread(KERNEL_PROCESS.get(), 0x28, entry)
+    create_thread(KERNEL_PROCESS.get(), 0x28, entry, 0, 0, 0)
 }
 
-pub fn create_user_thread(process: &Arc<Process>, entry: fn()) -> Arc<Thread> {
-    create_thread(process, 0x40 | 0x03, entry)
+pub fn create_user_thread(
+    process: &Arc<Process>,
+    entry: fn(),
+    phdr_addr: u64,
+    phent_size: u64,
+    phdr_num: u64,
+) -> Arc<Thread> {
+    create_thread(process, 0x40 | 0x03, entry, phdr_num, phent_size, phdr_addr)
 }
 
-fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
+fn create_thread(
+    process: &Arc<Process>,
+    cs: u64,
+    entry: fn(),
+    phdr_addr: u64,
+    phent_size: u64,
+    phdr_num: u64,
+) -> Arc<Thread> {
     let page_map = process.page_map;
 
     let id = ThreadId(NEXT_THREAD_ID.fetch_add(1, Ordering::Relaxed));
 
-    let stack_size = PAGE_SIZE;
-    let stack = pmm::allocate(stack_size / PAGE_SIZE, true) as u64;
-    let virtual_stack = stack
-        + if cs == 0x28 {
-            boot::get_hhdm_offset()
-        } else {
-            0
+    let stack_pages = if cs == 0x28 { 1 } else { 16 };
+    let stack_size = PAGE_SIZE * stack_pages;
+    let stack = pmm::allocate(stack_pages, true) as u64;
+    let mut virtual_stack = if cs == 0x28 {
+        stack + stack_size + boot::get_hhdm_offset()
+    } else {
+        const USER_STACK_TOP: u64 = 0x0000_7fff_ffff_0000;
+        USER_STACK_TOP
+    };
+
+    for i in 0..stack_pages {
+        vmm::map(
+            page_map,
+            stack + i * PAGE_SIZE,
+            virtual_stack - stack_size + i * PAGE_SIZE,
+            Attribute::WRITE
+                | if cs == 0x28 {
+                    Attribute::NULL
+                } else {
+                    Attribute::USER
+                },
+        );
+    }
+
+    if cs != 0x28 {
+        let stack_hhdm = stack + boot::get_hhdm_offset();
+        let mut physical_address = stack_hhdm + stack_size;
+
+        let mut push = |value: u64| {
+            virtual_stack -= 8;
+            physical_address -= 8;
+            unsafe { (physical_address as *mut u64).write(value) };
         };
-    vmm::map(
-        page_map,
-        stack,
-        virtual_stack,
-        Attribute::WRITE
-            | if cs == 0x28 {
-                Attribute::NULL
-            } else {
-                Attribute::USER
-            },
-    );
+
+        push(0);
+
+        push(0);
+        push(0);
+
+        push(entry as u64);
+        push(9);
+
+        push(phdr_addr);
+        push(3);
+
+        push(phent_size);
+        push(4);
+
+        push(phdr_num);
+        push(5);
+
+        push(PAGE_SIZE);
+        push(6);
+
+        push(0);
+        push(0);
+        push(0);
+    }
 
     let thread = Arc::new(Thread {
         id,
@@ -126,10 +178,11 @@ fn create_thread(process: &Arc<Process>, cs: u64, entry: fn()) -> Arc<Thread> {
             rip: entry as u64,
             cs,
             flags: (1 << 9) | (1 << 1),
-            rsp: virtual_stack + stack_size,
+            rsp: virtual_stack,
             ss: if cs == 0x28 { cs + 0x08 } else { cs - 0x08 },
         },
         fx_state: FxState([0; 512]),
+        fs_base: 0,
         stack: stack as *mut u8,
         stack_size: stack_size as usize,
         process: process.clone(),
@@ -177,6 +230,7 @@ fn schedule(registers: &Registers) {
         unsafe {
             (*current_thread).registers = *registers;
             cpu::fxsave(&mut (*current_thread).fx_state);
+            (*current_thread).fs_base = cpu::read_msr(0xc0000100);
         }
 
         let current_thread = unsafe { Arc::from_raw(current_thread) };
@@ -218,6 +272,7 @@ fn schedule(registers: &Registers) {
     unsafe {
         *(*next_thread_ptr).state.lock() = ThreadState::Busy;
         cpu::fxrstor(&mut (*next_thread_ptr).fx_state);
+        cpu::set_fs_base((*next_thread_ptr).fs_base);
     }
 
     core.current_thread

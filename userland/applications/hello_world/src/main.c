@@ -4,4 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-int main() { return 0; }
+#include <stdio.h>
+
+int main()
+{
+    printf("Hello from Userland!\n");
+    return 0;
+}
