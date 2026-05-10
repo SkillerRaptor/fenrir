@@ -11,7 +11,7 @@ use bitflags::bitflags;
 use crate::{
     acpi::apic,
     arch::x86_64::{cpu, registers::Registers},
-    common::once::Once,
+    common::{once::Once, stacktrace},
 };
 
 bitflags! {
@@ -294,6 +294,10 @@ fn handle_exception(registers: &Registers) {
         cpu::read_cr3(),
         cpu::read_cr4()
     );
+    log::error!("");
+
+    log::error!("Stacktrace: ");
+    stacktrace::print(50);
     log::error!("");
 
     log::error!("Halting System...");
