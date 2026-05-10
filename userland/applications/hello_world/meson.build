@@ -7,6 +7,5 @@
 src = ['src/main.c']
 
 sources = files(src)
-includes = include_directories('include')
 
-hello_world = executable('hello_world', sources: sources, include_directories: includes)
+hello_world = executable('hello_world', sources: sources)
