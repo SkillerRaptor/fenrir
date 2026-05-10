@@ -3,8 +3,9 @@
 set -e
 
 SOURCE_ROOT="$1"
-STAMP="$2"
-WGET="$3"
+BUILD_ROOT="$2"
+STAMP="$3"
+WGET="$4"
 
 SYSROOT_DIR="$SOURCE_ROOT/sysroot"
 TOOLCHAIN_DIR="$SOURCE_ROOT/toolchain"
@@ -29,6 +30,7 @@ if [ ! -d "$BUILD_DIR/build" ]; then
 
     make -j$(nproc)
     DESTDIR="$TOOLCHAIN_DIR" make install
-fi
 
-touch "$STAMP"
+    cd "$BUILD_ROOT"
+    touch "$STAMP"
+fi

@@ -3,24 +3,31 @@
 set -e
 
 SOURCE_ROOT="$1"
-STAMP="$2"
+BUILD_ROOT="$2"
+STAMP="$3"
 
+REPOSITORY_DIR="$SOURCE_ROOT/toolchain/mlibc"
+BUILD_DIR="$REPOSITORY_DIR/build"
 SYSROOT_DIR="$SOURCE_ROOT/sysroot"
-BUILD_DIR="$SOURCE_ROOT/third_party/mlibc/build"
 
 export PATH="$SOURCE_ROOT/toolchain/usr/bin:$PATH"
 
-cd "$SOURCE_ROOT/third_party/mlibc"
+if [ ! -f "$STAMP" ] || [ "$BUILD_ROOT/mlibc_install.stamp" -nt "$STAMP" ]; then
+    rm -rf $BUILD_DIR
+    cd "$REPOSITORY_DIR"
 
-meson setup \
-    --cross-file="$SOURCE_ROOT/toolchains/x86_64-fenrir.ini" \
-    --prefix=/usr \
-    -Ddefault_library=static \
-    -Dno_headers=true \
-    "$BUILD_DIR"
+    meson setup \
+        --cross-file="$SOURCE_ROOT/toolchains/x86_64-fenrir.ini" \
+        --prefix=/usr \
+        -Ddefault_library=static \
+        -Dno_headers=true \
+        "$BUILD_DIR"
 
-ninja -C "$BUILD_DIR"
+    ninja -C "$BUILD_DIR"
 
-DESTDIR="$SYSROOT_DIR" ninja -C "$BUILD_DIR" install
+    DESTDIR="$SYSROOT_DIR" ninja -C "$BUILD_DIR" install
 
-touch "$STAMP"
+    cd "$BUILD_ROOT"
+    touch "$STAMP"
+fi
+

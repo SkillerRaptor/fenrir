@@ -22,8 +22,10 @@ add_global_arguments(
 #-------------------------------------------------------------------------------------------
 # Userland
 #-------------------------------------------------------------------------------------------
-subdir('libraries')
+initramfs_files = []
+
 subdir('applications')
+subdir('libraries')
 subdir('ports')
 
 #-------------------------------------------------------------------------------------------
@@ -33,13 +35,17 @@ generate_initramfs = find_program('../scripts/generate_initramfs.sh', required: 
 
 initramfs = custom_target(
     'initramfs',
-    input: initramfs_files,
     output: 'initramfs.tar',
+    depends: [hello_world],
     command: [
         generate_initramfs,
         '@OUTPUT@',
+        meson.project_build_root() / 'initramfs',
     ]
-    + initramfs_files,
+    + [
+        hello_world,
+    ],
     console: true,
     build_by_default: true,
+    build_always_stale: true,
 )

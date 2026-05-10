@@ -11,6 +11,7 @@ rm -rf "$STAGING"
 mkdir -p "$STAGING"
 
 for MODULE in "${MODULES[@]}"; do
+    echo "$MODULE -> $STAGING/"
     cp "$MODULE" "$STAGING/"
 done
 
@@ -24,4 +25,4 @@ tar \
     -C "$STAGING" \
     .
 
-rm -rf "$BUILD_ROOT/staging"
+rm -rf "$STAGING"

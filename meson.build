@@ -10,8 +10,14 @@ project(
     license: 'MIT',
 )
 
+#-------------------------------------------------------------------------------------------
+# Options
+#-------------------------------------------------------------------------------------------
 build_type = get_option('build_type')
 
+#-------------------------------------------------------------------------------------------
+# Programs
+#-------------------------------------------------------------------------------------------
 cargo = find_program('cargo', required: true)
 curl = find_program('curl', required: true)
 git = find_program('git', required: true)
@@ -19,50 +25,34 @@ qemu = find_program('qemu-system-x86_64', required: true)
 wget = find_program('wget', required: true)
 xorriso = find_program('xorriso', required: true)
 
-target_dir = meson.project_source_root() / 'target/x86_64-fenrir' / build_type
-
-cargo_flags = build_type == 'release' ? ['--release'] : []
-
-kernel_bin = target_dir / 'kernel'
-kernel_symbols = target_dir / 'kernel_symbols.map'
-
-clean = find_program('scripts/clean.sh', required: true)
-
-# Clones
-clone_flanterm = find_program('scripts/clone_flanterm.sh', required: true)
-clone_limine = find_program('scripts/clone_limine.sh', required: true)
-clone_mlibc = find_program('scripts/clone_mlibc.sh', required: true)
-clone_uacpi = find_program('scripts/clone_uacpi.sh', required: true)
-
-# Compilations
-compile_binutils = find_program('scripts/compile_binutils.sh', required: true)
-compile_gcc = find_program('scripts/compile_gcc.sh', required: true)
-compile_kernel = find_program('scripts/compile_kernel.sh', required: true)
-compile_mlibc = find_program('scripts/compile_mlibc.sh', required: true)
-compile_userland = find_program('scripts/compile_userland.sh', required: true)
-
-generate_iso = find_program('scripts/generate_iso.sh', required: true)
-install_mlibc = find_program('scripts/install_mlibc.sh', required: true)
-
 #-------------------------------------------------------------------------------------------
 # Third Party
 #-------------------------------------------------------------------------------------------
+clone_flanterm = find_program('scripts/clone_flanterm.sh', required: true)
+clone_limine = find_program('scripts/clone_limine.sh', required: true)
+clone_uacpi = find_program('scripts/clone_uacpi.sh', required: true)
+
+flanterm_commit = 'dfa1922c0749faf64c4423a81b233a20c08a7db7'
+limine_tag = 'v12.2.0'
+uacpi_commit = '71f981d4ee36bf3ae85976409734000578b5249c'
+
 flanterm_clone = custom_target(
     'flanterm_clone',
-    input: clone_flanterm.full_path(),
     output: 'flanterm_clone.stamp',
     command: [
         clone_flanterm,
         meson.project_source_root(),
         '@OUTPUT@',
         git.full_path(),
+        flanterm_commit,
     ],
     console: true,
+    build_by_default: true,
+    build_always_stale: true,
 )
 
 limine_clone = custom_target(
     'limine_clone',
-    input: clone_limine.full_path(),
     output: 'limine_clone.stamp',
     command: [
         clone_limine,
@@ -70,31 +60,113 @@ limine_clone = custom_target(
         '@OUTPUT@',
         curl.full_path(),
         wget.full_path(),
+        limine_tag,
     ],
     console: true,
-)
-
-mlibc_clone = custom_target(
-    'mlibc_clone',
-    input: clone_mlibc.full_path(),
-    output: 'mlibc_clone.stamp',
-    command: [clone_mlibc, meson.project_source_root(), '@OUTPUT@', git.full_path()],
-    console: true,
+    build_by_default: true,
     build_always_stale: true,
 )
 
 uacpi_clone = custom_target(
     'uacpi_clone',
-    input: clone_uacpi.full_path(),
     output: 'uacpi_clone.stamp',
-    command: [clone_uacpi, meson.project_source_root(), '@OUTPUT@', git.full_path()],
+    command: [
+        clone_uacpi,
+        meson.project_source_root(),
+        '@OUTPUT@',
+        git.full_path(),
+        uacpi_commit,
+    ],
     console: true,
+    build_by_default: true,
+    build_always_stale: true,
+)
+
+#-------------------------------------------------------------------------------------------
+# Toolchain
+#-------------------------------------------------------------------------------------------
+compile_binutils = find_program('scripts/compile_binutils.sh', required: true)
+compile_gcc = find_program('scripts/compile_gcc.sh', required: true)
+compile_mlibc = find_program('scripts/compile_mlibc.sh', required: true)
+install_mlibc = find_program('scripts/install_mlibc.sh', required: true)
+
+mlibc_commit = 'b557ca568c897f441c1bca232691ff7365056f2c'
+
+mlibc_install = custom_target(
+    'mlibc_install',
+    output: 'mlibc_install.stamp',
+    command: [
+        install_mlibc,
+        meson.project_source_root(),
+        meson.project_build_root(),
+        '@OUTPUT@',
+        git.full_path(),
+        mlibc_commit,
+    ],
+    console: true,
+    build_by_default: true,
+    build_always_stale: true,
+)
+
+binutils = custom_target(
+    'binutils',
+    output: 'binutils.stamp',
+    depends: [mlibc_install],
+    command: [
+        compile_binutils,
+        meson.project_source_root(),
+        meson.project_build_root(),
+        '@OUTPUT@',
+        wget.full_path(),
+    ],
+    console: true,
+    build_by_default: true,
+    build_always_stale: true,
+)
+
+gcc = custom_target(
+    'gcc',
+    output: 'gcc.stamp',
+    depends: [mlibc_install, binutils],
+    command: [
+        compile_gcc,
+        meson.project_source_root(),
+        meson.project_build_root(),
+        '@OUTPUT@',
+        wget.full_path(),
+    ],
+    console: true,
+    build_by_default: true,
+    build_always_stale: true,
+)
+
+mlibc = custom_target(
+    'mlibc',
+    output: 'mlibc.stamp',
+    depends: [mlibc_install, gcc],
+    command: [
+        compile_mlibc,
+        meson.project_source_root(),
+        meson.project_build_root(),
+        '@OUTPUT@',
+    ],
+    console: true,
+    build_by_default: true,
+    build_always_stale: true,
 )
 
 #-------------------------------------------------------------------------------------------
 # Kernel
 #-------------------------------------------------------------------------------------------
+compile_kernel = find_program('scripts/compile_kernel.sh', required: true)
+
+cargo_flags = build_type == 'release' ? ['--release'] : []
+
 kernel_dir = meson.project_source_root() / 'kernel'
+target_dir = meson.project_source_root() / 'target/x86_64-fenrir' / build_type
+
+kernel_bin = target_dir / 'kernel'
+kernel_symbols = target_dir / 'kernel_symbols.map'
 
 kernel_sources = run_command(
     'find',
@@ -130,65 +202,10 @@ kernel = custom_target(
 )
 
 #-------------------------------------------------------------------------------------------
-# Toolchain
-#-------------------------------------------------------------------------------------------
-mlibc_install = custom_target(
-    'mlibc_install',
-    output: 'mlibc_install.stamp',
-    depends: [mlibc_clone],
-    command: [
-        install_mlibc,
-        meson.project_source_root(),
-        '@OUTPUT@',
-    ],
-    console: true,
-)
-
-binutils = custom_target(
-    'binutils',
-    input: meson.project_source_root() / 'patches/binutils.patch',
-    output: 'binutils.stamp',
-    depends: [mlibc_install],
-    command: [
-        compile_binutils,
-        meson.project_source_root(),
-        '@OUTPUT@',
-        wget.full_path(),
-    ],
-    console: true,
-)
-
-gcc = custom_target(
-    'gcc',
-    input: meson.project_source_root() / 'patches/gcc.patch',
-    output: 'gcc.stamp',
-    depends: [mlibc_install, binutils],
-    command: [
-        compile_gcc,
-        meson.project_source_root(),
-        '@OUTPUT@',
-        wget.full_path(),
-    ],
-    console: true,
-)
-
-mlibc = custom_target(
-    'mlibc',
-    input: meson.project_source_root() / 'patches/mlibc.patch',
-    output: 'mlibc.stamp',
-    depends: [mlibc_install, gcc],
-    command: [
-        compile_mlibc,
-        meson.project_source_root(),
-        '@OUTPUT@',
-    ],
-    console: true,
-    build_by_default: true,
-)
-
-#-------------------------------------------------------------------------------------------
 # Userland
 #-------------------------------------------------------------------------------------------
+compile_userland = find_program('scripts/compile_userland.sh', required: true)
+
 userland = custom_target(
     'userland',
     input: run_command(
@@ -221,6 +238,8 @@ userland = custom_target(
 #-------------------------------------------------------------------------------------------
 # Iso
 #-------------------------------------------------------------------------------------------
+generate_iso = find_program('scripts/generate_iso.sh', required: true)
+
 limine_dir = meson.project_source_root() / 'third_party/limine'
 
 iso_image = custom_target(
@@ -262,6 +281,8 @@ run_target(
 #-------------------------------------------------------------------------------------------
 # Clean
 #-------------------------------------------------------------------------------------------
+clean = find_program('scripts/clean.sh', required: true)
+
 run_target(
     'clean-all',
     command: [

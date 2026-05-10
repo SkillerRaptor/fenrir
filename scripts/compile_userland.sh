@@ -6,9 +6,13 @@ SOURCE_ROOT="$1"
 BUILD_ROOT="$2"
 STAMP="$3"
 
+BUILD_DIR="$BUILD_ROOT/userland/"
+
 export PATH="$SOURCE_ROOT/toolchain/usr/bin:$PATH"
 
-BUILD_DIR="$BUILD_ROOT/userland/"
+if [ "$BUILD_ROOT/mlibc.stamp" -nt "$STAMP" ]; then
+    rm -rf $BUILD_DIR
+fi
 
 if [ ! -f "$BUILD_DIR/build.ninja" ]; then
     meson setup \
