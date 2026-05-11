@@ -22,7 +22,8 @@ mod scheduler;
 mod sync;
 mod syscalls;
 
-use core::{mem, panic::PanicInfo, ptr, sync::atomic::Ordering};
+use alloc::sync::Arc;
+use core::{panic::PanicInfo, ptr, sync::atomic::Ordering};
 
 use elf::{
     ElfBytes,
@@ -40,7 +41,7 @@ use crate::{
         pmm,
         vmm::{self, Attribute},
     },
-    scheduler::smp,
+    scheduler::{process::Process, smp, thread::Thread},
 };
 
 #[unsafe(no_mangle)]
@@ -83,21 +84,20 @@ unsafe extern "C" fn kmain() -> ! {
 
     syscalls::initialize();
 
-    let thread = scheduler::create_kernel_thread(kthread);
+    let thread = Thread::new_kernel(kthread);
     scheduler::add_thread_to_current(&thread);
 
     scheduler::reschedule();
 }
 
-fn kthread() {
-    log::info!("Fenrir successfully booted!");
+fn load_program(bytes: &[u8]) -> (Arc<Process>, Arc<Thread>) {
+    let elf = ElfBytes::<LittleEndian>::minimal_parse(bytes).unwrap();
 
-    let initramfs = boot::get_modules()[1];
-    let hello_world_bytes = ustar::lookup(initramfs.data(), "./hello_world").unwrap();
-    let elf = ElfBytes::<LittleEndian>::minimal_parse(hello_world_bytes).unwrap();
+    let page_map = vmm::create_page_map();
+
+    let mut virtual_stack = 0x00007fffffff0000;
 
     let mut highest_address = 0;
-    let user_page_map = vmm::create_page_map();
     for program_header in elf
         .segments()
         .unwrap()
@@ -118,13 +118,13 @@ fn kthread() {
         for i in 0..page_count {
             let physical_address = physical_start + i * PAGE_SIZE;
             let virtual_address = virtual_start + i * PAGE_SIZE;
-            vmm::map(user_page_map, physical_address, virtual_address, attributes);
+            vmm::map(page_map, physical_address, virtual_address, attributes);
         }
 
         let offset = program_header.p_offset as usize;
         let size = program_header.p_filesz as usize;
 
-        let src = &hello_world_bytes[offset..offset + size];
+        let src = &bytes[offset..offset + size];
         let dst = (physical_start + boot::get_hhdm_offset()) as *mut u8;
 
         let page_offset = (program_header.p_vaddr - virtual_start) as usize;
@@ -137,9 +137,53 @@ fn kthread() {
         }
     }
 
-    log::info!("Creating user process...");
+    let stack_pages = 16;
+    let stack_size = PAGE_SIZE * stack_pages;
+    let stack = pmm::allocate(stack_pages, true) as u64;
 
-    let user_process = scheduler::create_process(user_page_map);
+    for i in 0..stack_pages {
+        vmm::map(
+            page_map,
+            stack + i * PAGE_SIZE,
+            virtual_stack - stack_size + i * PAGE_SIZE,
+            Attribute::WRITE | Attribute::USER,
+        );
+    }
+
+    let stack_hhdm = stack + boot::get_hhdm_offset();
+    let mut physical_address = stack_hhdm + stack_size;
+
+    let mut push = |value: u64| {
+        virtual_stack -= 8;
+        physical_address -= 8;
+        unsafe { (physical_address as *mut u64).write(value) };
+    };
+
+    push(0);
+
+    push(0);
+    push(0);
+
+    push(elf.ehdr.e_entry as u64);
+    push(9);
+
+    push(elf.ehdr.e_phoff);
+    push(3);
+
+    push(elf.ehdr.e_phentsize as u64);
+    push(4);
+
+    push(elf.ehdr.e_phnum as u64);
+    push(5);
+
+    push(PAGE_SIZE);
+    push(6);
+
+    push(0);
+    push(0);
+    push(0);
+
+    let user_process = Process::new(page_map);
     user_process
         .heap_start
         .store(highest_address, Ordering::Release);
@@ -147,13 +191,22 @@ fn kthread() {
         .heap_end
         .store(highest_address, Ordering::Release);
 
-    let user_thread = scheduler::create_user_thread(
+    let user_thread = Thread::new_user(
         &user_process,
-        unsafe { mem::transmute(elf.ehdr.e_entry) },
-        elf.ehdr.e_phoff,
-        elf.ehdr.e_phentsize as u64,
-        elf.ehdr.e_phnum as u64,
+        elf.ehdr.e_entry,
+        virtual_stack,
+        stack,
+        stack_size as usize,
     );
+    (user_process, user_thread)
+}
+
+fn kthread() {
+    log::info!("Fenrir successfully booted!");
+
+    let initramfs = boot::get_modules()[1];
+    let hello_world_bytes = ustar::lookup(initramfs.data(), "./hello_world").unwrap();
+    let (_user_process, user_thread) = load_program(&hello_world_bytes);
     scheduler::add_thread_to_least_loaded(&user_thread);
 
     scheduler::reschedule();

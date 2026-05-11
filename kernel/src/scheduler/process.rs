@@ -5,13 +5,19 @@
 //
 
 use alloc::{sync::Arc, vec::Vec};
-use core::sync::atomic::AtomicU64;
+use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
-use crate::{memory::vmm::PageMap, scheduler::thread::Thread, sync::spinlock::SpinLock};
+use crate::{
+    memory::vmm::PageMap,
+    scheduler::{self, thread::Thread},
+    sync::spinlock::SpinLock,
+};
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ProcessId(pub u32);
+
+static NEXT_PROCESS_ID: AtomicU32 = AtomicU32::new(0);
 
 pub struct Process {
     pub id: ProcessId,
@@ -25,3 +31,21 @@ pub struct Process {
 
 unsafe impl Send for Process {}
 unsafe impl Sync for Process {}
+
+impl Process {
+    pub fn new(page_map: PageMap) -> Arc<Self> {
+        let id = ProcessId(NEXT_PROCESS_ID.fetch_add(1, Ordering::Relaxed));
+
+        let process = Arc::new(Process {
+            id,
+            page_map,
+            threads: SpinLock::new(Vec::new()),
+            heap_start: AtomicU64::new(0),
+            heap_end: AtomicU64::new(0),
+        });
+
+        scheduler::register_process(&process);
+
+        process
+    }
+}

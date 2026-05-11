@@ -17,7 +17,7 @@ use crate::{
     },
     common::boot,
     memory::{PAGE_SIZE, pmm, vmm},
-    scheduler,
+    scheduler::{self, thread::Thread},
     syscalls,
 };
 
@@ -73,7 +73,7 @@ extern "C" fn core_init(info: &MpInfo) -> ! {
     idt::load();
 
     core.idle_thread.store(
-        Arc::into_raw(scheduler::create_kernel_thread(thread_idle)) as *mut _,
+        Arc::into_raw(Thread::new_kernel(thread_idle)) as *mut _,
         Ordering::Release,
     );
 
