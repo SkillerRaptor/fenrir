@@ -42,7 +42,7 @@ index 00000000..fa2c16be
 +}
 diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
 new file mode 100644
-index 00000000..1c616c34
+index 00000000..3431acf0
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/sysdeps.cpp
 @@ -0,0 +1,152 @@
@@ -140,7 +140,7 @@ index 00000000..1c616c34
 +
 +int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd)
 +{
-+    int64_t file_descriptor = syscall(SYS_OPEN, pathname, flags, mode, fd);
++    int64_t file_descriptor = syscall(SYS_OPEN, pathname, flags, mode);
 +    if (file_descriptor < 0) {
 +        *fd = -1;
 +        return ENOENT;
@@ -584,10 +584,10 @@ index 00000000..feb2840c
 \ No newline at end of file
 diff --git a/sysdeps/fenrir/include/fenrir/syscall.hpp b/sysdeps/fenrir/include/fenrir/syscall.hpp
 new file mode 100644
-index 00000000..cc4d2d5e
+index 00000000..fbbf91f6
 --- /dev/null
 +++ b/sysdeps/fenrir/include/fenrir/syscall.hpp
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,125 @@
 +#ifndef _MLIBC_SYSCALL_H
 +#define _MLIBC_SYSCALL_H
 +
@@ -598,7 +598,7 @@ index 00000000..cc4d2d5e
 +    register int64_t return_value asm("rax") = 0;
 +    register uint64_t _syscall_id asm("rax") = syscall_id;
 +
-+    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "memory");
++    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -610,7 +610,7 @@ index 00000000..cc4d2d5e
 +    register uint64_t _syscall_id asm("rax") = syscall_id;
 +    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +
-+    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "memory");
++    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -623,7 +623,10 @@ index 00000000..cc4d2d5e
 +    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
 +
-+    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2) : "memory");
++    asm volatile("syscall"
++                 : "=r"(return_value)
++                 : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2)
++                 : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -640,7 +643,7 @@ index 00000000..cc4d2d5e
 +    asm volatile("syscall"
 +                 : "=r"(return_value)
 +                 : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
-+                 : "memory");
++                 : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -653,12 +656,12 @@ index 00000000..cc4d2d5e
 +    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
 +    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
-+    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
++    register uint64_t _argument_4 asm("r10") = (uint64_t) a3;
 +
 +    asm volatile("syscall"
 +                 : "=r"(return_value)
 +                 : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
-+                 : "memory");
++                 : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -671,14 +674,14 @@ index 00000000..cc4d2d5e
 +    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
 +    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
-+    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
++    register uint64_t _argument_4 asm("r10") = (uint64_t) a3;
 +    register uint64_t _argument_5 asm("r8") = (uint64_t) a4;
 +
 +    asm volatile(
 +        "syscall"
 +        : "=r"(return_value)
 +        : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4), "r"(_argument_5)
-+        : "memory");
++        : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}
@@ -691,7 +694,7 @@ index 00000000..cc4d2d5e
 +    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
 +    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
-+    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
++    register uint64_t _argument_4 asm("r10") = (uint64_t) a3;
 +    register uint64_t _argument_5 asm("r8") = (uint64_t) a4;
 +    register uint64_t _argument_6 asm("r9") = (uint64_t) a5;
 +
@@ -704,7 +707,7 @@ index 00000000..cc4d2d5e
 +                   "r"(_argument_4),
 +                   "r"(_argument_5),
 +                   "r"(_argument_6)
-+                 : "memory");
++                 : "rcx", "r11", "memory");
 +
 +    return return_value;
 +}

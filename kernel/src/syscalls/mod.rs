@@ -63,7 +63,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
     let argument_1 = registers.rdi;
     let argument_2 = registers.rsi;
     let argument_3 = registers.rdx;
-    let argument_4 = registers.rcx;
+    let argument_4 = registers.r10;
     let argument_5 = registers.r8;
     let argument_6 = registers.r9;
 
