@@ -163,15 +163,26 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let flags = argument_2;
             let mode = argument_3;
 
+            let path = unsafe { CStr::from_ptr(path as *const i8) }
+                .to_str()
+                .unwrap();
+
             log::debug!(
                 "Syscall: Open(pathname: {}, flags: {}, mode: {:#09b})",
-                unsafe { CStr::from_ptr(path as *const i8).display() },
+                path,
                 flags,
                 mode
             );
 
-            unsafe {
-                (*registers_ptr).rax = u64::MAX;
+            if path == "./DOOM1.WAD" {
+                // NOTE: Hardcode FD to 10
+                unsafe {
+                    (*registers_ptr).rax = 10;
+                }
+            } else {
+                unsafe {
+                    (*registers_ptr).rax = u64::MAX;
+                }
             }
         }
         8 => {

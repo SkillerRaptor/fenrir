@@ -16,6 +16,7 @@ add_global_arguments(
     '-m64',
     '-march=x86-64',
     '-mabi=sysv',
+    '-fno-omit-frame-pointer',
     language: ['c', 'cpp'],
 )
 
@@ -36,14 +37,19 @@ generate_initramfs = find_program('../scripts/generate_initramfs.sh', required: 
 initramfs = custom_target(
     'initramfs',
     output: 'initramfs.tar',
-    depends: [hello_world],
+    depends: [
+        hello_world,
+        doomgeneric,
+    ],
     command: [
         generate_initramfs,
+        meson.project_build_root(),
         '@OUTPUT@',
         meson.project_build_root() / 'initramfs',
     ]
     + [
         hello_world,
+        doomgeneric,
     ],
     console: true,
     build_by_default: true,

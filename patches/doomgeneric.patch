@@ -1,0 +1,367 @@
+diff --git a/.gitignore b/.gitignore
+index 4ac2545..fb05d1b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,5 +9,4 @@
+ Debug/
+ Release/
+ Build/
+-doomgeneric
+ doomgeneric.map
+diff --git a/doomgeneric/doomgeneric_fenrir.c b/doomgeneric/doomgeneric_fenrir.c
+new file mode 100644
+index 0000000..db65cf4
+--- /dev/null
++++ b/doomgeneric/doomgeneric_fenrir.c
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2026-present, SkillerRaptor
++ *
++ * SPDX-License-Identifier: MIT
++ */
++
++#include "doomgeneric.h"
++
++void DG_Init() {}
++
++void DG_DrawFrame() {}
++
++void DG_SleepMs(uint32_t ms) {}
++
++uint32_t DG_GetTicksMs() { return 0; }
++
++int DG_GetKey(int *pressed, unsigned char *doomKey) { return 0; }
++
++void DG_SetWindowTitle(const char *title) {}
++
++int main(int argc, char **argv)
++{
++    doomgeneric_Create(argc, argv);
++
++    while (1)
++    {
++        doomgeneric_Tick();
++    }
++
++    return 0;
++}
+diff --git a/doomgeneric/i_system.c b/doomgeneric/i_system.c
+index 53ab2c9..e061558 100644
+--- a/doomgeneric/i_system.c
++++ b/doomgeneric/i_system.c
+@@ -15,8 +15,6 @@
+ // DESCRIPTION:
+ //
+ 
+-
+-
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -56,8 +54,7 @@
+ #endif
+ 
+ #define DEFAULT_RAM 6 /* MiB */
+-#define MIN_RAM     6  /* MiB */
+-
++#define MIN_RAM 6     /* MiB */
+ 
+ typedef struct atexit_listentry_s atexit_listentry_t;
+ 
+@@ -130,7 +127,7 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
+     return zonemem;
+ }
+ 
+-byte *I_ZoneBase (int *size)
++byte *I_ZoneBase(int *size)
+ {
+     byte *zonemem;
+     int min_ram, default_ram;
+@@ -146,7 +143,7 @@ byte *I_ZoneBase (int *size)
+ 
+     if (p > 0)
+     {
+-        default_ram = atoi(myargv[p+1]);
++        default_ram = atoi(myargv[p + 1]);
+         min_ram = default_ram;
+     }
+     else
+@@ -157,7 +154,7 @@ byte *I_ZoneBase (int *size)
+ 
+     zonemem = AutoAllocMemory(size, default_ram, min_ram);
+ 
+-    printf("zone memory: %p, %x allocated for zone\n", 
++    printf("zone memory: %p, %x allocated for zone\n",
+            zonemem, *size);
+ 
+     return zonemem;
+@@ -168,7 +165,7 @@ void I_PrintBanner(char *msg)
+     int i;
+     int spaces = 35 - (strlen(msg) / 2);
+ 
+-    for (i=0; i<spaces; ++i)
++    for (i = 0; i < spaces; ++i)
+         putchar(' ');
+ 
+     puts(msg);
+@@ -178,7 +175,7 @@ void I_PrintDivider(void)
+ {
+     int i;
+ 
+-    for (i=0; i<75; ++i)
++    for (i = 0; i < 75; ++i)
+     {
+         putchar('=');
+     }
+@@ -191,17 +188,17 @@ void I_PrintStartupBanner(char *gamedescription)
+     I_PrintDivider();
+     I_PrintBanner(gamedescription);
+     I_PrintDivider();
+-    
++
+     printf(
+-    " " PACKAGE_NAME " is free software, covered by the GNU General Public\n"
+-    " License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
+-    " FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n"
+-    " copies under certain conditions. See the source for more information.\n");
++        " " PACKAGE_NAME " is free software, covered by the GNU General Public\n"
++        " License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
++        " FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n"
++        " copies under certain conditions. See the source for more information.\n");
+ 
+     I_PrintDivider();
+ }
+ 
+-// 
++//
+ // I_ConsoleStdout
+ //
+ // Returns true if stdout is a real console, false if it is a file
+@@ -216,7 +213,7 @@ boolean I_ConsoleStdout(void)
+ #if ORIGCODE
+     return isatty(fileno(stdout));
+ #else
+-	return 0;
++    return 0;
+ #endif
+ #endif
+ }
+@@ -243,13 +240,13 @@ void I_BindVariables(void)
+ // I_Quit
+ //
+ 
+-void I_Quit (void)
++void I_Quit(void)
+ {
+     atexit_listentry_t *entry;
+ 
+     // Run through all exit functions
+- 
+-    entry = exit_funcs; 
++
++    entry = exit_funcs;
+ 
+     while (entry != NULL)
+     {
+@@ -271,7 +268,7 @@ void I_Quit (void)
+ 
+ static int ZenityAvailable(void)
+ {
+-    return system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
++    return 0;
+ }
+ 
+ // Escape special characters in the given string so that they can be
+@@ -349,14 +346,13 @@ static int ZenityErrorBox(char *message)
+ 
+ #endif /* !defined(_WIN32) && !defined(__MACOSX__) && !defined(__DJGPP__) */
+ 
+-
+ //
+ // I_Error
+ //
+ 
+ static boolean already_quitting = false;
+ 
+-void I_Error (char *error, ...)
++void I_Error(char *error, ...)
+ {
+     char msgbuf[512];
+     va_list argptr;
+@@ -377,7 +373,7 @@ void I_Error (char *error, ...)
+ 
+     // Message first.
+     va_start(argptr, error);
+-    //fprintf(stderr, "\nError: ");
++    // fprintf(stderr, "\nError: ");
+     vfprintf(stderr, error, argptr);
+     fprintf(stderr, "\n\n");
+     va_end(argptr);
+@@ -422,13 +418,13 @@ void I_Error (char *error, ...)
+ #elif defined(__MACOSX__)
+     {
+         CFStringRef message;
+-	int i;
++        int i;
+ 
+-	// The CoreFoundation message box wraps text lines, so replace
+-	// newline characters with spaces so that multiline messages
+-	// are continuous.
++        // The CoreFoundation message box wraps text lines, so replace
++        // newline characters with spaces so that multiline messages
++        // are continuous.
+ 
+-	for (i = 0; msgbuf[i] != '\0'; ++i)
++        for (i = 0; msgbuf[i] != '\0'; ++i)
+         {
+             if (msgbuf[i] == '\n')
+             {
+@@ -491,11 +487,11 @@ void I_Error (char *error, ...)
+ #define DOS_MEM_DUMP_SIZE 10
+ 
+ static const unsigned char mem_dump_dos622[DOS_MEM_DUMP_SIZE] = {
+-  0x57, 0x92, 0x19, 0x00, 0xF4, 0x06, 0x70, 0x00, 0x16, 0x00};
++    0x57, 0x92, 0x19, 0x00, 0xF4, 0x06, 0x70, 0x00, 0x16, 0x00};
+ static const unsigned char mem_dump_win98[DOS_MEM_DUMP_SIZE] = {
+-  0x9E, 0x0F, 0xC9, 0x00, 0x65, 0x04, 0x70, 0x00, 0x16, 0x00};
++    0x9E, 0x0F, 0xC9, 0x00, 0x65, 0x04, 0x70, 0x00, 0x16, 0x00};
+ static const unsigned char mem_dump_dosbox[DOS_MEM_DUMP_SIZE] = {
+-  0x00, 0x00, 0x00, 0xF1, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00};
++    0x00, 0x00, 0x00, 0xF1, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00};
+ static unsigned char mem_dump_custom[DOS_MEM_DUMP_SIZE];
+ 
+ static const unsigned char *dos_mem_dump = mem_dump_dos622;
+@@ -548,7 +544,7 @@ boolean I_GetMemoryValue(unsigned int offset, void *value, int size)
+                     }
+ 
+                     M_StrToInt(myargv[p], &val);
+-                    mem_dump_custom[i++] = (unsigned char) val;
++                    mem_dump_custom[i++] = (unsigned char)val;
+                 }
+ 
+                 dos_mem_dump = mem_dump_custom;
+@@ -559,20 +555,15 @@ boolean I_GetMemoryValue(unsigned int offset, void *value, int size)
+     switch (size)
+     {
+     case 1:
+-        *((unsigned char *) value) = dos_mem_dump[offset];
++        *((unsigned char *)value) = dos_mem_dump[offset];
+         return true;
+     case 2:
+-        *((unsigned short *) value) = dos_mem_dump[offset]
+-                                    | (dos_mem_dump[offset + 1] << 8);
++        *((unsigned short *)value) = dos_mem_dump[offset] | (dos_mem_dump[offset + 1] << 8);
+         return true;
+     case 4:
+-        *((unsigned int *) value) = dos_mem_dump[offset]
+-                                  | (dos_mem_dump[offset + 1] << 8)
+-                                  | (dos_mem_dump[offset + 2] << 16)
+-                                  | (dos_mem_dump[offset + 3] << 24);
++        *((unsigned int *)value) = dos_mem_dump[offset] | (dos_mem_dump[offset + 1] << 8) | (dos_mem_dump[offset + 2] << 16) | (dos_mem_dump[offset + 3] << 24);
+         return true;
+     }
+ 
+     return false;
+ }
+-
+diff --git a/meson.build b/meson.build
+new file mode 100644
+index 0000000..31dccf4
+--- /dev/null
++++ b/meson.build
+@@ -0,0 +1,94 @@
++#-------------------------------------------------------------------------------------------
++# Copyright (c) 2026-present, SkillerRaptor
++#
++# SPDX-License-Identifier: MIT
++#-------------------------------------------------------------------------------------------
++
++src = [
++    'doomgeneric/dummy.c',
++    'doomgeneric/am_map.c',
++    'doomgeneric/doomdef.c',
++    'doomgeneric/doomstat.c',
++    'doomgeneric/dstrings.c',
++    'doomgeneric/d_event.c',
++    'doomgeneric/d_items.c',
++    'doomgeneric/d_iwad.c',
++    'doomgeneric/d_loop.c',
++    'doomgeneric/d_main.c',
++    'doomgeneric/d_mode.c',
++    'doomgeneric/d_net.c',
++    'doomgeneric/f_finale.c',
++    'doomgeneric/f_wipe.c',
++    'doomgeneric/g_game.c',
++    'doomgeneric/hu_lib.c',
++    'doomgeneric/hu_stuff.c',
++    'doomgeneric/info.c',
++    'doomgeneric/i_cdmus.c',
++    'doomgeneric/i_endoom.c',
++    'doomgeneric/i_joystick.c',
++    'doomgeneric/i_scale.c',
++    'doomgeneric/i_sound.c',
++    'doomgeneric/i_system.c',
++    'doomgeneric/i_timer.c',
++    'doomgeneric/memio.c',
++    'doomgeneric/m_argv.c',
++    'doomgeneric/m_bbox.c',
++    'doomgeneric/m_cheat.c',
++    'doomgeneric/m_config.c',
++    'doomgeneric/m_controls.c',
++    'doomgeneric/m_fixed.c',
++    'doomgeneric/m_menu.c',
++    'doomgeneric/m_misc.c',
++    'doomgeneric/m_random.c',
++    'doomgeneric/p_ceilng.c',
++    'doomgeneric/p_doors.c',
++    'doomgeneric/p_enemy.c',
++    'doomgeneric/p_floor.c',
++    'doomgeneric/p_inter.c',
++    'doomgeneric/p_lights.c',
++    'doomgeneric/p_map.c',
++    'doomgeneric/p_maputl.c',
++    'doomgeneric/p_mobj.c',
++    'doomgeneric/p_plats.c',
++    'doomgeneric/p_pspr.c',
++    'doomgeneric/p_saveg.c',
++    'doomgeneric/p_setup.c',
++    'doomgeneric/p_sight.c',
++    'doomgeneric/p_spec.c',
++    'doomgeneric/p_switch.c',
++    'doomgeneric/p_telept.c',
++    'doomgeneric/p_tick.c',
++    'doomgeneric/p_user.c',
++    'doomgeneric/r_bsp.c',
++    'doomgeneric/r_data.c',
++    'doomgeneric/r_draw.c',
++    'doomgeneric/r_main.c',
++    'doomgeneric/r_plane.c',
++    'doomgeneric/r_segs.c',
++    'doomgeneric/r_sky.c',
++    'doomgeneric/r_things.c',
++    'doomgeneric/sha1.c',
++    'doomgeneric/sounds.c',
++    'doomgeneric/statdump.c',
++    'doomgeneric/st_lib.c',
++    'doomgeneric/st_stuff.c',
++    'doomgeneric/s_sound.c',
++    'doomgeneric/tables.c',
++    'doomgeneric/v_video.c',
++    'doomgeneric/wi_stuff.c',
++    'doomgeneric/w_checksum.c',
++    'doomgeneric/w_file.c',
++    'doomgeneric/w_main.c',
++    'doomgeneric/w_wad.c',
++    'doomgeneric/z_zone.c',
++    'doomgeneric/w_file_stdc.c',
++    'doomgeneric/i_input.c',
++    'doomgeneric/i_video.c',
++    'doomgeneric/doomgeneric.c',
++    'doomgeneric/doomgeneric_fenrir.c',
++]
++
++sources = files(src)
++includes = include_directories('doomgeneric')
++
++doomgeneric = executable('doomgeneric', sources: sources, include_directories: includes)
+\ No newline at end of file

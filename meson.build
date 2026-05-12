@@ -90,7 +90,7 @@ compile_gcc = find_program('scripts/compile_gcc.sh', required: true)
 compile_mlibc = find_program('scripts/compile_mlibc.sh', required: true)
 install_mlibc = find_program('scripts/install_mlibc.sh', required: true)
 
-mlibc_commit = 'b557ca568c897f441c1bca232691ff7365056f2c'
+mlibc_commit = 'd5efaaaffcb7622429986edb835792ba7d612380'
 
 mlibc_install = custom_target(
     'mlibc_install',
@@ -204,7 +204,27 @@ kernel = custom_target(
 #-------------------------------------------------------------------------------------------
 # Userland
 #-------------------------------------------------------------------------------------------
+clone_doomgeneric = find_program('scripts/clone_doomgeneric.sh', required: true)
 compile_userland = find_program('scripts/compile_userland.sh', required: true)
+
+doomgeneric_commit = 'dcb7a8dbc7a16ce3dda29382ac9aae9d77d21284'
+
+doomgeneric_clone = custom_target(
+    'doomgeneric_clone',
+    output: 'doomgeneric_clone.stamp',
+    command: [
+        clone_doomgeneric,
+        meson.project_source_root(),
+        meson.project_build_root(),
+        '@OUTPUT@',
+        git.full_path(),
+        wget.full_path(),
+        doomgeneric_commit,
+    ],
+    console: true,
+    build_by_default: true,
+    build_always_stale: true,
+)
 
 userland = custom_target(
     'userland',
@@ -225,7 +245,10 @@ userland = custom_target(
         check: true,
     ).stdout().strip().split('\n'),
     output: 'userland.stamp',
-    depends: [mlibc],
+    depends: [
+        mlibc,
+        doomgeneric_clone,
+    ],
     command: [
         compile_userland,
         meson.project_source_root(),
@@ -274,7 +297,26 @@ run_target(
         '--no-shutdown',
         '-m', '256M',
         '-serial', 'stdio',
-        '-smp', '4',
+        '-smp', '1',
+    ],
+)
+
+run_target(
+    'debug',
+    depends: [iso_image],
+    command: [
+        qemu,
+        '-M', 'q35,smm=off',
+        '-accel', 'tcg',
+        '-boot', 'd',
+        '-cdrom', iso_image,
+        '--no-reboot',
+        '--no-shutdown',
+        '-m', '256M',
+        '-serial', 'stdio',
+        '-smp', '1',
+        '-s',
+        '-S',
     ],
 )
 

@@ -69,3 +69,4 @@ target/
 /*.iso
 /sysroot/
 /toolchain/
+/userland/ports/doomgeneric/

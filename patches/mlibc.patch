@@ -1,18 +1,3 @@
-diff --git a/meson.build b/meson.build
-index 662ba916..38d52123 100644
---- a/meson.build
-+++ b/meson.build
-@@ -290,6 +290,10 @@ elif host_machine.system() == 'zinnia'
- 	internal_conf.set10('MLIBC_MMAP_ALLOCATE_DSO', true)
- 	internal_conf.set10('MLIBC_MAP_FILE_WINDOWS', true)
- 	subdir('sysdeps/zinnia')
-+elif host_machine.system() == 'fenrir'
-+	rtld_include_dirs += include_directories('sysdeps/fenrir/include')
-+	libc_include_dirs += include_directories('sysdeps/fenrir/include')
-+	subdir('sysdeps/fenrir')
- # ANCHOR: demo-sysdeps
- elif host_machine.system() == 'demo'
- 	subdir('sysdeps/demo')
 diff --git a/sysdeps/fenrir/generic/entry.cpp b/sysdeps/fenrir/generic/entry.cpp
 new file mode 100644
 index 00000000..fa2c16be
@@ -42,10 +27,10 @@ index 00000000..fa2c16be
 +}
 diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
 new file mode 100644
-index 00000000..5289ba03
+index 00000000..5d706ed0
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/sysdeps.cpp
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,168 @@
 +/*
 + * Copyright (c) 2026-present, SkillerRaptor
 + *
@@ -145,15 +130,18 @@ index 00000000..5289ba03
 +int Sysdeps<Mkdir>::operator()(const char *path, mode_t mode)
 +{
 +    syscall(SYS_MKDIR, path, mode);
-+    return 0;
++    return EROFS;
 +}
 +
 +int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd)
 +{
-+    uint64_t file_descriptor = syscall(SYS_OPEN, pathname, flags, mode);
-+    if (file_descriptor == UINT64_MAX) {
++    int64_t file_descriptor = syscall(SYS_OPEN, pathname, flags, mode, fd);
++    if (file_descriptor < 0) {
++        *fd = -1;
 +        return ENOENT;
 +    }
++
++    *fd = file_descriptor;
 +
 +    return 0;
 +}
