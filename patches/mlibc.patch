@@ -15,7 +15,7 @@ index 662ba916..38d52123 100644
  	subdir('sysdeps/demo')
 diff --git a/sysdeps/fenrir/generic/entry.cpp b/sysdeps/fenrir/generic/entry.cpp
 new file mode 100644
-index 00000000..71cf340c
+index 00000000..fa2c16be
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/entry.cpp
 @@ -0,0 +1,21 @@
@@ -33,94 +33,182 @@ index 00000000..71cf340c
 +
 +extern char **environ;
 +
-+extern "C" void
-+__mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[])) {
-+	__dlapi_enter(entry_stack);
++extern "C" void __mlibc_entry(uintptr_t *entry_stack, int (*main_fn)(int argc, char *argv[], char *env[]))
++{
++    __dlapi_enter(entry_stack);
 +
-+	auto result = main_fn(mlibc::entry_stack.argc, mlibc::entry_stack.argv, environ);
-+	exit(result);
++    auto result = main_fn(mlibc::entry_stack.argc, mlibc::entry_stack.argv, environ);
++    exit(result);
 +}
 diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
 new file mode 100644
-index 00000000..45d4054f
+index 00000000..5289ba03
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/sysdeps.cpp
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,165 @@
 +/*
 + * Copyright (c) 2026-present, SkillerRaptor
 + *
 + * SPDX-License-Identifier: MIT
 + */
 +
-+#include "mlibc/tcb.hpp"
 +#include <abi-bits/errno.h>
 +#include <bits/ensure.h>
 +#include <fenrir/syscall.hpp>
 +#include <mlibc/all-sysdeps.hpp>
++#include <mlibc/debug.hpp>
++#include <stdio.h>
 +#include <string.h>
 +
-+#define SYS_EXIT 1
-+#define SYS_WRITE 2
-+#define SYS_ALLOC 3
-+#define SYS_FS 4
++#include "mlibc/tcb.hpp"
 +
-+#define STUB()                                                                                     \
-+	({                                                                                             \
-+		__ensure(!"STUB function was called");                                                     \
-+		__builtin_unreachable();                                                                   \
-+	})
++#define SYS_ANON_ALLOCATE 1
++#define SYS_ANON_FREE 2
++#define SYS_CLOSE 3
++#define SYS_EXIT 4
++#define SYS_ISATTY 5
++#define SYS_MKDIR 6
++#define SYS_OPEN 7
++#define SYS_READ 8
++#define SYS_SEEK 9
++#define SYS_TCBSET 10
++#define SYS_WRITE 11
++
++#define STUB()                                 \
++    ({                                         \
++        __ensure(!"STUB function was called"); \
++        __builtin_unreachable();               \
++    })
 +
 +namespace mlibc {
 +
-+void Sysdeps<LibcPanic>::operator()() {
-+	sysdep<LibcLog>("!!! mlibc panic !!!\n");
-+	sysdep<Exit>(-1);
-+	__builtin_trap();
++int Sysdeps<AnonAllocate>::operator()(size_t size, void **ptr)
++{
++    void *out = (void *) syscall(SYS_ANON_ALLOCATE, size);
++    if (!out) {
++        return ENOMEM;
++    }
++
++    *ptr = out;
++
++    return 0;
 +}
 +
-+void Sysdeps<LibcLog>::operator()(const char *msg) { sysdep<Write>(0, msg, strlen(msg), nullptr); }
-+
-+int Sysdeps<Isatty>::operator()(int) { return 0; }
-+
-+int Sysdeps<Write>::operator()(int, void const *buf, size_t size, ssize_t *) {
-+	syscall(SYS_WRITE, buf, size);
-+	return 0;
++int Sysdeps<AnonFree>::operator()(void *ptr, unsigned long size)
++{
++    syscall(SYS_ANON_FREE, ptr, size);
++    return 0;
 +}
 +
-+int Sysdeps<TcbSet>::operator()(void *ptr) {
-+	syscall(SYS_FS, ptr);
-+	return 0;
++int Sysdeps<ClockGet>::operator()(int, time_t *, long *) { STUB(); }
++
++int Sysdeps<Close>::operator()(int fd)
++{
++    syscall(SYS_CLOSE, fd);
++    return 0;
 +}
 +
-+int Sysdeps<AnonAllocate>::operator()(size_t size, void **ptr) {
-+	*ptr = (void *)syscall(SYS_ALLOC, size);
-+	return 0;
++void Sysdeps<Exit>::operator()(int status)
++{
++    syscall(SYS_EXIT, status);
++    __builtin_unreachable();
 +}
 +
-+int Sysdeps<AnonFree>::operator()(void *, unsigned long) { return 0; }
-+
-+int Sysdeps<Seek>::operator()(int, off_t, int, off_t *) { return ESPIPE; }
-+
-+void Sysdeps<Exit>::operator()(int status) {
-+	syscall(SYS_EXIT, status);
-+	__builtin_unreachable();
-+}
-+
-+int Sysdeps<Close>::operator()(int) { STUB(); }
++int Sysdeps<FutexWait>::operator()(int *, int, const timespec *) { STUB(); }
 +
 +int Sysdeps<FutexWake>::operator()(int *, bool) { STUB(); }
 +
-+int Sysdeps<FutexWait>::operator()(int *, int, timespec const *) { STUB(); }
++int Sysdeps<Isatty>::operator()(int fd)
++{
++    if (fd == 0 || fd == 1 || fd == 2) {
++        return 0;
++    }
 +
-+int Sysdeps<Read>::operator()(int, void *, unsigned long, long *) { STUB(); }
++    syscall(SYS_ISATTY, fd);
 +
-+int Sysdeps<Open>::operator()(const char *, int, unsigned int, int *) { STUB(); }
++    return ENOTTY;
++}
++
++void Sysdeps<LibcLog>::operator()(const char *message)
++{
++    syscall(SYS_WRITE, message, strlen(message));
++    syscall(SYS_WRITE, "\n", 1);
++}
++
++void Sysdeps<LibcPanic>::operator()()
++{
++    sysdep<LibcLog>("!!! mlibc panic !!!");
++    sysdep<Exit>(-1);
++    __builtin_trap();
++}
++
++int Sysdeps<Mkdir>::operator()(const char *path, mode_t mode)
++{
++    syscall(SYS_MKDIR, path, mode);
++    return 0;
++}
++
++int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd)
++{
++    uint64_t file_descriptor = syscall(SYS_OPEN, pathname, flags, mode);
++    if (file_descriptor == UINT64_MAX) {
++        return ENOENT;
++    }
++
++    return 0;
++}
++
++int Sysdeps<Read>::operator()(int fd, void *buffer, size_t count, ssize_t *bytes_read)
++{
++    syscall(SYS_READ, fd, buffer, count);
++    return 0;
++}
++
++int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offset)
++{
++    if (fd == 0 || fd == 1 || fd == 2) {
++        return ESPIPE;
++    }
++
++    syscall(SYS_SEEK, fd, offset, whence);
++
++    return 0;
++}
++
++int Sysdeps<TcbSet>::operator()(void *ptr)
++{
++    syscall(SYS_TCBSET, ptr);
++
++    return 0;
++}
 +
 +int Sysdeps<VmMap>::operator()(void *, size_t, int, int, int, off_t, void **) { STUB(); }
 +
 +int Sysdeps<VmUnmap>::operator()(void *, size_t) { STUB(); }
 +
-+int Sysdeps<ClockGet>::operator()(int, time_t *, long *) { STUB(); }
++int Sysdeps<Waitpid>::operator()(pid_t pid, int *status, int flags, struct rusage *ru, pid_t *ret_pid) { STUB(); }
++
++int Sysdeps<Write>::operator()(int fd, const void *buffer, size_t count, ssize_t *bytes_written)
++{
++    if (fd == 1 || fd == 2) {
++        const char *string_buffer = (const char *) buffer;
++
++        char tmp[2];
++        tmp[1] = '\0';
++        for (size_t i = 0; i < count; ++i) {
++            tmp[0] = string_buffer[i];
++            syscall(SYS_WRITE, fd, tmp, strlen(tmp));
++        }
++
++        if (bytes_written) {
++            *bytes_written = count;
++        }
++
++        return 0;
++    }
++
++    return EROFS;
++}
 +
 +} // namespace mlibc
 diff --git a/sysdeps/fenrir/include/abi-bits/access.h b/sysdeps/fenrir/include/abi-bits/access.h
@@ -509,163 +597,164 @@ index 00000000..feb2840c
 \ No newline at end of file
 diff --git a/sysdeps/fenrir/include/fenrir/syscall.hpp b/sysdeps/fenrir/include/fenrir/syscall.hpp
 new file mode 100644
-index 00000000..5ee18204
+index 00000000..cc4d2d5e
 --- /dev/null
 +++ b/sysdeps/fenrir/include/fenrir/syscall.hpp
-@@ -0,0 +1,124 @@
+@@ -0,0 +1,122 @@
 +#ifndef _MLIBC_SYSCALL_H
 +#define _MLIBC_SYSCALL_H
 +
 +#include <stdint.h>
 +
-+inline int64_t syscall(uint64_t syscall_id) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
++inline int64_t syscall(uint64_t syscall_id)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
 +
-+	asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "memory");
++    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
++int64_t syscall(uint64_t syscall_id, Arg0 a0)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
 +
-+	asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "memory");
++    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0, typename Arg1>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
-+	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
++    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
 +
-+	asm volatile("syscall"
-+	             : "=r"(return_value)
-+	             : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2)
-+	             : "memory");
++    asm volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2) : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0, typename Arg1, typename Arg2>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
-+	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
-+	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
++    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
++    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
 +
-+	asm volatile("syscall"
-+	             : "=r"(return_value)
-+	             : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
-+	             : "memory");
++    asm volatile("syscall"
++                 : "=r"(return_value)
++                 : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
++                 : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0, typename Arg1, typename Arg2, typename Arg3>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
-+	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
-+	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
-+	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
++    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
++    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
++    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
 +
-+	asm volatile(
-+	    "syscall"
-+	    : "=r"(return_value)
-+	    : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
-+	    : "memory"
-+	);
++    asm volatile("syscall"
++                 : "=r"(return_value)
++                 : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
++                 : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
-+	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
-+	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
-+	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
-+	register uint64_t _argument_5 asm("r8") = (uint64_t)a4;
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
++    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
++    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
++    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
++    register uint64_t _argument_5 asm("r8") = (uint64_t) a4;
 +
-+	asm volatile("syscall"
-+	             : "=r"(return_value)
-+	             : "r"(_syscall_id),
-+	               "r"(_argument_1),
-+	               "r"(_argument_2),
-+	               "r"(_argument_3),
-+	               "r"(_argument_4),
-+	               "r"(_argument_5)
-+	             : "memory");
++    asm volatile(
++        "syscall"
++        : "=r"(return_value)
++        : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4), "r"(_argument_5)
++        : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +template <typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-+int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4, Arg5 a5) {
-+	register int64_t return_value asm("rax") = 0;
-+	register uint64_t _syscall_id asm("rax") = syscall_id;
-+	register uint64_t _argument_1 asm("rdi") = (uint64_t)a0;
-+	register uint64_t _argument_2 asm("rsi") = (uint64_t)a1;
-+	register uint64_t _argument_3 asm("rdx") = (uint64_t)a2;
-+	register uint64_t _argument_4 asm("rcx") = (uint64_t)a3;
-+	register uint64_t _argument_5 asm("r8") = (uint64_t)a4;
-+	register uint64_t _argument_6 asm("r9") = (uint64_t)a5;
++int64_t syscall(uint64_t syscall_id, Arg0 a0, Arg1 a1, Arg2 a2, Arg3 a3, Arg4 a4, Arg5 a5)
++{
++    register int64_t return_value asm("rax") = 0;
++    register uint64_t _syscall_id asm("rax") = syscall_id;
++    register uint64_t _argument_1 asm("rdi") = (uint64_t) a0;
++    register uint64_t _argument_2 asm("rsi") = (uint64_t) a1;
++    register uint64_t _argument_3 asm("rdx") = (uint64_t) a2;
++    register uint64_t _argument_4 asm("rcx") = (uint64_t) a3;
++    register uint64_t _argument_5 asm("r8") = (uint64_t) a4;
++    register uint64_t _argument_6 asm("r9") = (uint64_t) a5;
 +
-+	asm volatile("syscall"
-+	             : "=r"(return_value)
-+	             : "r"(_syscall_id),
-+	               "r"(_argument_1),
-+	               "r"(_argument_2),
-+	               "r"(_argument_3),
-+	               "r"(_argument_4),
-+	               "r"(_argument_5),
-+	               "r"(_argument_6)
-+	             : "memory");
++    asm volatile("syscall"
++                 : "=r"(return_value)
++                 : "r"(_syscall_id),
++                   "r"(_argument_1),
++                   "r"(_argument_2),
++                   "r"(_argument_3),
++                   "r"(_argument_4),
++                   "r"(_argument_5),
++                   "r"(_argument_6)
++                 : "memory");
 +
-+	return return_value;
++    return return_value;
 +}
 +
 +#endif /* _MLIBC_SYSCALL_H */
 diff --git a/sysdeps/fenrir/include/mlibc/sysdeps.hpp b/sysdeps/fenrir/include/mlibc/sysdeps.hpp
 new file mode 100644
-index 00000000..bc89cb2e
+index 00000000..62113d0b
 --- /dev/null
 +++ b/sysdeps/fenrir/include/mlibc/sysdeps.hpp
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,31 @@
 +#pragma once
 +
 +#include <mlibc/sysdep-signatures.hpp>
 +
 +namespace mlibc {
 +
-+struct FenrirSysdepTags : LibcPanic,
-+                          LibcLog,
-+                          Isatty,
-+                          Write,
-+                          TcbSet,
-+                          AnonAllocate,
-+                          AnonFree,
-+                          Seek,
-+                          Exit,
-+                          Close,
-+                          FutexWake,
-+                          FutexWait,
-+                          Read,
-+                          Open,
-+                          VmMap,
-+                          VmUnmap,
-+                          ClockGet {};
++struct FenrirSysdepTags
++    : AnonAllocate
++    , AnonFree
++    , ClockGet
++    , Close
++    , Exit
++    , FutexWait
++    , FutexWake
++    , Isatty
++    , LibcLog
++    , LibcPanic
++    , Mkdir
++    , Open
++    , Read
++    , Seek
++    , TcbSet
++    , VmMap
++    , VmUnmap
++    , Waitpid
++    , Write { };
 +
 +template <typename Tag>
 +using Sysdeps = SysdepOf<FenrirSysdepTags, Tag>;
