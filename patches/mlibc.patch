@@ -42,10 +42,10 @@ index 00000000..fa2c16be
 +}
 diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
 new file mode 100644
-index 00000000..3431acf0
+index 00000000..14336f9e
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/sysdeps.cpp
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,146 @@
 +/*
 + * Copyright (c) 2026-present, SkillerRaptor
 + *
@@ -111,13 +111,7 @@ index 00000000..3431acf0
 +
 +int Sysdeps<Isatty>::operator()(int fd)
 +{
-+    if (fd == 0 || fd == 1 || fd == 2) {
-+        return 0;
-+    }
-+
-+    syscall(SYS_ISATTY, fd);
-+
-+    return ENOTTY;
++    return syscall(SYS_ISATTY, fd);
 +}
 +
 +void Sysdeps<LibcLog>::operator()(const char *message)

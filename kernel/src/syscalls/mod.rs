@@ -138,10 +138,14 @@ fn syscall_handler(registers_ptr: *mut Registers) {
         5 => {
             let fd = argument_1;
 
-            log::debug!("Syscall: Isatty(fd: {})", fd);
+            if false {
+                log::debug!("Syscall: Isatty(fd: {})", fd);
+            }
+
+            const ENOTTY: u64 = 25;
 
             unsafe {
-                (*registers_ptr).rax = 0;
+                (*registers_ptr).rax = ENOTTY;
             }
         }
         6 => {
