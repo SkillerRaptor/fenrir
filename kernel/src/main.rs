@@ -165,7 +165,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
         unsafe {
             ptr::copy_nonoverlapping(bytes.as_ptr(), physical_address as *mut u8, bytes.len())
         };
-        string_addresses.push(0x00007fffffff0000 - (stack_hhdm + stack_size - physical_address));
+        string_addresses.push(virtual_stack);
     }
     string_addresses.reverse();
 
