@@ -11,7 +11,6 @@ rm -rf "$STAGING"
 mkdir -p "$STAGING"
 
 for MODULE in "${MODULES[@]}"; do
-    echo "$MODULE -> $STAGING/"
     cp "$MODULE" "$STAGING/"
 done
 
