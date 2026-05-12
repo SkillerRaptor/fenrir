@@ -144,7 +144,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
         .iter()
         .filter(|program_header| program_header.p_type == PT_LOAD)
     {
-        program_header_base = program_header.p_vaddr - program_header.p_offset;
+        program_header_base = program_header.p_vaddr;
         break;
     }
 
