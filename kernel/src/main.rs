@@ -166,7 +166,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
     let mut physical_address = stack_hhdm + stack_size;
     let mut string_addresses: Vec<u64> = Vec::new();
 
-    for argument in arguments.iter().rev() {
+    for argument in arguments.iter() {
         let bytes = argument.as_bytes();
         physical_address -= 1;
         virtual_stack -= 1;
@@ -214,7 +214,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
     push(0);
 
     push(0);
-    for addr in string_addresses.iter() {
+    for addr in string_addresses.iter().rev() {
         push(*addr);
     }
 

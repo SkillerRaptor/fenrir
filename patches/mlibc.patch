@@ -42,10 +42,10 @@ index 00000000..fa2c16be
 +}
 diff --git a/sysdeps/fenrir/generic/sysdeps.cpp b/sysdeps/fenrir/generic/sysdeps.cpp
 new file mode 100644
-index 00000000..5d706ed0
+index 00000000..1c616c34
 --- /dev/null
 +++ b/sysdeps/fenrir/generic/sysdeps.cpp
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,152 @@
 +/*
 + * Copyright (c) 2026-present, SkillerRaptor
 + *
@@ -57,10 +57,9 @@ index 00000000..5d706ed0
 +#include <fenrir/syscall.hpp>
 +#include <mlibc/all-sysdeps.hpp>
 +#include <mlibc/debug.hpp>
++#include <mlibc/tcb.hpp>
 +#include <stdio.h>
 +#include <string.h>
-+
-+#include "mlibc/tcb.hpp"
 +
 +#define SYS_ANON_ALLOCATE 1
 +#define SYS_ANON_FREE 2
@@ -94,19 +93,11 @@ index 00000000..5d706ed0
 +    return 0;
 +}
 +
-+int Sysdeps<AnonFree>::operator()(void *ptr, unsigned long size)
-+{
-+    syscall(SYS_ANON_FREE, ptr, size);
-+    return 0;
-+}
++int Sysdeps<AnonFree>::operator()(void *ptr, unsigned long size) { return syscall(SYS_ANON_FREE, ptr, size); }
 +
 +int Sysdeps<ClockGet>::operator()(int, time_t *, long *) { STUB(); }
 +
-+int Sysdeps<Close>::operator()(int fd)
-+{
-+    syscall(SYS_CLOSE, fd);
-+    return 0;
-+}
++int Sysdeps<Close>::operator()(int fd) { return syscall(SYS_CLOSE, fd); }
 +
 +void Sysdeps<Exit>::operator()(int status)
 +{
@@ -144,8 +135,7 @@ index 00000000..5d706ed0
 +
 +int Sysdeps<Mkdir>::operator()(const char *path, mode_t mode)
 +{
-+    syscall(SYS_MKDIR, path, mode);
-+    return EROFS;
++    return syscall(SYS_MKDIR, path, mode);
 +}
 +
 +int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd)
@@ -163,8 +153,7 @@ index 00000000..5d706ed0
 +
 +int Sysdeps<Read>::operator()(int fd, void *buffer, size_t count, ssize_t *bytes_read)
 +{
-+    syscall(SYS_READ, fd, buffer, count);
-+    return 0;
++    return syscall(SYS_READ, fd, buffer, count);
 +}
 +
 +int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offset)
@@ -178,12 +167,7 @@ index 00000000..5d706ed0
 +    return 0;
 +}
 +
-+int Sysdeps<TcbSet>::operator()(void *ptr)
-+{
-+    syscall(SYS_TCBSET, ptr);
-+
-+    return 0;
-+}
++int Sysdeps<TcbSet>::operator()(void *ptr) { return syscall(SYS_TCBSET, ptr); }
 +
 +int Sysdeps<VmMap>::operator()(void *, size_t, int, int, int, off_t, void **) { STUB(); }
 +

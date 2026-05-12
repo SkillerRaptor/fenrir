@@ -83,7 +83,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let new_heap_end = math::align_up(old_heap_end + size, PAGE_SIZE);
 
             let page_count = (new_heap_end - old_heap_end) / PAGE_SIZE;
-            let physical_base = pmm::allocate(page_count, false) as u64;
+            let physical_base = pmm::allocate(page_count, true) as u64;
 
             for i in 0..page_count {
                 let physical_address = physical_base + i * PAGE_SIZE;
@@ -188,7 +188,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
         8 => {
             let fd = argument_1;
             let buffer = argument_2;
-            let count = argument_2;
+            let count = argument_3;
 
             log::debug!(
                 "Syscall: Read(fd: {}, buffer: {:#018x}, count: {:#x})",
@@ -204,7 +204,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
         9 => {
             let fd = argument_1;
             let offset = argument_2;
-            let whence = argument_2;
+            let whence = argument_3;
 
             log::debug!(
                 "Syscall: Seek(fd: {}, offset: {:#x}, whence: {})",
