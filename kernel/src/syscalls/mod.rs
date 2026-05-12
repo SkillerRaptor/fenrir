@@ -123,8 +123,15 @@ fn syscall_handler(registers_ptr: *mut Registers) {
         }
         4 => {
             let status = argument_1 as i64;
+            if status == 0 {
+                log::info!("The thread has exited with code {}", status);
+            } else {
+                log::error!("The thread has exited with code {}", status);
+            }
 
-            log::debug!("Syscall: Exit(status: {})", status);
+            if false {
+                log::debug!("Syscall: Exit(status: {})", status);
+            }
 
             let core = Core::current();
             core.enter_critical();
