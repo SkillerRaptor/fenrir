@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::{slice, sync::atomic::Ordering};
+use core::{ffi::CStr, slice, sync::atomic::Ordering};
 
 use crate::{
     arch::x86_64::cpu::{self, Core},
@@ -59,37 +59,21 @@ pub fn initialize() {
 fn syscall_handler(registers_ptr: *mut Registers) {
     let registers = unsafe { &*registers_ptr };
 
-    match registers.rax {
+    let syscall_id = registers.rax;
+    let argument_1 = registers.rdi;
+    let argument_2 = registers.rsi;
+    let argument_3 = registers.rdx;
+    let argument_4 = registers.rcx;
+    let argument_5 = registers.r8;
+    let argument_6 = registers.r9;
+
+    match syscall_id {
         1 => {
-            let core = Core::current();
-            core.enter_critical();
-            let thread = core.current_thread.load(Ordering::Acquire);
-            unsafe {
-                *(*thread).state.lock() = ThreadState::Dead;
+            let size = argument_1;
+
+            if false {
+                log::debug!("Syscall: AnonAllocate(size: {:#x})", size);
             }
-            core.leave_critical();
-            scheduler::reschedule();
-        }
-        2 => {
-            let ptr = registers.rdi as u64;
-            let length = registers.rsi as usize;
-
-            let core = Core::current();
-            let thread = core.current_thread.load(Ordering::Acquire);
-            let page_map = unsafe { (*(*thread).process).page_map };
-
-            let physical_address = vmm::virtual_to_physical(page_map, ptr);
-            let kernel_ptr = (physical_address + boot::get_hhdm_offset()) as *const u8;
-
-            let bytes = unsafe { slice::from_raw_parts(kernel_ptr, length) };
-            print!("{}", unsafe { str::from_utf8_unchecked(bytes) });
-
-            unsafe {
-                (*registers_ptr).rax = 0;
-            }
-        }
-        3 => {
-            let size = registers.rdi;
 
             let core = Core::current();
             let thread = core.current_thread.load(Ordering::Acquire);
@@ -118,16 +102,153 @@ fn syscall_handler(registers_ptr: *mut Registers) {
                 (*registers_ptr).rax = old_heap_end;
             }
         }
+        2 => {
+            let ptr = argument_1;
+            let size = argument_2;
+
+            log::debug!("Syscall: AnonFree(ptr: {:#018x}, size: {:#x})", ptr, size);
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        3 => {
+            let fd = argument_1;
+
+            log::debug!("Syscall: Close(fd: {})", fd);
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
         4 => {
-            let pointer = registers.rdi;
-            cpu::set_fs_base(pointer);
+            let status = argument_1 as i64;
+
+            log::debug!("Syscall: Exit(status: {})", status);
+
+            let core = Core::current();
+            core.enter_critical();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            unsafe {
+                *(*thread).state.lock() = ThreadState::Dead;
+            }
+            core.leave_critical();
+            scheduler::reschedule();
+        }
+        5 => {
+            let fd = argument_1;
+
+            log::debug!("Syscall: Isatty(fd: {})", fd);
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        6 => {
+            let path = argument_1;
+            let mode = argument_2;
+
+            log::debug!(
+                "Syscall: Mkdir(path: {}, mode: {:#09b})",
+                unsafe { CStr::from_ptr(path as *const i8).display() },
+                mode
+            );
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        7 => {
+            let path = argument_1;
+            let flags = argument_2;
+            let mode = argument_3;
+
+            log::debug!(
+                "Syscall: Open(pathname: {}, flags: {}, mode: {:#09b})",
+                unsafe { CStr::from_ptr(path as *const i8).display() },
+                flags,
+                mode
+            );
+
+            unsafe {
+                (*registers_ptr).rax = u64::MAX;
+            }
+        }
+        8 => {
+            let fd = argument_1;
+            let buffer = argument_2;
+            let count = argument_2;
+
+            log::debug!(
+                "Syscall: Read(fd: {}, buffer: {:#018x}, count: {:#x})",
+                fd,
+                buffer,
+                count
+            );
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        9 => {
+            let fd = argument_1;
+            let offset = argument_2;
+            let whence = argument_2;
+
+            log::debug!(
+                "Syscall: Seek(fd: {}, offset: {:#x}, whence: {})",
+                fd,
+                offset,
+                whence
+            );
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        10 => {
+            let ptr = argument_1;
+
+            if false {
+                log::debug!("Syscall: TcbSet(ptr: {:#018x})", ptr);
+            }
+
+            cpu::set_fs_base(ptr);
+
+            unsafe {
+                (*registers_ptr).rax = 0;
+            }
+        }
+        11 => {
+            let fd = argument_1;
+            let buffer = argument_2;
+            let count = argument_3;
+
+            if fd != 1 && fd != 2 {
+                log::debug!(
+                    "Syscall: Write(fd: {}, buffer: {:#018x}, count: {:#x})",
+                    fd,
+                    buffer,
+                    count
+                );
+            }
+
+            let core = Core::current();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            let page_map = unsafe { (*(*thread).process).page_map };
+
+            let physical_address = vmm::virtual_to_physical(page_map, buffer);
+            let kernel_ptr = (physical_address + boot::get_hhdm_offset()) as *const u8;
+
+            let bytes = unsafe { slice::from_raw_parts(kernel_ptr, count as usize) };
+            print!("{}", unsafe { str::from_utf8_unchecked(bytes) });
 
             unsafe {
                 (*registers_ptr).rax = 0;
             }
         }
         _ => {
-            log::warn!("Unhandled syscall: {}", registers.rax);
+            log::warn!("Unhandled syscall: {}", syscall_id);
 
             unsafe {
                 (*registers_ptr).rax = u64::MAX;
