@@ -22,13 +22,13 @@ impl Write for Writer {
         for byte in string.bytes() {
             if byte == b'\n' {
                 unsafe {
-                    flanterm_write(FLANTERM_CTX, b"\r\n".as_ptr() as *const i8, 2);
+                    // flanterm_write(FLANTERM_CTX, b"\r\n".as_ptr() as *const i8, 2);
                     serial::write('\r');
                     serial::write('\n');
                 }
             } else {
                 unsafe {
-                    flanterm_write(FLANTERM_CTX, &byte as *const u8 as *const i8, 1);
+                    // flanterm_write(FLANTERM_CTX, &byte as *const u8 as *const i8, 1);
                     serial::write(byte as char);
                 }
             }

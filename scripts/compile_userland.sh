@@ -10,7 +10,7 @@ BUILD_DIR="$BUILD_ROOT/userland/"
 
 export PATH="$SOURCE_ROOT/toolchain/usr/bin:$PATH"
 
-if [ "$BUILD_ROOT/mlibc.stamp" -nt "$STAMP" ]; then
+if [ "$BUILD_ROOT/doomgeneric.stamp" -nt "$STAMP" ] || [ "$BUILD_ROOT/mlibc.stamp" -nt "$STAMP" ]; then
     rm -rf $BUILD_DIR
 fi
 

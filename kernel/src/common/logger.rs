@@ -20,7 +20,7 @@ static LOGGER: Logger = Logger;
 static LOCK: SpinLock<()> = SpinLock::new(());
 
 static TSC_FREQUENCY: Once<u64> = Once::new();
-static TSC_BOOT: Once<u64> = Once::new();
+pub static TSC_BOOT: Once<u64> = Once::new();
 
 struct Timestamp {
     seconds: u64,

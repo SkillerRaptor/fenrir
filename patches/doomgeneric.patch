@@ -10,10 +10,10 @@ index 4ac2545..fb05d1b 100644
  doomgeneric.map
 diff --git a/doomgeneric/doomgeneric_fenrir.c b/doomgeneric/doomgeneric_fenrir.c
 new file mode 100644
-index 0000000..db65cf4
+index 0000000..280c982
 --- /dev/null
 +++ b/doomgeneric/doomgeneric_fenrir.c
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,137 @@
 +/*
 + * Copyright (c) 2026-present, SkillerRaptor
 + *
@@ -22,17 +22,123 @@ index 0000000..db65cf4
 +
 +#include "doomgeneric.h"
 +
-+void DG_Init() {}
++#include <stdio.h>
 +
-+void DG_DrawFrame() {}
++int64_t syscall0(uint64_t syscall_id)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
 +
-+void DG_SleepMs(uint32_t ms) {}
++    __asm__ volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "rcx", "r11", "memory");
 +
-+uint32_t DG_GetTicksMs() { return 0; }
++    return return_value;
++}
 +
-+int DG_GetKey(int *pressed, unsigned char *doomKey) { return 0; }
++int64_t syscall1(uint64_t syscall_id, uint64_t a0)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
 +
-+void DG_SetWindowTitle(const char *title) {}
++    __asm__ volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall2(uint64_t syscall_id, uint64_t a0, uint64_t a1)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall3(uint64_t syscall_id, uint64_t a0, uint64_t a1, uint64_t a2)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++    register uint64_t _argument_3 __asm__("rdx") = a2;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall4(uint64_t syscall_id, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++    register uint64_t _argument_3 __asm__("rdx") = a2;
++    register uint64_t _argument_4 __asm__("r10") = a3;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++static volatile uint32_t *g_framebuffer = NULL;
++static uint64_t g_framebuffer_pitch = 0;
++static uint32_t g_initial_ticks = 0;
++
++void DG_Init()
++{
++    printf("DG_Init\n");
++
++    g_framebuffer = (volatile uint32_t *) (void*)syscall0(60);
++    g_framebuffer_pitch = (uint64_t)syscall0(61);
++    g_initial_ticks = (uint32_t)syscall0(63);
++}
++
++void DG_DrawFrame()
++{
++    for (uint64_t y = 0; y < 800; y++)
++    {
++        for (uint64_t x = 0; x < 1200; x++)
++        {
++            uint64_t doom_x = x * DOOMGENERIC_RESX / 1200;
++            uint64_t doom_y = y * DOOMGENERIC_RESY / 800;
++            uint32_t color = DG_ScreenBuffer[doom_y * DOOMGENERIC_RESX + doom_x];
++            g_framebuffer[y * (g_framebuffer_pitch / 4) + x] = color;
++        }
++    }
++}
++
++void DG_SleepMs(uint32_t ms)
++{
++    syscall1(62, (uint64_t)ms);
++}
++
++uint32_t DG_GetTicksMs()
++{
++    return syscall0(63) - g_initial_ticks;
++}
++
++int DG_GetKey(int *pressed, unsigned char *doomKey)
++{
++    return 0;
++}
++
++void DG_SetWindowTitle(const char *title)
++{
++    printf("DG_SetWindowTitle\n");
++}
 +
 +int main(int argc, char **argv)
 +{
@@ -45,231 +151,12 @@ index 0000000..db65cf4
 +
 +    return 0;
 +}
-diff --git a/doomgeneric/i_system.c b/doomgeneric/i_system.c
-index 53ab2c9..e061558 100644
---- a/doomgeneric/i_system.c
-+++ b/doomgeneric/i_system.c
-@@ -15,8 +15,6 @@
- // DESCRIPTION:
- //
- 
--
--
- #include <stdlib.h>
- #include <stdio.h>
- #include <string.h>
-@@ -56,8 +54,7 @@
- #endif
- 
- #define DEFAULT_RAM 6 /* MiB */
--#define MIN_RAM     6  /* MiB */
--
-+#define MIN_RAM 6     /* MiB */
- 
- typedef struct atexit_listentry_s atexit_listentry_t;
- 
-@@ -130,7 +127,7 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
-     return zonemem;
- }
- 
--byte *I_ZoneBase (int *size)
-+byte *I_ZoneBase(int *size)
- {
-     byte *zonemem;
-     int min_ram, default_ram;
-@@ -146,7 +143,7 @@ byte *I_ZoneBase (int *size)
- 
-     if (p > 0)
-     {
--        default_ram = atoi(myargv[p+1]);
-+        default_ram = atoi(myargv[p + 1]);
-         min_ram = default_ram;
-     }
-     else
-@@ -157,7 +154,7 @@ byte *I_ZoneBase (int *size)
- 
-     zonemem = AutoAllocMemory(size, default_ram, min_ram);
- 
--    printf("zone memory: %p, %x allocated for zone\n", 
-+    printf("zone memory: %p, %x allocated for zone\n",
-            zonemem, *size);
- 
-     return zonemem;
-@@ -168,7 +165,7 @@ void I_PrintBanner(char *msg)
-     int i;
-     int spaces = 35 - (strlen(msg) / 2);
- 
--    for (i=0; i<spaces; ++i)
-+    for (i = 0; i < spaces; ++i)
-         putchar(' ');
- 
-     puts(msg);
-@@ -178,7 +175,7 @@ void I_PrintDivider(void)
- {
-     int i;
- 
--    for (i=0; i<75; ++i)
-+    for (i = 0; i < 75; ++i)
-     {
-         putchar('=');
-     }
-@@ -191,17 +188,17 @@ void I_PrintStartupBanner(char *gamedescription)
-     I_PrintDivider();
-     I_PrintBanner(gamedescription);
-     I_PrintDivider();
--    
-+
-     printf(
--    " " PACKAGE_NAME " is free software, covered by the GNU General Public\n"
--    " License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
--    " FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n"
--    " copies under certain conditions. See the source for more information.\n");
-+        " " PACKAGE_NAME " is free software, covered by the GNU General Public\n"
-+        " License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
-+        " FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n"
-+        " copies under certain conditions. See the source for more information.\n");
- 
-     I_PrintDivider();
- }
- 
--// 
-+//
- // I_ConsoleStdout
- //
- // Returns true if stdout is a real console, false if it is a file
-@@ -216,7 +213,7 @@ boolean I_ConsoleStdout(void)
- #if ORIGCODE
-     return isatty(fileno(stdout));
- #else
--	return 0;
-+    return 0;
- #endif
- #endif
- }
-@@ -243,13 +240,13 @@ void I_BindVariables(void)
- // I_Quit
- //
- 
--void I_Quit (void)
-+void I_Quit(void)
- {
-     atexit_listentry_t *entry;
- 
-     // Run through all exit functions
-- 
--    entry = exit_funcs; 
-+
-+    entry = exit_funcs;
- 
-     while (entry != NULL)
-     {
-@@ -271,7 +268,7 @@ void I_Quit (void)
- 
- static int ZenityAvailable(void)
- {
--    return system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
-+    return 0;
- }
- 
- // Escape special characters in the given string so that they can be
-@@ -349,14 +346,13 @@ static int ZenityErrorBox(char *message)
- 
- #endif /* !defined(_WIN32) && !defined(__MACOSX__) && !defined(__DJGPP__) */
- 
--
- //
- // I_Error
- //
- 
- static boolean already_quitting = false;
- 
--void I_Error (char *error, ...)
-+void I_Error(char *error, ...)
- {
-     char msgbuf[512];
-     va_list argptr;
-@@ -377,7 +373,7 @@ void I_Error (char *error, ...)
- 
-     // Message first.
-     va_start(argptr, error);
--    //fprintf(stderr, "\nError: ");
-+    // fprintf(stderr, "\nError: ");
-     vfprintf(stderr, error, argptr);
-     fprintf(stderr, "\n\n");
-     va_end(argptr);
-@@ -422,13 +418,13 @@ void I_Error (char *error, ...)
- #elif defined(__MACOSX__)
-     {
-         CFStringRef message;
--	int i;
-+        int i;
- 
--	// The CoreFoundation message box wraps text lines, so replace
--	// newline characters with spaces so that multiline messages
--	// are continuous.
-+        // The CoreFoundation message box wraps text lines, so replace
-+        // newline characters with spaces so that multiline messages
-+        // are continuous.
- 
--	for (i = 0; msgbuf[i] != '\0'; ++i)
-+        for (i = 0; msgbuf[i] != '\0'; ++i)
-         {
-             if (msgbuf[i] == '\n')
-             {
-@@ -491,11 +487,11 @@ void I_Error (char *error, ...)
- #define DOS_MEM_DUMP_SIZE 10
- 
- static const unsigned char mem_dump_dos622[DOS_MEM_DUMP_SIZE] = {
--  0x57, 0x92, 0x19, 0x00, 0xF4, 0x06, 0x70, 0x00, 0x16, 0x00};
-+    0x57, 0x92, 0x19, 0x00, 0xF4, 0x06, 0x70, 0x00, 0x16, 0x00};
- static const unsigned char mem_dump_win98[DOS_MEM_DUMP_SIZE] = {
--  0x9E, 0x0F, 0xC9, 0x00, 0x65, 0x04, 0x70, 0x00, 0x16, 0x00};
-+    0x9E, 0x0F, 0xC9, 0x00, 0x65, 0x04, 0x70, 0x00, 0x16, 0x00};
- static const unsigned char mem_dump_dosbox[DOS_MEM_DUMP_SIZE] = {
--  0x00, 0x00, 0x00, 0xF1, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00};
-+    0x00, 0x00, 0x00, 0xF1, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00};
- static unsigned char mem_dump_custom[DOS_MEM_DUMP_SIZE];
- 
- static const unsigned char *dos_mem_dump = mem_dump_dos622;
-@@ -548,7 +544,7 @@ boolean I_GetMemoryValue(unsigned int offset, void *value, int size)
-                     }
- 
-                     M_StrToInt(myargv[p], &val);
--                    mem_dump_custom[i++] = (unsigned char) val;
-+                    mem_dump_custom[i++] = (unsigned char)val;
-                 }
- 
-                 dos_mem_dump = mem_dump_custom;
-@@ -559,20 +555,15 @@ boolean I_GetMemoryValue(unsigned int offset, void *value, int size)
-     switch (size)
-     {
-     case 1:
--        *((unsigned char *) value) = dos_mem_dump[offset];
-+        *((unsigned char *)value) = dos_mem_dump[offset];
-         return true;
-     case 2:
--        *((unsigned short *) value) = dos_mem_dump[offset]
--                                    | (dos_mem_dump[offset + 1] << 8);
-+        *((unsigned short *)value) = dos_mem_dump[offset] | (dos_mem_dump[offset + 1] << 8);
-         return true;
-     case 4:
--        *((unsigned int *) value) = dos_mem_dump[offset]
--                                  | (dos_mem_dump[offset + 1] << 8)
--                                  | (dos_mem_dump[offset + 2] << 16)
--                                  | (dos_mem_dump[offset + 3] << 24);
-+        *((unsigned int *)value) = dos_mem_dump[offset] | (dos_mem_dump[offset + 1] << 8) | (dos_mem_dump[offset + 2] << 16) | (dos_mem_dump[offset + 3] << 24);
-         return true;
-     }
- 
-     return false;
- }
--
 diff --git a/meson.build b/meson.build
 new file mode 100644
-index 0000000..31dccf4
+index 0000000..937e34b
 --- /dev/null
 +++ b/meson.build
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,99 @@
 +#-------------------------------------------------------------------------------------------
 +# Copyright (c) 2026-present, SkillerRaptor
 +#
@@ -363,5 +250,9 @@ index 0000000..31dccf4
 +sources = files(src)
 +includes = include_directories('doomgeneric')
 +
-+doomgeneric = executable('doomgeneric', sources: sources, include_directories: includes)
-\ No newline at end of file
++doomgeneric = executable(
++    'doomgeneric',
++    sources: sources,
++    include_directories: includes,
++    c_args: ['-O0'],
++)

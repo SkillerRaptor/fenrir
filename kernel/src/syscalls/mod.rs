@@ -4,11 +4,19 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::{ffi::CStr, slice, sync::atomic::Ordering};
+use core::{
+    arch::asm,
+    ffi::CStr,
+    ptr,
+    slice,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use crate::{
+    acpi::hpet,
     arch::x86_64::cpu::{self, Core},
-    common::{boot, math},
+    common::{boot, logger, math},
+    filesystem::ustar,
     memory::{
         PAGE_SIZE,
         pmm,
@@ -54,6 +62,8 @@ pub fn initialize() {
     cpu::write_msr(LSTAR_MSR, syscall_entry as *const () as u64);
     cpu::write_msr(SFMASK_MSR, (1 << 10) | (1 << 9));
 }
+
+static OFFSET: AtomicU64 = AtomicU64::new(0);
 
 #[unsafe(no_mangle)]
 fn syscall_handler(registers_ptr: *mut Registers) {
@@ -201,31 +211,82 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let buffer = argument_2;
             let count = argument_3;
 
-            log::debug!(
-                "Syscall: Read(fd: {}, buffer: {:#018x}, count: {:#x})",
-                fd,
-                buffer,
-                count
-            );
+            if fd == 10 {
+                let core = Core::current();
+                let thread = core.current_thread.load(Ordering::Acquire);
+                let page_map = unsafe { (*(*thread).process).page_map };
 
-            unsafe {
-                (*registers_ptr).rax = 0;
+                let physical_address = vmm::virtual_to_physical(page_map, buffer);
+                let buffer = (physical_address + boot::get_hhdm_offset()) as *mut u8;
+
+                let initramfs = boot::get_modules()[1];
+                let bytes = ustar::lookup(initramfs.data(), "./DOOM1.WAD").unwrap();
+
+                unsafe {
+                    ptr::copy_nonoverlapping(
+                        bytes
+                            .as_ptr()
+                            .add(OFFSET.fetch_add(count, Ordering::Acquire) as usize),
+                        buffer,
+                        count as usize,
+                    );
+                }
+
+                unsafe {
+                    (*registers_ptr).rax = count;
+                }
+            } else {
+                log::debug!(
+                    "Syscall: Read(fd: {}, buffer: {:#018x}, count: {:#x})",
+                    fd,
+                    buffer,
+                    count
+                );
+
+                unsafe {
+                    (*registers_ptr).rax = u64::MAX;
+                }
             }
         }
         9 => {
             let fd = argument_1;
             let offset = argument_2;
-            let whence = argument_3;
+            let whence = argument_3 as u8;
 
-            log::debug!(
-                "Syscall: Seek(fd: {}, offset: {:#x}, whence: {})",
-                fd,
-                offset,
-                whence
-            );
+            const SEEK_SET: u8 = 0;
+            const SEEK_CUR: u8 = 1;
+            const SEEK_END: u8 = 2;
+
+            let offset = if fd == 10 {
+                match whence {
+                    SEEK_SET => {
+                        OFFSET.store(offset, Ordering::Release);
+                        offset
+                    }
+                    SEEK_CUR => {
+                        OFFSET.fetch_add(offset, Ordering::Release);
+                        OFFSET.load(Ordering::Acquire)
+                    }
+                    SEEK_END => {
+                        let initramfs = boot::get_modules()[1];
+                        let bytes = ustar::lookup(initramfs.data(), "./DOOM1.WAD").unwrap();
+                        bytes.len() as u64 + offset
+                    }
+                    _ => unreachable!(),
+                }
+            } else {
+                log::debug!(
+                    "Syscall: Seek(fd: {}, offset: {:#x}, whence: {})",
+                    fd,
+                    offset,
+                    whence
+                );
+
+                u64::MAX
+            };
 
             unsafe {
-                (*registers_ptr).rax = 0;
+                (*registers_ptr).rax = offset;
             }
         }
         10 => {
@@ -267,6 +328,66 @@ fn syscall_handler(registers_ptr: *mut Registers) {
 
             unsafe {
                 (*registers_ptr).rax = 0;
+            }
+        }
+        60 => {
+            let core = Core::current();
+            core.enter_critical();
+            let thread = core.current_thread.load(Ordering::Acquire);
+            let page_map = unsafe { (*(*thread).process).page_map };
+
+            let framebuffer = boot::get_framebuffers()[0];
+            let physical_address = framebuffer.address() as u64 - boot::get_hhdm_offset();
+            let byte_size = framebuffer.pitch * framebuffer.height;
+
+            let aligned_physical_address = math::align_down(physical_address, PAGE_SIZE);
+            let physical_offset = physical_address - aligned_physical_address;
+
+            let total_bytes = byte_size + physical_offset;
+            let total_pages = math::div_round_up(total_bytes, PAGE_SIZE);
+
+            for i in 0..total_pages {
+                vmm::map(
+                    page_map,
+                    aligned_physical_address + i * PAGE_SIZE,
+                    0x0000000010000000 + i * PAGE_SIZE,
+                    Attribute::USER | Attribute::WRITE,
+                );
+            }
+            core.leave_critical();
+
+            unsafe {
+                (*registers_ptr).rax = 0x0000000010000000;
+            }
+        }
+        61 => unsafe {
+            (*registers_ptr).rax = boot::get_framebuffers()[0].pitch;
+        },
+        62 => {
+            let ms = argument_1;
+            // hpet::sleep(ms);
+        }
+        63 => {
+            fn get_tsc() -> u64 {
+                let mut low = 0u32;
+                let mut high = 0u32;
+                unsafe {
+                    asm!(
+                        "rdtsc",
+                        out("eax") low,
+                        out("edx") high,
+                        options(nomem, nostack));
+                }
+
+                return ((high as u64) << 32) | (low as u64);
+            }
+
+            // NOTE: THIS IS VERY HACKY
+            let elapsed = get_tsc() - logger::TSC_BOOT.get();
+            let milliseconds = (elapsed * 1000) / boot::get_tsc_frequency();
+
+            unsafe {
+                (*registers_ptr).rax = milliseconds;
             }
         }
         _ => {

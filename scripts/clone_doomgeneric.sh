@@ -29,4 +29,4 @@ else
     fi
 fi
 
-touch "$STAMP"
+touch "$BUILD_ROOT/$STAMP"
