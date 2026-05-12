@@ -12,8 +12,7 @@ SYSROOT_DIR="$SOURCE_ROOT/sysroot"
 
 export PATH="$SOURCE_ROOT/toolchain/usr/bin:$PATH"
 
-if [ ! -f "$STAMP" ] || [ "$BUILD_ROOT/mlibc_install.stamp" -nt "$STAMP" ]; then
-    rm -rf $BUILD_DIR
+if [ ! -f "$STAMP" ]; then
     cd "$REPOSITORY_DIR"
 
     meson setup \
@@ -22,7 +21,9 @@ if [ ! -f "$STAMP" ] || [ "$BUILD_ROOT/mlibc_install.stamp" -nt "$STAMP" ]; then
         -Ddefault_library=static \
         -Dno_headers=true \
         "$BUILD_DIR"
+fi
 
+if [ "$BUILD_ROOT/mlibc_install.stamp" -nt "$STAMP" ]; then
     ninja -C "$BUILD_DIR"
 
     DESTDIR="$SYSROOT_DIR" ninja -C "$BUILD_DIR" install
