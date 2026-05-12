@@ -22,7 +22,7 @@ mod scheduler;
 mod sync;
 mod syscalls;
 
-use alloc::sync::Arc;
+use alloc::{sync::Arc, vec::Vec};
 use core::{panic::PanicInfo, ptr, sync::atomic::Ordering};
 
 use elf::{
@@ -90,7 +90,7 @@ unsafe extern "C" fn kmain() -> ! {
     scheduler::reschedule();
 }
 
-fn load_program(bytes: &[u8]) -> (Arc<Process>, Arc<Thread>) {
+fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>) {
     let elf = ElfBytes::<LittleEndian>::minimal_parse(bytes).unwrap();
 
     let page_map = vmm::create_page_map();
@@ -151,7 +151,26 @@ fn load_program(bytes: &[u8]) -> (Arc<Process>, Arc<Thread>) {
     }
 
     let stack_hhdm = stack + boot::get_hhdm_offset();
+
     let mut physical_address = stack_hhdm + stack_size;
+    let mut string_addresses: Vec<u64> = Vec::new();
+
+    for argument in arguments.iter().rev() {
+        let bytes = argument.as_bytes();
+        physical_address -= 1;
+        virtual_stack -= 1;
+        unsafe { *(physical_address as *mut u8) = 0 };
+        physical_address -= bytes.len() as u64;
+        virtual_stack -= bytes.len() as u64;
+        unsafe {
+            ptr::copy_nonoverlapping(bytes.as_ptr(), physical_address as *mut u8, bytes.len())
+        };
+        string_addresses.push(0x00007fffffff0000 - (stack_hhdm + stack_size - physical_address));
+    }
+    string_addresses.reverse();
+
+    virtual_stack = virtual_stack & !15;
+    physical_address = physical_address & !15;
 
     let mut push = |value: u64| {
         virtual_stack -= 8;
@@ -159,7 +178,10 @@ fn load_program(bytes: &[u8]) -> (Arc<Process>, Arc<Thread>) {
         unsafe { (physical_address as *mut u64).write(value) };
     };
 
-    push(0);
+    let word_count = 1 + string_addresses.len() + 1 + 1;
+    if word_count & 1 != 0 {
+        push(0);
+    }
 
     push(0);
     push(0);
@@ -180,8 +202,15 @@ fn load_program(bytes: &[u8]) -> (Arc<Process>, Arc<Thread>) {
     push(6);
 
     push(0);
+
     push(0);
-    push(0);
+    for addr in string_addresses.iter().rev() {
+        push(*addr);
+    }
+
+    push(arguments.len() as u64);
+
+    assert_eq!(virtual_stack % 16, 0);
 
     let user_process = Process::new(page_map);
     user_process
@@ -205,8 +234,9 @@ fn kthread() {
     log::info!("Fenrir successfully booted!");
 
     let initramfs = boot::get_modules()[1];
-    let hello_world_bytes = ustar::lookup(initramfs.data(), "./hello_world").unwrap();
-    let (_user_process, user_thread) = load_program(&hello_world_bytes);
+    let hello_world_bytes = ustar::lookup(initramfs.data(), "./doomgeneric").unwrap();
+    let (_user_process, user_thread) =
+        load_program(&hello_world_bytes, &["doomgeneric", "-iwad", "./DOOM1.WAD"]);
     scheduler::add_thread_to_least_loaded(&user_thread);
 
     scheduler::reschedule();
