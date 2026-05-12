@@ -98,38 +98,35 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
     let mut virtual_stack = 0x00007fffffff0000;
 
     let mut highest_address = 0;
-    for program_header in elf
-        .segments()
-        .unwrap()
-        .iter()
-        .filter(|program_header| program_header.p_type == PT_LOAD)
-    {
+    for program_header in elf.segments().unwrap().iter() {
         let virtual_start = math::align_down(program_header.p_vaddr, PAGE_SIZE);
         let virtual_end =
             math::align_up(program_header.p_vaddr + program_header.p_memsz, PAGE_SIZE);
-        let page_count = (virtual_end - virtual_start) / PAGE_SIZE;
+        if program_header.p_type == PT_LOAD {
+            let page_count = (virtual_end - virtual_start) / PAGE_SIZE;
 
-        let physical_start = pmm::allocate(page_count, true) as u64;
-        let mut attributes = Attribute::USER;
-        if (program_header.p_flags & PF_W) == PF_W {
-            attributes |= Attribute::WRITE;
-        }
+            let physical_start = pmm::allocate(page_count, true) as u64;
+            let mut attributes = Attribute::USER;
+            if (program_header.p_flags & PF_W) == PF_W {
+                attributes |= Attribute::WRITE;
+            }
 
-        for i in 0..page_count {
-            let physical_address = physical_start + i * PAGE_SIZE;
-            let virtual_address = virtual_start + i * PAGE_SIZE;
-            vmm::map(page_map, physical_address, virtual_address, attributes);
-        }
+            for i in 0..page_count {
+                let physical_address = physical_start + i * PAGE_SIZE;
+                let virtual_address = virtual_start + i * PAGE_SIZE;
+                vmm::map(page_map, physical_address, virtual_address, attributes);
+            }
 
-        let offset = program_header.p_offset as usize;
-        let size = program_header.p_filesz as usize;
+            let offset = program_header.p_offset as usize;
+            let size = program_header.p_filesz as usize;
 
-        let src = &bytes[offset..offset + size];
-        let dst = (physical_start + boot::get_hhdm_offset()) as *mut u8;
+            let src = &bytes[offset..offset + size];
+            let dst = (physical_start + boot::get_hhdm_offset()) as *mut u8;
 
-        let page_offset = (program_header.p_vaddr - virtual_start) as usize;
-        unsafe {
-            ptr::copy_nonoverlapping(src.as_ptr(), dst.add(page_offset), size);
+            let page_offset = (program_header.p_vaddr - virtual_start) as usize;
+            unsafe {
+                ptr::copy_nonoverlapping(src.as_ptr(), dst.add(page_offset), size);
+            }
         }
 
         if highest_address <= virtual_end {
