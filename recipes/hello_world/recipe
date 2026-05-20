@@ -1,0 +1,25 @@
+#!/bin/sh
+
+name=hello_world
+version=0
+revision=0
+source_dir="userland/applications/hello_world"
+
+deps="mlibc mlibc-headers"
+hostdeps="gcc"
+
+configure() {
+    cp -rpf "${source_dir}"/. ./
+    meson setup \
+        build . \
+        --cross-file="${base_dir}/toolchains/${JINX_ARCH}-fenrir.ini"
+}
+
+build() {
+    ninja -C build -j"${parallelism}"
+}
+
+package() {
+    mkdir -p ${dest_dir}/staging
+    cp ./build/hello_world ${dest_dir}/staging
+}

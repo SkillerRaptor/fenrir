@@ -1,0 +1,33 @@
+#!/bin/sh
+
+name=gcc
+version=16.1.0
+revision=0
+
+tarball_url="https://mirrors.ocf.berkeley.edu/gnu/gcc/gcc-${version}/gcc-${version}.tar.gz"
+tarball_sha256="48be131b8c719db967cf0265a0ccb0cab2a3b224d5bb42f84904f0c1744213e6"
+
+deps="mlibc-headers"
+hostdeps="binutils"
+
+configure() {
+    CFLAGS_FOR_TARGET="-march=x86-64 -mabi=sysv" \
+    CXXFLAGS_FOR_TARGET="-march=x86-64 -mabi=sysv" \
+    "${source_dir}"/configure \
+        --target=x86_64-fenrir \
+        --prefix="${prefix}" \
+        --with-sysroot="${sysroot}" \
+        --enable-languages=c,c++ \
+        --enable-threads=posix \
+        --disable-multilib \
+        --enable-shared \
+        --enable-host-shared
+}
+
+build() {
+    make all-gcc all-target-libgcc -j${parallelism}
+}
+
+package() {
+    make DESTDIR="${dest_dir}" install-gcc install-target-libgcc
+}

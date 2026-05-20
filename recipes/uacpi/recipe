@@ -1,0 +1,18 @@
+#!/bin/sh
+
+name=uacpi
+version=4.0.0
+revision=0
+
+uacpi_commit="71f981d4ee36bf3ae85976409734000578b5249c"
+
+tarball_url="https://github.com/uACPI/uACPI/archive/${uacpi_commit}.tar.gz"
+tarball_sha256="96f4c59c915d58b2d46bea71697655df861440370358c8580f8e5f7e05ce021f"
+
+package() {
+    mkdir -p "${dest_dir}/usr/src/uacpi"
+    mkdir -p "${dest_dir}/usr/include/uacpi"
+
+    cp -r "${source_dir}/source/"* "${dest_dir}/usr/src/uacpi/"
+    cp -r "${source_dir}/include/"* "${dest_dir}/usr/include/uacpi/"
+}

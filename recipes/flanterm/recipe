@@ -1,0 +1,16 @@
+#!/bin/sh
+
+name=flanterm
+version=3.1.1
+revision=0
+
+flanterm_commit="dfa1922c0749faf64c4423a81b233a20c08a7db7"
+
+tarball_url="https://github.com/mintsuki/flanterm/archive/${flanterm_commit}.tar.gz"
+tarball_sha256="cde081112554cae18c029112700276d909c7c6156c8794e58e06f4c317755984"
+
+package() {
+    mkdir -p "${dest_dir}/usr/src/flanterm/"
+
+    cp -r "${source_dir}/src/"* "${dest_dir}/usr/src/flanterm/"
+}

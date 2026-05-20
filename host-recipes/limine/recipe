@@ -1,0 +1,26 @@
+#!/bin/sh
+
+name=limine
+version=12.3.0
+revision=0
+allow_network=yes
+
+tarball_url="https://github.com/Limine-Bootloader/Limine/releases/download/v${version}/limine-${version}.tar.gz"
+tarball_sha256="de532a72c082d233ff50c917b1cb103d08e52faae4b89e964491695d9fac243c"
+
+build() {
+    cp -rpf "${source_dir}"/. ./
+    ./bootstrap
+    CC_FOR_TARGET=gcc \
+    LD_FOR_TARGET=ld \
+    OBJCOPY_FOR_TARGET=objcopy \
+    OBJDUMP_FOR_TARGET=objdump \
+    READELF_FOR_TARGET=readelf \
+    CFLAGS_FOR_TARGET="-O2 -pipe" \
+    ./configure --enable-bios-cd --enable-bios-pxe --enable-bios --enable-uefi-ia32 --enable-uefi-x86-64 --enable-uefi-cd --prefix="${prefix}"
+    make -j${parallelism}
+}
+
+package() {
+    DESTDIR="${dest_dir}" make install
+}

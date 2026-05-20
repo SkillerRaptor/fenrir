@@ -1,0 +1,264 @@
+diff --git a/.gitignore b/.gitignore
+index 4ac2545..fb05d1b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -9,5 +9,4 @@
+ Debug/
+ Release/
+ Build/
+-doomgeneric
+ doomgeneric.map
+diff --git a/doomgeneric/doomgeneric_fenrir.c b/doomgeneric/doomgeneric_fenrir.c
+new file mode 100644
+index 0000000..280c982
+--- /dev/null
++++ b/doomgeneric/doomgeneric_fenrir.c
+@@ -0,0 +1,137 @@
++/*
++ * Copyright (c) 2026-present, SkillerRaptor
++ *
++ * SPDX-License-Identifier: MIT
++ */
++
++#include "doomgeneric.h"
++
++#include <stdio.h>
++
++int64_t syscall0(uint64_t syscall_id)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++
++    __asm__ volatile("syscall" : "=r"(return_value) : "r"(_syscall_id) : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall1(uint64_t syscall_id, uint64_t a0)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++
++    __asm__ volatile("syscall" : "=r"(return_value) : "r"(_syscall_id), "r"(_argument_1) : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall2(uint64_t syscall_id, uint64_t a0, uint64_t a1)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall3(uint64_t syscall_id, uint64_t a0, uint64_t a1, uint64_t a2)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++    register uint64_t _argument_3 __asm__("rdx") = a2;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++int64_t syscall4(uint64_t syscall_id, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3)
++{
++    register int64_t return_value __asm__("rax") = 0;
++    register uint64_t _syscall_id __asm__("rax") = syscall_id;
++    register uint64_t _argument_1 __asm__("rdi") = a0;
++    register uint64_t _argument_2 __asm__("rsi") = a1;
++    register uint64_t _argument_3 __asm__("rdx") = a2;
++    register uint64_t _argument_4 __asm__("r10") = a3;
++
++    __asm__ volatile("syscall"
++                     : "=r"(return_value)
++                     : "r"(_syscall_id), "r"(_argument_1), "r"(_argument_2), "r"(_argument_3), "r"(_argument_4)
++                     : "rcx", "r11", "memory");
++
++    return return_value;
++}
++
++static volatile uint32_t *g_framebuffer = NULL;
++static uint64_t g_framebuffer_pitch = 0;
++static uint32_t g_initial_ticks = 0;
++
++void DG_Init()
++{
++    printf("DG_Init\n");
++
++    g_framebuffer = (volatile uint32_t *) (void*)syscall0(60);
++    g_framebuffer_pitch = (uint64_t)syscall0(61);
++    g_initial_ticks = (uint32_t)syscall0(63);
++}
++
++void DG_DrawFrame()
++{
++    for (uint64_t y = 0; y < 800; y++)
++    {
++        for (uint64_t x = 0; x < 1200; x++)
++        {
++            uint64_t doom_x = x * DOOMGENERIC_RESX / 1200;
++            uint64_t doom_y = y * DOOMGENERIC_RESY / 800;
++            uint32_t color = DG_ScreenBuffer[doom_y * DOOMGENERIC_RESX + doom_x];
++            g_framebuffer[y * (g_framebuffer_pitch / 4) + x] = color;
++        }
++    }
++}
++
++void DG_SleepMs(uint32_t ms)
++{
++    syscall1(62, (uint64_t)ms);
++}
++
++uint32_t DG_GetTicksMs()
++{
++    return syscall0(63) - g_initial_ticks;
++}
++
++int DG_GetKey(int *pressed, unsigned char *doomKey)
++{
++    return 0;
++}
++
++void DG_SetWindowTitle(const char *title)
++{
++    printf("DG_SetWindowTitle\n");
++}
++
++int main(int argc, char **argv)
++{
++    doomgeneric_Create(argc, argv);
++
++    while (1)
++    {
++        doomgeneric_Tick();
++    }
++
++    return 0;
++}
+diff --git a/meson.build b/meson.build
+new file mode 100644
+index 0000000..3cba16a
+--- /dev/null
++++ b/meson.build
+@@ -0,0 +1,105 @@
++#-------------------------------------------------------------------------------------------
++# Copyright (c) 2026-present, SkillerRaptor
++#
++# SPDX-License-Identifier: MIT
++#-------------------------------------------------------------------------------------------
++
++project(
++    'doomgeneric',
++    'c',
++    version: '0.0.0',
++    license: 'MIT',
++)
++
++src = [
++    'doomgeneric/dummy.c',
++    'doomgeneric/am_map.c',
++    'doomgeneric/doomdef.c',
++    'doomgeneric/doomstat.c',
++    'doomgeneric/dstrings.c',
++    'doomgeneric/d_event.c',
++    'doomgeneric/d_items.c',
++    'doomgeneric/d_iwad.c',
++    'doomgeneric/d_loop.c',
++    'doomgeneric/d_main.c',
++    'doomgeneric/d_mode.c',
++    'doomgeneric/d_net.c',
++    'doomgeneric/f_finale.c',
++    'doomgeneric/f_wipe.c',
++    'doomgeneric/g_game.c',
++    'doomgeneric/hu_lib.c',
++    'doomgeneric/hu_stuff.c',
++    'doomgeneric/info.c',
++    'doomgeneric/i_cdmus.c',
++    'doomgeneric/i_endoom.c',
++    'doomgeneric/i_joystick.c',
++    'doomgeneric/i_scale.c',
++    'doomgeneric/i_sound.c',
++    'doomgeneric/i_system.c',
++    'doomgeneric/i_timer.c',
++    'doomgeneric/memio.c',
++    'doomgeneric/m_argv.c',
++    'doomgeneric/m_bbox.c',
++    'doomgeneric/m_cheat.c',
++    'doomgeneric/m_config.c',
++    'doomgeneric/m_controls.c',
++    'doomgeneric/m_fixed.c',
++    'doomgeneric/m_menu.c',
++    'doomgeneric/m_misc.c',
++    'doomgeneric/m_random.c',
++    'doomgeneric/p_ceilng.c',
++    'doomgeneric/p_doors.c',
++    'doomgeneric/p_enemy.c',
++    'doomgeneric/p_floor.c',
++    'doomgeneric/p_inter.c',
++    'doomgeneric/p_lights.c',
++    'doomgeneric/p_map.c',
++    'doomgeneric/p_maputl.c',
++    'doomgeneric/p_mobj.c',
++    'doomgeneric/p_plats.c',
++    'doomgeneric/p_pspr.c',
++    'doomgeneric/p_saveg.c',
++    'doomgeneric/p_setup.c',
++    'doomgeneric/p_sight.c',
++    'doomgeneric/p_spec.c',
++    'doomgeneric/p_switch.c',
++    'doomgeneric/p_telept.c',
++    'doomgeneric/p_tick.c',
++    'doomgeneric/p_user.c',
++    'doomgeneric/r_bsp.c',
++    'doomgeneric/r_data.c',
++    'doomgeneric/r_draw.c',
++    'doomgeneric/r_main.c',
++    'doomgeneric/r_plane.c',
++    'doomgeneric/r_segs.c',
++    'doomgeneric/r_sky.c',
++    'doomgeneric/r_things.c',
++    'doomgeneric/sha1.c',
++    'doomgeneric/sounds.c',
++    'doomgeneric/statdump.c',
++    'doomgeneric/st_lib.c',
++    'doomgeneric/st_stuff.c',
++    'doomgeneric/s_sound.c',
++    'doomgeneric/tables.c',
++    'doomgeneric/v_video.c',
++    'doomgeneric/wi_stuff.c',
++    'doomgeneric/w_checksum.c',
++    'doomgeneric/w_file.c',
++    'doomgeneric/w_main.c',
++    'doomgeneric/w_wad.c',
++    'doomgeneric/z_zone.c',
++    'doomgeneric/w_file_stdc.c',
++    'doomgeneric/i_input.c',
++    'doomgeneric/i_video.c',
++    'doomgeneric/doomgeneric.c',
++    'doomgeneric/doomgeneric_fenrir.c',
++]
++
++sources = files(src)
++includes = include_directories('doomgeneric')
++
++doomgeneric = executable(
++    'doomgeneric',
++    sources: sources,
++    include_directories: includes,
++)

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+name=kernel
+version=0
+revision=0
+source_dir="kernel"
+allow_network=yes
+
+deps="flanterm uacpi"
+imagedeps="rustup"
+
+configure() {
+    rm -rf "${source_dir}/target"
+    cd "${source_dir}"
+    RUSTUP_HOME="${build_dir}/.rustup" \
+    CARGO_HOME="${build_dir}/.cargo" \
+    rustup show
+}
+
+build() {
+    cd "${source_dir}"
+    CARGO_HOME="${build_dir}/.cargo" \
+    RUSTUP_HOME="${build_dir}/.rustup" \
+    CARGO_TARGET_DIR="${build_dir}/target" \
+    BINDGEN_EXTRA_CLANG_ARGS="--sysroot=${sysroot}" \
+    RUSTFLAGS="-C relocation-model=static" \
+    cargo build --bin kernel
+}
+
+package() {
+    cp "${build_dir}/target/${JINX_ARCH}-fenrir/debug/kernel" "${dest_dir}/kernel"
+    nm -Cn "${dest_dir}/kernel" | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > "${dest_dir}/kernel_symbols.map"
+}

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+name=binutils
+version=2.46.0
+revision=0
+
+tarball_url="https://mirrors.ocf.berkeley.edu/gnu/binutils/binutils-${version}.tar.gz"
+tarball_sha256="8608fe44ab7de645f6ad0a898313b75338842490d609adb85c9fb2827c376af2"
+
+configure() {
+    "${source_dir}"/configure \
+        --target=${JINX_ARCH}-fenrir \
+        --prefix="${prefix}" \
+        --with-sysroot="${sysroot}" \
+        --disable-werror \
+        --enable-default-execstack=no
+}
+
+build() {
+    make -j${parallelism}
+}
+
+package() {
+    DESTDIR="${dest_dir}" make install
+}

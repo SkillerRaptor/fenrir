@@ -1,0 +1,36 @@
+#!/bin/sh
+
+name=doomgeneric
+version=0
+revision=0
+allow_network=yes
+
+doomgeneric_commit='dcb7a8dbc7a16ce3dda29382ac9aae9d77d21284'
+
+tarball_url="https://github.com/ozkl/doomgeneric/archive/${doomgeneric_commit}.tar.gz"
+tarball_sha256="1bd3f7f26220494159a38d71f2847ec81b58d6bbd7c7c8d81b08993018001148"
+
+deps="mlibc mlibc-headers"
+hostdeps="gcc"
+
+doom_wad_url="https://distro.ibiblio.org/slitaz/sources/packages/d/doom1.wad"
+
+configure() {
+    FILE="./DOOM1.WAD"
+    wget -O ./DOOM1.WAD "${doom_wad_url}"
+
+    cp -rpf "${source_dir}"/. ./
+    meson setup \
+        build . \
+        --cross-file="${base_dir}/toolchains/${JINX_ARCH}-fenrir.ini"
+}
+
+build() {
+    ninja -C build -j"${parallelism}"
+}
+
+package() {
+    mkdir -p ${dest_dir}/staging
+    cp ./build/doomgeneric ${dest_dir}/staging
+    cp ./DOOM1.WAD ${dest_dir}/staging
+}
