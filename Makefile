@@ -116,6 +116,8 @@ $(ISO): $(SYSROOT_STAMP) $(INITRAMFS)
 	$(LIMINE_DIR)/usr/local/bin/limine bios-install $(ISO)
 
 clean:
+	rm -rf $(shell pwd)/kernel/bindings/flanterm/flanterm
+	rm -rf $(shell pwd)/kernel/bindings/uacpi/uacpi
 	rm -rf $(shell pwd)/host-sources
 	rm -rf $(shell pwd)/sources
 	rm -rf $(JINX_BUILD_DIR)

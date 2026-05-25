@@ -9,18 +9,14 @@ use std::{env, path::PathBuf};
 use cc::Build;
 
 fn main() {
-    let sysroot = std::env::var("SYSROOT").unwrap_or_else(|_| "/sysroot".to_string());
-
-    let include_path = format!("{sysroot}/usr/src/flanterm/");
-
     let mut build = Build::new();
 
     build
         .files([
-            format!("{sysroot}/usr/src/flanterm/flanterm.c"),
-            format!("{sysroot}/usr/src/flanterm/flanterm_backends/fb.c"),
+            format!("./flanterm/src/flanterm.c"),
+            format!("./flanterm/src/flanterm_backends/fb.c"),
         ])
-        .includes([&include_path])
+        .includes(["./flanterm/src/"])
         .pic(false)
         .flag("-mcmodel=kernel")
         .flag("-fno-pic")
@@ -36,7 +32,7 @@ fn main() {
         .derive_default(true)
         .derive_debug(true)
         .prepend_enum_name(false)
-        .clang_args(["-I", &include_path, "-ffreestanding"])
+        .clang_args(["-I", "./flanterm/src/", "-ffreestanding"])
         .header("./src/wrapper.h")
         .generate()
         .expect("Unable to generate bindings!");

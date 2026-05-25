@@ -10,9 +10,9 @@ tarball_url="https://github.com/uACPI/uACPI/archive/${uacpi_commit}.tar.gz"
 tarball_sha256="96f4c59c915d58b2d46bea71697655df861440370358c8580f8e5f7e05ce021f"
 
 package() {
-    mkdir -p "${dest_dir}/usr/src/uacpi"
-    mkdir -p "${dest_dir}/usr/include/uacpi"
+    mkdir -p "${base_dir}/kernel/bindings/uacpi/uacpi/src/"
+    mkdir -p "${base_dir}/kernel/bindings/uacpi/uacpi/include/"
 
-    cp -r "${source_dir}/source/"* "${dest_dir}/usr/src/uacpi/"
-    cp -r "${source_dir}/include/"* "${dest_dir}/usr/include/uacpi/"
+    cp -r "${source_dir}/source/"* "${base_dir}/kernel/bindings/uacpi/uacpi/src/"
+    cp -r "${source_dir}/include/"* "${base_dir}/kernel/bindings/uacpi/uacpi/include/"
 }

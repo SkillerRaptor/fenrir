@@ -9,34 +9,30 @@ use std::{env, path::PathBuf};
 use cc::Build;
 
 fn main() {
-    let sysroot = std::env::var("SYSROOT").unwrap_or_else(|_| "/sysroot".to_string());
-
-    let include_path = format!("{sysroot}/usr/include/uacpi/");
-
     let mut build = Build::new();
 
     build
         .files([
-            format!("{sysroot}/usr/src/uacpi/default_handlers.c"),
-            format!("{sysroot}/usr/src/uacpi/event.c"),
-            format!("{sysroot}/usr/src/uacpi/interpreter.c"),
-            format!("{sysroot}/usr/src/uacpi/io.c"),
-            format!("{sysroot}/usr/src/uacpi/mutex.c"),
-            format!("{sysroot}/usr/src/uacpi/namespace.c"),
-            format!("{sysroot}/usr/src/uacpi/notify.c"),
-            format!("{sysroot}/usr/src/uacpi/opcodes.c"),
-            format!("{sysroot}/usr/src/uacpi/opregion.c"),
-            format!("{sysroot}/usr/src/uacpi/osi.c"),
-            format!("{sysroot}/usr/src/uacpi/registers.c"),
-            format!("{sysroot}/usr/src/uacpi/resources.c"),
-            format!("{sysroot}/usr/src/uacpi/shareable.c"),
-            format!("{sysroot}/usr/src/uacpi/stdlib.c"),
-            format!("{sysroot}/usr/src/uacpi/tables.c"),
-            format!("{sysroot}/usr/src/uacpi/types.c"),
-            format!("{sysroot}/usr/src/uacpi/uacpi.c"),
-            format!("{sysroot}/usr/src/uacpi/utilities.c"),
+            format!("./uacpi/src/default_handlers.c"),
+            format!("./uacpi/src/event.c"),
+            format!("./uacpi/src/interpreter.c"),
+            format!("./uacpi/src/io.c"),
+            format!("./uacpi/src/mutex.c"),
+            format!("./uacpi/src/namespace.c"),
+            format!("./uacpi/src/notify.c"),
+            format!("./uacpi/src/opcodes.c"),
+            format!("./uacpi/src/opregion.c"),
+            format!("./uacpi/src/osi.c"),
+            format!("./uacpi/src/registers.c"),
+            format!("./uacpi/src/resources.c"),
+            format!("./uacpi/src/shareable.c"),
+            format!("./uacpi/src/stdlib.c"),
+            format!("./uacpi/src/tables.c"),
+            format!("./uacpi/src/types.c"),
+            format!("./uacpi/src/uacpi.c"),
+            format!("./uacpi/src/utilities.c"),
         ])
-        .includes([&include_path])
+        .includes(["./uacpi/include/"])
         .define("UACPI_SIZED_FREES", None)
         .pic(false)
         .flag("-mcmodel=kernel")
@@ -53,7 +49,7 @@ fn main() {
         .derive_default(true)
         .derive_debug(true)
         .prepend_enum_name(false)
-        .clang_args(["-I", &include_path, "-ffreestanding"])
+        .clang_args(["-I", "./uacpi/include/", "-ffreestanding"])
         .header("./src/wrapper.h")
         .generate()
         .expect("Unable to generate bindings!");
