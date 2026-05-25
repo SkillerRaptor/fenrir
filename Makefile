@@ -15,11 +15,19 @@ SYSROOT_DIR=$(JINX_BUILD_DIR)/sysroot
 ISO_ROOT_DIR=$(JINX_BUILD_DIR)/iso-root
 LIMINE_DIR=$(JINX_BUILD_DIR)/host-pkgs/limine
 
+JINX_STAMP=$(JINX_BUILD_DIR)/fenrir.stamp
+KERNEL_STAMP=$(JINX_BUILD_DIR)/kernel.stamp
+PACKAGES_STAMP=$(JINX_BUILD_DIR)/packages.stamp
+SYSROOT_STAMP=$(JINX_BUILD_DIR)/sysroot.stamp
+
+INITRAMFS=$(JINX_BUILD_DIR)/initramfs.tar
+ISO=$(JINX_BUILD_DIR)/fenrir.iso
+
 PACKAGES=doomgeneric hello_world
 
-.PHONY: all kernel packages sysroot disk iso clean
+.PHONY: all clean run
 
-all: $(JINX_BUILD_DIR)/fenrir.stamp kernel iso
+all: $(ISO)
 
 jinx:
 	@if [ -d "$(JINX_DIR)/.git" ]; then \
@@ -35,27 +43,34 @@ jinx:
 		git -C "$(JINX_DIR)" -c advice.detachedHead=false checkout "$(JINX_COMMIT)"; \
 	fi
 
-$(JINX_BUILD_DIR)/fenrir.stamp: jinx
+$(JINX_STAMP): jinx
 	mkdir -p $(JINX_BUILD_DIR)
 	cd $(JINX_BUILD_DIR) && \
 	../jinx/jinx init .. ARCH=$(JINX_ARCH) && \
-	../jinx/jinx build host:limine && \
-	touch fenrir.stamp
+	../jinx/jinx build host:limine
+	touch $(JINX_STAMP)
 
-kernel:
+KERNEL_SOURCES=$(shell find kernel -type f 2>/dev/null)
+
+$(KERNEL_STAMP): $(JINX_STAMP) $(KERNEL_SOURCES)
 	cd $(JINX_BUILD_DIR) && \
 	../jinx/jinx build kernel
+	touch $(KERNEL_STAMP)
 
-packages:
+PACKAGE_SOURCES=$(shell find userland -type f 2>/dev/null)
+
+$(PACKAGES_STAMP): $(JINX_STAMP) $(PACKAGE_SOURCES)
 	cd $(JINX_BUILD_DIR) && \
-	../jinx/jinx build doomgeneric
+	../jinx/jinx build $(PACKAGES)
+	touch $(PACKAGES_STAMP)
 
-sysroot: packages
-	mkdir -p $(JINX_BUILD_DIR)/sysroot
+$(SYSROOT_STAMP): $(KERNEL_STAMP) $(PACKAGES_STAMP)
+	mkdir -p $(SYSROOT_DIR)
 	cd $(JINX_BUILD_DIR) && \
 	../jinx/jinx install -f $(SYSROOT_DIR) kernel $(PACKAGES)
+	touch $(SYSROOT_STAMP)
 
-disk: sysroot
+$(INITRAMFS): $(SYSROOT_STAMP)
 	cd $(JINX_BUILD_DIR) && \
 	tar \
 		--sort=name \
@@ -67,11 +82,11 @@ disk: sysroot
 		-C $(SYSROOT_DIR)/staging \
 		.
 
-iso: sysroot disk
+$(ISO): $(SYSROOT_STAMP) $(INITRAMFS)
 	mkdir -p $(ISO_ROOT_DIR)/boot
 	cp $(SYSROOT_DIR)/kernel $(ISO_ROOT_DIR)/boot/
 	cp $(SYSROOT_DIR)/kernel_symbols.map $(ISO_ROOT_DIR)/boot/
-	cp $(JINX_BUILD_DIR)/initramfs.tar $(ISO_ROOT_DIR)/boot/
+	cp $(INITRAMFS) $(ISO_ROOT_DIR)/boot/
 
 	mkdir -p $(ISO_ROOT_DIR)/boot/limine
 	cp limine.conf $(ISO_ROOT_DIR)/boot/limine
@@ -96,16 +111,16 @@ iso: sysroot disk
         -efi-boot-part \
         --efi-boot-image \
         --protective-msdos-label \
-        $(ISO_ROOT_DIR) -o $(JINX_BUILD_DIR)/fenrir.iso
+        $(ISO_ROOT_DIR) -o $(ISO)
 
-	$(LIMINE_DIR)/usr/local/bin/limine bios-install $(JINX_BUILD_DIR)/fenrir.iso
+	$(LIMINE_DIR)/usr/local/bin/limine bios-install $(ISO)
 
 clean:
 	rm -rf $(shell pwd)/host-sources
 	rm -rf $(shell pwd)/sources
 	rm -rf $(JINX_BUILD_DIR)
 
-run: iso
+run:
 	qemu-system-x86_64 \
 		-M q35,smm=off \
         -accel tcg \
