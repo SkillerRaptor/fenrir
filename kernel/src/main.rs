@@ -34,7 +34,7 @@ use elf::{
 use crate::{
     acpi::{apic, hpet},
     arch::x86_64::{cpu, idt},
-    common::{boot, logger, math, stacktrace},
+    common::{boot, logger, math, stacktrace, writer},
     filesystem::ustar,
     memory::{
         PAGE_SIZE,
@@ -242,6 +242,8 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
 
 fn kthread() {
     log::info!("Fenrir successfully booted!");
+
+    writer::disable_flanterm();
 
     let initramfs = boot::get_modules()[1];
     let hello_world_bytes = ustar::lookup(initramfs.data(), "./doomgeneric").unwrap();

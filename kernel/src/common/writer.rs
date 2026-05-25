@@ -7,28 +7,35 @@
 use core::{
     fmt::{Arguments, Result, Write},
     ptr,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
-use flanterm_sys::{flanterm_context, flanterm_fb_init, flanterm_write};
+use flanterm_sys::{flanterm_clear, flanterm_context, flanterm_fb_init, flanterm_write};
 
 use crate::{common::boot, drivers::serial};
 
 static mut FLANTERM_CTX: *mut flanterm_context = ptr::null_mut();
+static FLANTERM_ENABLED: AtomicBool = AtomicBool::new(false);
 
 struct Writer;
 
 impl Write for Writer {
     fn write_str(&mut self, string: &str) -> Result {
+        let flanterm_enabled = FLANTERM_ENABLED.load(Ordering::Relaxed);
         for byte in string.bytes() {
             if byte == b'\n' {
                 unsafe {
-                    // flanterm_write(FLANTERM_CTX, b"\r\n".as_ptr() as *const i8, 2);
+                    if flanterm_enabled {
+                        flanterm_write(FLANTERM_CTX, b"\r\n".as_ptr() as *const i8, 2);
+                    }
                     serial::write('\r');
                     serial::write('\n');
                 }
             } else {
                 unsafe {
-                    // flanterm_write(FLANTERM_CTX, &byte as *const u8 as *const i8, 1);
+                    if flanterm_enabled {
+                        flanterm_write(FLANTERM_CTX, &byte as *const u8 as *const i8, 1);
+                    }
                     serial::write(byte as char);
                 }
             }
@@ -90,5 +97,14 @@ pub fn initialize() {
             0,
             0,
         );
+    }
+
+    FLANTERM_ENABLED.store(true, Ordering::Relaxed);
+}
+
+pub fn disable_flanterm() {
+    FLANTERM_ENABLED.store(false, Ordering::Relaxed);
+    unsafe {
+        flanterm_clear(FLANTERM_CTX, true);
     }
 }
