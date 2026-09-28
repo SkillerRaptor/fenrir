@@ -13,7 +13,7 @@ tarball_sha256="1bd3f7f26220494159a38d71f2847ec81b58d6bbd7c7c8d81b08993018001148
 deps="mlibc mlibc-headers"
 hostdeps="gcc"
 
-doom_wad_url="https://distro.ibiblio.org/slitaz/sources/packages/d/doom1.wad"
+doom_wad_url="https://www.wad-archive.com/wad/5b2e249b9c5133ec987b3ea77596381dc0d6bc1d/download/DOOM1.WAD"
 
 configure() {
     FILE="./DOOM1.WAD"
