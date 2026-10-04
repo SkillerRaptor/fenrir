@@ -43,7 +43,7 @@ pub fn initialize() {
     vmm::map_into_kernel(lapic_physical_address, Attribute::WRITE);
 
     log::debug!(
-        "HPET: Mapping MMIO {:#018x} -> {:#018x}",
+        "APIC: Mapping MMIO {:#018x} -> {:#018x}",
         lapic_physical_address,
         BASE_LAPIC_ADDRESS.get()
     );
