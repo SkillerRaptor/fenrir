@@ -168,25 +168,25 @@ pub fn set_current_core(core: *const Core) {
 
 pub fn halt() {
     unsafe {
-        asm!("hlt", options(nomem, nostack, preserves_flags));
+        asm!("hlt", options(nostack, preserves_flags));
     }
 }
 
 pub fn pause() {
     unsafe {
-        asm!("pause", options(nomem, nostack, preserves_flags));
+        asm!("pause", options(nostack, preserves_flags));
     }
 }
 
 pub fn enable_interrupts() {
     unsafe {
-        asm!("sti", options(nomem, nostack, preserves_flags));
+        asm!("sti", options(nostack, preserves_flags));
     }
 }
 
 pub fn disable_interrupts() {
     unsafe {
-        asm!("cli", options(nomem, nostack, preserves_flags));
+        asm!("cli", options(nostack, preserves_flags));
     }
 }
 
@@ -351,8 +351,8 @@ pub fn are_interrupts_enabled() -> bool {
 }
 
 pub fn write_msr(msr: u32, value: u64) {
-    let high = (value >> 32) & 0xffffffff;
-    let low = (value >> 0) & 0xffffffff;
+    let high = (value >> 32) as u32;
+    let low = value as u32;
 
     unsafe {
         asm!(
@@ -366,8 +366,8 @@ pub fn write_msr(msr: u32, value: u64) {
 }
 
 pub fn read_msr(msr: u32) -> u64 {
-    let mut high = 0;
-    let mut low = 0;
+    let mut high = 0u32;
+    let mut low = 0u32;
 
     unsafe {
         asm!(
@@ -375,7 +375,7 @@ pub fn read_msr(msr: u32) -> u64 {
             in("ecx") msr,
             out("eax") low,
             out("edx") high,
-            options(nomem, nostack, preserves_flags)
+            options(nostack, preserves_flags)
         );
     }
 
