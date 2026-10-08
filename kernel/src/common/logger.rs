@@ -96,7 +96,7 @@ impl Log for Logger {
 
         print!("{}: ", RESET);
 
-        let path_offset = "kernel/src/".len();
+        let path_offset = "src/".len();
         let file = &record.file().unwrap()[path_offset..];
         let line = record.line().unwrap();
         print!("{}{}<{}:{}> ", GRAY, ITALIC, file, line);
