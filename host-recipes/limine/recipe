@@ -1,12 +1,12 @@
 #!/bin/sh
 
 name=limine
-version=12.3.0
+version=12.9.3
 revision=0
 allow_network=yes
 
 tarball_url="https://github.com/Limine-Bootloader/Limine/releases/download/v${version}/limine-${version}.tar.gz"
-tarball_sha256="de532a72c082d233ff50c917b1cb103d08e52faae4b89e964491695d9fac243c"
+tarball_sha256="b28b9c9f614f4252cae79580d6cbbc09f4d764a541ec01d586b5c385e3776c99"
 
 build() {
     cp -rpf "${source_dir}"/. ./
