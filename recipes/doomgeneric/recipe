@@ -13,11 +13,11 @@ tarball_sha256="1bd3f7f26220494159a38d71f2847ec81b58d6bbd7c7c8d81b08993018001148
 deps="mlibc mlibc-headers"
 hostdeps="gcc"
 
-doom_wad_url="https://www.wad-archive.com/wad/5b2e249b9c5133ec987b3ea77596381dc0d6bc1d/download/DOOM1.WAD"
+doom_wad_url="https://archive.org/download/wadarchive/DATA/5b.zip/5b%2F2e249b9c5133ec987b3ea77596381dc0d6bc1d%2F5b2e249b9c5133ec987b3ea77596381dc0d6bc1d.wad.gz"
 
 configure() {
-    FILE="./DOOM1.WAD"
-    wget -O ./DOOM1.WAD "${doom_wad_url}"
+    wget -O ./DOOM1.WAD.gz "${doom_wad_url}"
+    gunzip -f ./DOOM1.WAD.gz
 
     cp -rpf "${source_dir}"/. ./
     meson setup \
