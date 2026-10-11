@@ -14,9 +14,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bitflags = { version = "2.11", default-features = false }
+bitflags = { version = "2.13", default-features = false }
 elf = { version = "0.8", default-features = false, features = ["alloc"] }
-limine = { git = "https://github.com/SkillerRaptor/limine-rs.git" }
+limine = "0.6"
 log = { version = "0.4", default-features = false }
 
 flanterm-sys = { path = "./bindings/flanterm" }
