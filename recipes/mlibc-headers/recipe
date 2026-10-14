@@ -4,10 +4,10 @@ name=mlibc-headers
 version=0
 revision=0
 
-mlibc_commit='d5efaaaffcb7622429986edb835792ba7d612380'
+mlibc_commit='86ddc2a14ddacba41ec12f854289b3a929133ace'
 
-tarball_url="https://github.com/managarm/mlibc/archive/${mlibc_commit}.tar.gz"
-tarball_sha256="3c95737dde1a592bd08bb779b59a90b4ee9f57350a5614553815b1b6863e1005"
+tarball_url="https://github.com/SkillerRaptor/mlibc/archive/${mlibc_commit}.tar.gz"
+tarball_sha256="a482eb6d1dd641c114dd95477f4fa554d2f88d7873aacce453fd1175560c2f5c"
 
 configure() {
     meson setup \

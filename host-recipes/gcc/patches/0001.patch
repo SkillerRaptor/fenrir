@@ -12,23 +12,23 @@ index 38f3d037a78..c12b65790b0 100755
  	# This one is extra strict with allowed versions
  	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
 diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
-index 7112f4dcd64..b78580f41c7 100755
+index df90720b716..be41037d6f0 100755
 --- a/fixincludes/mkfixinc.sh
 +++ b/fixincludes/mkfixinc.sh
 @@ -11,6 +11,8 @@ target=fixinc.sh
-
+ 
  # Check for special fix rules for particular targets
  case $machine in
 +    *-fenrir* | \
 +    *-*-fenrir* | \
      i?86-*-cygwin* | \
-     *-mingw32* | \
-     powerpc-*-eabisim* | \
+     i?86-*-mingw32* | \
+     x86_64-*-mingw32* | \
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 8fe99616f82..104860647e3 100644
+index 039fa4694ad..fbed2fd0c5d 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -879,6 +879,13 @@ case ${target} in
+@@ -825,6 +825,13 @@ case ${target} in
    rust_target_objs="${rust_target_objs} dragonfly-rust.o"
    target_has_targetrustm=yes
    ;;
@@ -42,9 +42,9 @@ index 8fe99616f82..104860647e3 100644
  *-*-freebsd*)
    # This is the generic ELF configuration of FreeBSD.  Later
    # machine-specific sections may refine and add to this
-@@ -1236,6 +1243,9 @@ case ${target} in
+@@ -1189,6 +1196,9 @@ case ${target} in
  esac
-
+ 
  case ${target} in
 +x86_64-*-fenrir*)
 +	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h fenrir.h gnu-user.h"
@@ -78,10 +78,10 @@ index 00000000000..0f30ec30639
 +    builtin_assert ("system=fenrir");   \
 +  } while(0);
 diff --git a/libgcc/config.host b/libgcc/config.host
-index ac10ccc4340..52fb03b8a3d 100644
+index ee10e99b0a6..3325556fe04 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -783,6 +783,10 @@ i[34567]86-*-openbsd*)
+@@ -784,6 +784,10 @@ i[34567]86-*-openbsd*)
  	;;
  x86_64-*-openbsd*)
  	;;
@@ -99,7 +99,7 @@ index b3269cb88e0..97ea220db7f 100644
 @@ -9,6 +9,13 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-
+ 
 +  *-fenrir*)
 +    GLIBCXX_CHECK_COMPILER_FEATURES
 +    GLIBCXX_CHECK_LINKER_FEATURES

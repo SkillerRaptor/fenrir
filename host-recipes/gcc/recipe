@@ -1,11 +1,11 @@
 #!/bin/sh
 
 name=gcc
-version=16.1.0
+version=14.4.0
 revision=0
 
 tarball_url="https://mirrors.ocf.berkeley.edu/gnu/gcc/gcc-${version}/gcc-${version}.tar.gz"
-tarball_sha256="48be131b8c719db967cf0265a0ccb0cab2a3b224d5bb42f84904f0c1744213e6"
+tarball_sha256="f35aa1c7f14e6bbe5a7fab83abcb7813449aa1dc6d38bbf27b74614dee17db5e"
 
 deps="mlibc-headers"
 hostdeps="binutils"
