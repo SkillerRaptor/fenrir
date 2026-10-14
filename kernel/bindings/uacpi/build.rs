@@ -26,6 +26,7 @@ fn main() {
             format!("./uacpi/src/registers.c"),
             format!("./uacpi/src/resources.c"),
             format!("./uacpi/src/shareable.c"),
+            format!("./uacpi/src/sleep.c"),
             format!("./uacpi/src/stdlib.c"),
             format!("./uacpi/src/tables.c"),
             format!("./uacpi/src/types.c"),

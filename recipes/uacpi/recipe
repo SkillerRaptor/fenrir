@@ -1,13 +1,13 @@
 #!/bin/sh
 
 name=uacpi
-version=4.0.0
+version=6.1.1
 revision=0
 
-uacpi_commit="71f981d4ee36bf3ae85976409734000578b5249c"
+uacpi_commit="fd92d3f3bdd614afda47d08ff5fc373c6d1e4c27"
 
 tarball_url="https://github.com/uACPI/uACPI/archive/${uacpi_commit}.tar.gz"
-tarball_sha256="96f4c59c915d58b2d46bea71697655df861440370358c8580f8e5f7e05ce021f"
+tarball_sha256="6fc2f95db32d6a188d9fed9b12450fdc574e66b709d94eafc7bded54aa81a163"
 
 package() {
     mkdir -p "${base_dir}/kernel/bindings/uacpi/uacpi/src/"
