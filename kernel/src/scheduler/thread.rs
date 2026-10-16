@@ -61,7 +61,7 @@ unsafe impl Sync for Thread {}
 
 impl Thread {
     pub fn new_kernel(entry: fn()) -> Arc<Self> {
-        let stack_base = pmm::allocate(PAGE_SIZE, true) as u64;
+        let stack_base = pmm::allocate(1, true) as u64;
         let virtual_stack = stack_base + boot::get_hhdm_offset();
 
         vmm::map(
@@ -106,6 +106,8 @@ impl Thread {
         stack_base: u64,
         stack_size: usize,
     ) -> Arc<Self> {
+        assert_eq!(stack_size as u64 % PAGE_SIZE, 0);
+
         let id = ThreadId(NEXT_THREAD_ID.fetch_add(1, Ordering::Relaxed));
 
         let (cs, ss) = if location == ThreadLocation::Kernel {
@@ -158,7 +160,7 @@ impl Thread {
 impl Drop for Thread {
     fn drop(&mut self) {
         if !self.stack_base.is_null() {
-            pmm::free(self.stack_base, self.stack_size as u64);
+            pmm::free(self.stack_base, self.stack_size as u64 / PAGE_SIZE);
         }
     }
 }
