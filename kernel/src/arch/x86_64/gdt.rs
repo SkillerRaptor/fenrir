@@ -92,7 +92,7 @@ struct TssEntry {
 
 impl TssEntry {
     fn new(address: u64) -> Self {
-        const LIMIT: usize = mem::size_of::<Tss>();
+        const LIMIT: usize = mem::size_of::<Tss>() - 1;
         Self {
             limit_low: LIMIT as u16,
             base_low: address as u16,
