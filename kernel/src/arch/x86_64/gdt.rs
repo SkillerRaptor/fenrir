@@ -164,7 +164,7 @@ pub fn load(core: &Core) {
         ist_7: 0,
         reserved_2: 0,
         reserved_3: 0,
-        io_offset: 0,
+        io_offset: size_of::<Tss>() as u16,
     };
 
     gdt.table.entries = [
