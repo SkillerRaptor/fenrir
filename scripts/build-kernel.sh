@@ -6,14 +6,20 @@ cd "$(dirname -- "$0")"
 
 ARCH="${ARCH:-x86_64}"
 
-PACKAGES_DIR="$(realpath ./host-packages)"
+PROJECT_DIR="$(realpath ../)"
+BUILD_DIR="${PROJECT_DIR}/build"
+PACKAGES_DIR="${BUILD_DIR}/host-packages"
+ISO_DIR="${BUILD_DIR}/iso"
+KERNEL_BUILD_DIR="${BUILD_DIR}/kernel"
 KERNEL_DIR="$(realpath ../kernel)"
-ISO_DIR="$(realpath ./iso/)"
-
-mkdir -p ${ISO_DIR}/boot/
 
 cd ${KERNEL_DIR}
 
-RUSTFLAGS="-C relocation-model=static" cargo build --bin kernel
-cp "${KERNEL_DIR}/target/${ARCH}-fenrir/debug/kernel" "${ISO_DIR}/boot/kernel"
-nm -Cn "${KERNEL_DIR}/target/${ARCH}-fenrir/debug/kernel" | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > "${ISO_DIR}/boot/kernel_symbols.map"
+CARGO_TARGET_DIR="${KERNEL_BUILD_DIR}" \
+RUSTFLAGS="-C relocation-model=static" \
+cargo build --bin kernel
+
+mkdir -p ${ISO_DIR}/boot/
+
+cp "${KERNEL_BUILD_DIR}/${ARCH}-fenrir/debug/kernel" "${ISO_DIR}/boot/kernel"
+nm -Cn "${KERNEL_BUILD_DIR}/${ARCH}-fenrir/debug/kernel" | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > "${ISO_DIR}/boot/kernel_symbols.map"

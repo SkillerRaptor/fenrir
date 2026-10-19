@@ -10,9 +10,9 @@ CHARIOT_HASH="8ff60b602af522bbdfa95af9c760d84bf984812d581b5b27427742b526f24599"
 CHARIOT_DIR="$(realpath ../chariot/)"
 CHARIOT="${CHARIOT_DIR}/chariot-linux-x86_64"
 
-PACKAGES_DIR="$(realpath ./host-packages)"
 PROJECT_DIR="$(realpath ../)"
-KERNEL_DIR="$(realpath ../kernel/)"
+BUILD_DIR="${PROJECT_DIR}/build"
+PACKAGES_DIR="${BUILD_DIR}/host-packages"
 
 HOST_PACKAGES=(
     binutils
@@ -21,7 +21,7 @@ HOST_PACKAGES=(
     pkgconf
 )
 
-mkdir -p "$CHARIOT_DIR"
+mkdir -p "${CHARIOT_DIR}"
 
 echo "Downloading Chariot"
 wget -q --show-progress "${CHARIOT_URL}" -O "${CHARIOT}"

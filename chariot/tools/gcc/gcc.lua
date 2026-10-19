@@ -4,8 +4,8 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
-local binutils <const> = require("tools.binutils.binutils")
-local mlibc_headers <const> = require("recipes.mlibc-headers.mlibc-headers")
+local binutils <const> = require("chariot.tools.binutils.binutils")
+local mlibc_headers <const> = require("chariot.recipes.mlibc-headers.mlibc-headers")
 
 local GCC_VERSION <const> = "14.4.0"
 
@@ -20,7 +20,7 @@ local gcc = Tool {
             "f35aa1c7f14e6bbe5a7fab83abcb7813449aa1dc6d38bbf27b74614dee17db5e"
         ),
         patches = {
-            "tools/gcc/patches/0001.patch"
+            "chariot/tools/gcc/patches/0001.patch"
         }
     },
     dependencies = {

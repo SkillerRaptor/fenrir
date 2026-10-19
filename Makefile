@@ -28,7 +28,7 @@ run:
 		-M q35,smm=off \
         -accel tcg \
         -boot d \
-        -cdrom ./fenrir.iso \
+        -cdrom ./build/fenrir.iso \
         --no-reboot \
         --no-shutdown \
         -m 256M \

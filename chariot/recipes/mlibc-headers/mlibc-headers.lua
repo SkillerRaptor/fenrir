@@ -4,10 +4,10 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
-local binutils <const> = require("tools.binutils.binutils")
-local mlibc_source <const> = require("recipes.mlibc-source.mlibc-source")
-local pkgconf <const> = require("tools.pkgconf.pkgconf")
-local toolchains <const> = require("recipes.toolchains.toolchains")
+local binutils <const> = require("chariot.tools.binutils.binutils")
+local mlibc_source <const> = require("chariot.recipes.mlibc-source.mlibc-source")
+local pkgconf <const> = require("chariot.tools.pkgconf.pkgconf")
+local toolchains <const> = require("chariot.recipes.toolchains.toolchains")
 
 local MLIBC_VERSION <const> = "7.0.0"
 

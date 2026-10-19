@@ -4,8 +4,10 @@ set -e
 
 cd "$(dirname -- "$0")"
 
-PACKAGES_DIR="$(realpath ./host-packages)"
-ISO_DIR="$(realpath ./iso/)"
+PROJECT_DIR="$(realpath ../)"
+BUILD_DIR="${PROJECT_DIR}/build"
+PACKAGES_DIR="${BUILD_DIR}/host-packages"
+ISO_DIR="${BUILD_DIR}/iso"
 
 mkdir -p ${ISO_DIR}/boot/limine
 cp ${ISO_DIR}/../../limine.conf ${ISO_DIR}/boot/limine
@@ -30,6 +32,6 @@ xorriso -as mkisofs \
     -efi-boot-part \
     --efi-boot-image \
     --protective-msdos-label \
-    ${ISO_DIR} -o ../fenrir.iso
+    ${ISO_DIR} -o ${BUILD_DIR}/fenrir.iso
 
-${PACKAGES_DIR}/limine/usr/local/bin/limine bios-install ../fenrir.iso
+${PACKAGES_DIR}/limine/usr/local/bin/limine bios-install ${BUILD_DIR}/fenrir.iso

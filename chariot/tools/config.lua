@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
-require('tools.binutils.binutils')
-require('tools.gcc.gcc')
-require('tools.limine.limine')
-require('tools.pkgconf.pkgconf')
+require("chariot.tools.binutils.binutils")
+require("chariot.tools.gcc.gcc")
+require("chariot.tools.limine.limine")
+require("chariot.tools.pkgconf.pkgconf")

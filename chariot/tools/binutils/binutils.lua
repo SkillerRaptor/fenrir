@@ -17,7 +17,7 @@ local binutils = Tool {
             "8608fe44ab7de645f6ad0a898313b75338842490d609adb85c9fb2827c376af2"
         ),
         patches = {
-            "tools/binutils/patches/0001.patch"
+            "chariot/tools/binutils/patches/0001.patch"
         }
     },
     dependencies = {

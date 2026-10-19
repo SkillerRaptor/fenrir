@@ -9,11 +9,10 @@ ARCH="${ARCH:-x86_64}"
 CHARIOT_DIR="$(realpath ../chariot/)"
 CHARIOT="${CHARIOT_DIR}/chariot-linux-x86_64"
 
-STAGE_DIR="$(realpath ./initramfs-${ARCH})"
 PROJECT_DIR="$(realpath ../)"
-ISO_DIR="$(realpath ./iso/)"
-
-mkdir -p ${ISO_DIR}/boot
+BUILD_DIR="${PROJECT_DIR}/build"
+STAGE_DIR="${BUILD_DIR}/initramfs-${ARCH}"
+ISO_DIR="${BUILD_DIR}/iso"
 
 PACKAGES=(
     doomgeneric
@@ -23,6 +22,8 @@ PACKAGES=(
 cd ${PROJECT_DIR}
 
 ${CHARIOT} install --arch ${ARCH} --allow-new-profiles --force "${PACKAGES[@]}" "${STAGE_DIR}"
+
+mkdir -p ${ISO_DIR}/boot
 
 tar --sort=name \
     --owner=0 \

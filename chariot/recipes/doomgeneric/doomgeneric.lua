@@ -4,11 +4,11 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
-local binutils <const> = require("tools.binutils.binutils")
-local gcc <const> = require("tools.gcc.gcc")
-local mlibc <const> = require("recipes.mlibc.mlibc")
-local mlibc_headers <const> = require("recipes.mlibc-headers.mlibc-headers")
-local toolchains <const> = require("recipes.toolchains.toolchains")
+local binutils <const> = require("chariot.tools.binutils.binutils")
+local gcc <const> = require("chariot.tools.gcc.gcc")
+local mlibc <const> = require("chariot.recipes.mlibc.mlibc")
+local mlibc_headers <const> = require("chariot.recipes.mlibc-headers.mlibc-headers")
+local toolchains <const> = require("chariot.recipes.toolchains.toolchains")
 
 local doomgeneric = Package {
     name = "doomgeneric",
@@ -18,7 +18,7 @@ local doomgeneric = Package {
         name = "doomgeneric",
         Git("https://github.com/ozkl/doomgeneric.git", "dcb7a8dbc7a16ce3dda29382ac9aae9d77d21284"),
         patches = {
-            "recipes/doomgeneric/patches/0001.patch"
+            "chariot/recipes/doomgeneric/patches/0001.patch"
         }
     },
     dependencies = {

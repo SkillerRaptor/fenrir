@@ -4,5 +4,4 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
-require("recipes.config")
-require("tools.config")
+require("chariot.config")

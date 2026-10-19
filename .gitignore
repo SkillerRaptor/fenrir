@@ -62,8 +62,4 @@ target/
 #-------------------------------------------------------------------------------------------
 .chariot-cache/
 .chariot-rootfs/
-chariot/
-host-packages/
-initramfs-*/
-iso/
-*.iso
+chariot/chariot-*
