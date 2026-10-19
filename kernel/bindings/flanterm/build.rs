@@ -18,6 +18,7 @@ fn main() {
         ])
         .includes(["./flanterm/src/"])
         .pic(false)
+        .flag("-fno-stack-protector")
         .flag("-mcmodel=kernel")
         .flag("-fno-pic")
         .flag("-ffreestanding")

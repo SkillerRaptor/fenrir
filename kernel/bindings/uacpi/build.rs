@@ -13,29 +13,30 @@ fn main() {
 
     build
         .files([
-            format!("./uacpi/src/default_handlers.c"),
-            format!("./uacpi/src/event.c"),
-            format!("./uacpi/src/interpreter.c"),
-            format!("./uacpi/src/io.c"),
-            format!("./uacpi/src/mutex.c"),
-            format!("./uacpi/src/namespace.c"),
-            format!("./uacpi/src/notify.c"),
-            format!("./uacpi/src/opcodes.c"),
-            format!("./uacpi/src/opregion.c"),
-            format!("./uacpi/src/osi.c"),
-            format!("./uacpi/src/registers.c"),
-            format!("./uacpi/src/resources.c"),
-            format!("./uacpi/src/shareable.c"),
-            format!("./uacpi/src/sleep.c"),
-            format!("./uacpi/src/stdlib.c"),
-            format!("./uacpi/src/tables.c"),
-            format!("./uacpi/src/types.c"),
-            format!("./uacpi/src/uacpi.c"),
-            format!("./uacpi/src/utilities.c"),
+            format!("./uACPI/source/default_handlers.c"),
+            format!("./uACPI/source/event.c"),
+            format!("./uACPI/source/interpreter.c"),
+            format!("./uACPI/source/io.c"),
+            format!("./uACPI/source/mutex.c"),
+            format!("./uACPI/source/namespace.c"),
+            format!("./uACPI/source/notify.c"),
+            format!("./uACPI/source/opcodes.c"),
+            format!("./uACPI/source/opregion.c"),
+            format!("./uACPI/source/osi.c"),
+            format!("./uACPI/source/registers.c"),
+            format!("./uACPI/source/resources.c"),
+            format!("./uACPI/source/shareable.c"),
+            format!("./uACPI/source/sleep.c"),
+            format!("./uACPI/source/stdlib.c"),
+            format!("./uACPI/source/tables.c"),
+            format!("./uACPI/source/types.c"),
+            format!("./uACPI/source/uacpi.c"),
+            format!("./uACPI/source/utilities.c"),
         ])
-        .includes(["./uacpi/include/"])
+        .includes(["./uACPI/include/"])
         .define("UACPI_SIZED_FREES", None)
         .pic(false)
+        .flag("-fno-stack-protector")
         .flag("-mcmodel=kernel")
         .flag("-fno-pic")
         .flag("-ffreestanding")
@@ -50,7 +51,7 @@ fn main() {
         .derive_default(true)
         .derive_debug(true)
         .prepend_enum_name(false)
-        .clang_args(["-I", "./uacpi/include/", "-ffreestanding"])
+        .clang_args(["-I", "./uACPI/include/", "-ffreestanding"])
         .header("./src/wrapper.h")
         .generate()
         .expect("Unable to generate bindings!");
