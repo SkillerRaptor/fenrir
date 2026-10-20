@@ -31,7 +31,7 @@ macro_rules! implement_address_type {
             }
 
             pub fn is_aligned(self, alignment: u64) -> bool {
-                (self.0 & alignment) == 0
+                (self.0 & (alignment - 1)) == 0
             }
 
             pub fn as_u64(self) -> u64 {
