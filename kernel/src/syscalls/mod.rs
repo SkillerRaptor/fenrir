@@ -345,7 +345,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let physical_offset = physical_address - aligned_physical_address;
 
             let total_bytes = byte_size + physical_offset;
-            let total_pages = math::div_round_up(total_bytes, PAGE_SIZE);
+            let total_pages = total_bytes.div_ceil(PAGE_SIZE);
 
             for i in 0..total_pages {
                 vmm::map(
