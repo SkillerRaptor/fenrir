@@ -96,11 +96,6 @@ impl Log for Logger {
 
         print!("{}: ", RESET);
 
-        let path_offset = "src/".len();
-        let file = &record.file().unwrap()[path_offset..];
-        let line = record.line().unwrap();
-        print!("{}{}<{}:{}> ", GRAY, ITALIC, file, line);
-
         print!("{}{}[#{}] ", GRAY, ITALIC, core.id);
 
         let current_thread = core.current_thread.load(Ordering::Relaxed);
