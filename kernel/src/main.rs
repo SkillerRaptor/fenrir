@@ -50,7 +50,7 @@ unsafe extern "C" fn kmain() -> ! {
     cpu::disable_interrupts();
 
     if !boot::is_base_revision_supported() {
-        cpu::halt();
+        cpu::hcf();
     }
 
     cpu::initialize_bsp();
