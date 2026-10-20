@@ -4,62 +4,78 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::ptr;
-
 pub struct Bitmap {
     data: *mut u8,
-    size: u64,
+    len: usize,
 }
 
-unsafe impl Send for Bitmap {}
-
 impl Bitmap {
-    pub fn new(data: *mut u8, size: u64) -> Self {
-        Self { data, size }
+    pub const fn new(data: *mut u8, len: usize) -> Self {
+        Self { data, len }
+    }
+
+    pub fn set(&mut self, index: usize, value: bool) {
+        if index >= self.bit_len() {
+            panic!(
+                "index out of bounds: the len is {} bits but the index is {}",
+                self.bit_len(),
+                index
+            );
+        }
+
+        let byte_index = index / 8;
+        let bit_index = index % 8;
+
+        let byte_ptr = unsafe { self.data.add(byte_index) };
+        let byte_value = unsafe { byte_ptr.read_volatile() };
+
+        let new_value = if value {
+            byte_value | 1 << bit_index
+        } else {
+            byte_value & !(1 << bit_index)
+        };
+
+        unsafe {
+            byte_ptr.write_volatile(new_value);
+        }
+    }
+
+    pub fn is_set(&self, index: usize) -> bool {
+        if index >= self.bit_len() {
+            panic!(
+                "index out of bounds: the len is {} bits but the index is {}",
+                self.bit_len(),
+                index
+            );
+        }
+
+        let byte_index = index / 8;
+        let bit_index = index % 8;
+
+        let byte_ptr = unsafe { self.data.add(byte_index) };
+        let byte_value = unsafe { byte_ptr.read_volatile() };
+
+        let bit_value = byte_value & (1 << bit_index);
+        bit_value != 0
     }
 
     pub fn fill(&mut self, byte: u8) {
         unsafe {
-            self.data.write_bytes(byte, (self.size / 8) as usize);
+            self.data.write_bytes(byte, self.len as usize);
         }
-    }
-
-    pub fn set(&mut self, index: u64, value: bool) {
-        assert!(index < self.size);
-
-        let byte = index / 8;
-        let bit = index % 8;
-
-        unsafe {
-            if value {
-                *self.data.add(byte as usize) |= 1 << bit;
-            } else {
-                *self.data.add(byte as usize) &= !(1 << bit);
-            }
-        }
-    }
-
-    pub fn get(&self, index: u64) -> bool {
-        assert!(index < self.size);
-
-        let byte = index / 8;
-        let bit = index % 8;
-
-        unsafe { (*self.data.add(byte as usize) & (1 << bit)) != 0 }
     }
 
     pub fn data(&self) -> *mut u8 {
         self.data
     }
 
-    pub fn size(&self) -> u64 {
-        self.size
+    pub fn len(&self) -> usize {
+        self.len
     }
 
-    pub const fn default() -> Self {
-        Self {
-            data: ptr::null_mut(),
-            size: 0,
-        }
+    pub fn bit_len(&self) -> usize {
+        self.len * 8
     }
 }
+
+unsafe impl Send for Bitmap {}

@@ -4,132 +4,96 @@
 // SPDX-License-Identifier: MIT
 //
 
-use limine::memmap::{
-    MEMMAP_ACPI_NVS,
-    MEMMAP_ACPI_RECLAIMABLE,
-    MEMMAP_BAD_MEMORY,
-    MEMMAP_BOOTLOADER_RECLAIMABLE,
-    MEMMAP_EXECUTABLE_AND_MODULES,
-    MEMMAP_FRAMEBUFFER,
-    MEMMAP_MAPPED_RESERVED,
-    MEMMAP_RESERVED,
-    MEMMAP_USABLE,
-};
+use core::ptr;
+
+use limine::memmap;
 
 use crate::{
-    common::{boot, math, once::Once},
+    common::{boot, once::Once},
     memory::{PAGE_SIZE, address::PhysicalAddress, bitmap::Bitmap},
     sync::spinlock::SpinLock,
 };
 
-static HIGHEST_PAGE: Once<u64> = Once::new();
-static BITMAP: SpinLock<Bitmap> = SpinLock::new(Bitmap::default());
+static HIGHEST_ADDRESS: Once<PhysicalAddress> = Once::new();
+static BITMAP: SpinLock<Bitmap> = SpinLock::new(Bitmap::new(ptr::null_mut(), 0));
 
 pub fn initialize() {
     let memory_map = boot::get_memory_map();
 
     log::debug!("PMM: Scanning {} memory map entries", memory_map.len());
 
-    let mut highest_page = 0;
-    for entry in memory_map {
-        let ty = match entry.type_ {
-            MEMMAP_USABLE => "Usable",
-            MEMMAP_RESERVED => "Reserved",
-            MEMMAP_ACPI_RECLAIMABLE => "ACPI Reclaimable",
-            MEMMAP_ACPI_NVS => "ACPI NVS",
-            MEMMAP_BAD_MEMORY => "Bad Memory",
-            MEMMAP_BOOTLOADER_RECLAIMABLE => "Bootloader Reclaimable",
-            MEMMAP_EXECUTABLE_AND_MODULES => "Executable and Modules",
-            MEMMAP_FRAMEBUFFER => "Framebuffer",
-            MEMMAP_MAPPED_RESERVED => "Mapped Reserved",
-            _ => unreachable!(),
-        };
-
-        log::debug!(
-            "PMM:   [{:#018x}-{:#018x}] {}",
-            entry.base,
-            entry.base + entry.length,
-            ty
-        );
-
-        if entry.type_ != MEMMAP_USABLE {
-            continue;
-        }
-
-        let end_of_page = entry.base + entry.length;
-
-        if end_of_page > highest_page {
-            highest_page = end_of_page;
-        }
-    }
+    let Some(highest_address) = memory_map
+        .iter()
+        .filter(|entry| entry.type_ == memmap::MEMMAP_USABLE)
+        .map(|entry| PhysicalAddress::new(entry.base + entry.length))
+        .max()
+    else {
+        panic!("no usable regions in memory map");
+    };
 
     unsafe {
-        HIGHEST_PAGE.initialize(highest_page);
+        HIGHEST_ADDRESS.initialize(highest_address);
     }
 
-    let size = math::div_round_up(*HIGHEST_PAGE.get(), PAGE_SIZE);
+    let total_pages = HIGHEST_ADDRESS.get().as_u64().div_ceil(PAGE_SIZE);
 
-    for entry in memory_map {
-        if entry.type_ != MEMMAP_USABLE {
-            continue;
-        }
+    let bitmap_bytes = total_pages.div_ceil(8);
+    let bitmap_pages = bitmap_bytes.div_ceil(PAGE_SIZE);
 
-        if entry.length >= size {
-            let data = (entry.base + boot::get_hhdm_offset()) as *mut u8;
+    let Some(bitmap_base) = memory_map
+        .iter()
+        .find(|entry| entry.type_ == memmap::MEMMAP_USABLE && entry.length >= bitmap_pages * 8)
+        .map(|entry| PhysicalAddress::new(entry.base))
+    else {
+        panic!("no usable region to hold the bitmap");
+    };
 
-            let mut bitmap = BITMAP.lock();
-            *bitmap = Bitmap::new(data, size);
-            bitmap.fill(0xff);
+    let mut bitmap = BITMAP.lock();
 
-            break;
-        }
-    }
+    *bitmap = Bitmap::new(
+        bitmap_base.to_higher_half().as_mut_ptr(),
+        bitmap_bytes as usize,
+    );
+    bitmap.fill(0xff);
 
-    {
-        let bitmap = BITMAP.lock();
-        log::debug!(
-            "PMM: Placed bitmap at {:#018x} with a size of {} bytes ({} KiB)",
-            bitmap.data() as u64,
-            bitmap.size() / 8,
-            bitmap.size() / 8 / 1024,
-        );
-    }
+    log::debug!(
+        "PMM: Placed bitmap at {:#018x} with a size of {} bytes ({} pages)",
+        bitmap.data() as u64,
+        bitmap.len(),
+        bitmap_pages,
+    );
 
     let mut free_pages = 0;
 
     for entry in memory_map {
-        if entry.type_ != MEMMAP_USABLE {
+        if entry.type_ != memmap::MEMMAP_USABLE {
             continue;
         }
 
-        let mut bitmap = BITMAP.lock();
-        if (entry.base + boot::get_hhdm_offset()) as *mut u8 == bitmap.data() {
-            let remaining_bytes = entry.length - bitmap.size();
-            for offset in (0..remaining_bytes).step_by(PAGE_SIZE as usize) {
-                let address = (entry.base + bitmap.size()) + offset;
-                let page_index = address / PAGE_SIZE;
-                bitmap.set(page_index, false);
-            }
+        assert_eq!(entry.base % PAGE_SIZE, 0);
+        assert_eq!(entry.length % PAGE_SIZE, 0);
 
-            free_pages += remaining_bytes / PAGE_SIZE;
+        let first = entry.base / PAGE_SIZE;
+        let count = entry.length / PAGE_SIZE;
 
-            continue;
+        for page in first..first + count {
+            bitmap.set(page as usize, false);
         }
 
-        for offset in (0..entry.length).step_by(PAGE_SIZE as usize) {
-            let address = entry.base + offset;
-            let page_index = address / PAGE_SIZE;
-            bitmap.set(page_index, false);
-        }
-
-        free_pages += entry.length / PAGE_SIZE;
+        free_pages += count;
     }
 
+    let first_page = bitmap_base.as_u64() / PAGE_SIZE;
+    for page in first_page..first_page + bitmap_pages {
+        bitmap.set(page as usize, true);
+    }
+    free_pages -= bitmap_pages;
+
     log::debug!(
-        "PMM: Detected {} free pages ({} KiB, {} MiB)",
+        "PMM: Detected {} free pages ({} MiB) out of {}",
         free_pages,
-        (free_pages * PAGE_SIZE) / 1024,
-        (free_pages * PAGE_SIZE) / 1024 / 1024,
+        (free_pages * PAGE_SIZE) / (1024 * 1024),
+        total_pages,
     );
 
     log::info!("PMM: Initialized");
@@ -141,9 +105,9 @@ pub fn allocate(pages: u64, clear: bool) -> Option<PhysicalAddress> {
     let mut current_pages = 0;
     let mut bitmap = BITMAP.lock();
 
-    let total = HIGHEST_PAGE.get() / PAGE_SIZE;
+    let total = HIGHEST_ADDRESS.get().as_u64() / PAGE_SIZE;
     for i in 0..total {
-        if bitmap.get(i) {
+        if bitmap.is_set(i as usize) {
             current_pages = 0;
             continue;
         }
@@ -156,7 +120,7 @@ pub fn allocate(pages: u64, clear: bool) -> Option<PhysicalAddress> {
         let index = i + 1;
         let page = index - pages;
         for j in page..index {
-            bitmap.set(j, true);
+            bitmap.set(j as usize, true);
         }
 
         let address = PhysicalAddress::new(page * PAGE_SIZE);
@@ -180,6 +144,6 @@ pub fn free(address: PhysicalAddress, pages: u64) {
 
     let mut bitmap = BITMAP.lock();
     for i in 0..pages {
-        bitmap.set(page + i as u64, false);
+        bitmap.set((page + i) as usize, false);
     }
 }

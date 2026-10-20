@@ -10,7 +10,7 @@ use core::{
 };
 
 use crate::{
-    common::{boot, math},
+    common::boot,
     memory::{PAGE_SIZE, address::PhysicalAddress, pmm},
 };
 
@@ -27,7 +27,7 @@ unsafe impl GlobalAlloc for KernelAllocator {
         let size = layout.size();
         assert!(size > 0);
 
-        let page_count = math::div_round_up(size as u64, PAGE_SIZE);
+        let page_count = size.div_ceil(PAGE_SIZE as usize) as u64;
 
         let Some(ptr) = pmm::allocate(page_count + 1, false) else {
             return ptr::null_mut();
