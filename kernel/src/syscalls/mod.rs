@@ -13,12 +13,12 @@ use core::{
 };
 
 use crate::{
-    acpi::hpet,
     arch::x86_64::cpu::{self, Core},
     common::{boot, logger, math},
     filesystem::ustar,
     memory::{
         PAGE_SIZE,
+        address::{PhysicalAddress, VirtualAddress},
         pmm,
         vmm::{self, Attribute},
     },
@@ -93,7 +93,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let new_heap_end = math::align_up(old_heap_end + size, PAGE_SIZE);
 
             let page_count = (new_heap_end - old_heap_end) / PAGE_SIZE;
-            let physical_base = pmm::allocate(page_count, true) as u64;
+            let physical_base = pmm::allocate(page_count, true).unwrap();
 
             for i in 0..page_count {
                 let physical_address = physical_base + i * PAGE_SIZE;
@@ -101,7 +101,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
                 vmm::map(
                     process.page_map,
                     physical_address,
-                    virtual_address,
+                    VirtualAddress::new(virtual_address),
                     Attribute::WRITE | Attribute::USER,
                 );
             }
@@ -216,7 +216,8 @@ fn syscall_handler(registers_ptr: *mut Registers) {
                 let thread = core.current_thread.load(Ordering::Acquire);
                 let page_map = unsafe { (*(*thread).process).page_map };
 
-                let physical_address = vmm::virtual_to_physical(page_map, buffer);
+                let physical_address =
+                    vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer));
                 let buffer = (physical_address + boot::get_hhdm_offset()) as *mut u8;
 
                 let initramfs = boot::get_modules()[1];
@@ -320,7 +321,7 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let thread = core.current_thread.load(Ordering::Acquire);
             let page_map = unsafe { (*(*thread).process).page_map };
 
-            let physical_address = vmm::virtual_to_physical(page_map, buffer);
+            let physical_address = vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer));
             let kernel_ptr = (physical_address + boot::get_hhdm_offset()) as *const u8;
 
             let bytes = unsafe { slice::from_raw_parts(kernel_ptr, count as usize) };
@@ -349,8 +350,8 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             for i in 0..total_pages {
                 vmm::map(
                     page_map,
-                    aligned_physical_address + i * PAGE_SIZE,
-                    0x0000000010000000 + i * PAGE_SIZE,
+                    PhysicalAddress::new(aligned_physical_address + i * PAGE_SIZE),
+                    VirtualAddress::new(0x0000000010000000 + i * PAGE_SIZE),
                     Attribute::USER | Attribute::WRITE,
                 );
             }

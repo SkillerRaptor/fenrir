@@ -17,7 +17,11 @@ use limine::memmap::{
 
 use crate::{
     common::{boot, math},
-    memory::{PAGE_SIZE, pmm},
+    memory::{
+        PAGE_SIZE,
+        address::{PhysicalAddress, VirtualAddress},
+        pmm,
+    },
 };
 
 bitflags! {
@@ -78,10 +82,11 @@ pub fn initialize() {
         );
 
         for page in (entry_start..entry_end).step_by(PAGE_SIZE as usize) {
+            let page_address = PhysicalAddress::new(page);
             map(
                 unsafe { KERNEL_PAGE_MAP },
-                page,
-                page + boot::get_hhdm_offset(),
+                page_address,
+                page_address.to_higher_half(),
                 Attribute::WRITE,
             );
         }
@@ -118,8 +123,8 @@ pub fn initialize() {
     for page in (kernel_virtual_start..kernel_virtual_end).step_by(PAGE_SIZE as usize) {
         map(
             unsafe { KERNEL_PAGE_MAP },
-            page - virtual_base + physical_base,
-            page,
+            PhysicalAddress::new(page - virtual_base + physical_base),
+            VirtualAddress::new(page),
             Attribute::WRITE,
         );
     }
@@ -136,7 +141,7 @@ pub fn initialize() {
 }
 
 pub fn create_page_map() -> PageMap {
-    let page_map = PageMap(pmm::allocate(1, true) as u64);
+    let page_map = PageMap(pmm::allocate(1, true).unwrap().as_u64());
 
     // NOTE: This copies the higher half of the kernel page map
     if unsafe { KERNEL_PAGE_MAP.0 } != 0 {
@@ -176,7 +181,7 @@ fn get_next_level(pml: u64, entry: u16) -> u64 {
 
     let attributes = Attribute::from_bits_truncate((unsafe { pml_entry.read() } & 0x0fff) as u16);
     if !attributes.contains(Attribute::PRESENT) {
-        let new_level = pmm::allocate(1, true) as u64;
+        let new_level = pmm::allocate(1, true).unwrap().as_u64();
         unsafe {
             pml_entry.write(
                 new_level | (Attribute::USER | Attribute::WRITE | Attribute::PRESENT).bits() as u64,
@@ -187,17 +192,17 @@ fn get_next_level(pml: u64, entry: u16) -> u64 {
     (unsafe { pml_entry.read() } & ADDRESS_MASK)
 }
 
-fn get_pte(page_map: PageMap, virtual_addr: u64) -> *mut u64 {
-    let pml4_entry = ((virtual_addr >> 39) & 0x1ff) as u16;
+fn get_pte(page_map: PageMap, virtual_address: VirtualAddress) -> *mut u64 {
+    let pml4_entry = ((virtual_address.as_u64() >> 39) & 0x1ff) as u16;
     let pml4 = page_map.0;
 
-    let pdpt_entry = ((virtual_addr >> 30) & 0x1ff) as u16;
+    let pdpt_entry = ((virtual_address.as_u64() >> 30) & 0x1ff) as u16;
     let pdpt = get_next_level(pml4, pml4_entry);
 
-    let pd_entry = ((virtual_addr >> 21) & 0x1ff) as u16;
+    let pd_entry = ((virtual_address.as_u64() >> 21) & 0x1ff) as u16;
     let pd = get_next_level(pdpt, pdpt_entry);
 
-    let pt_entry = ((virtual_addr >> 12) & 0x1ff) as u16;
+    let pt_entry = ((virtual_address.as_u64() >> 12) & 0x1ff) as u16;
     let pt = get_next_level(pd, pd_entry);
 
     let entry_address = (pt + boot::get_hhdm_offset()) as *mut u64;
@@ -206,24 +211,29 @@ fn get_pte(page_map: PageMap, virtual_addr: u64) -> *mut u64 {
     entry
 }
 
-pub fn map(page_map: PageMap, physical_addr: u64, virtual_addr: u64, attributes: Attribute) {
-    let aligned_physical_addr = math::align_down(physical_addr, PAGE_SIZE);
-    let aligned_virtual_addr = math::align_down(virtual_addr, PAGE_SIZE);
+pub fn map(
+    page_map: PageMap,
+    physical_address: PhysicalAddress,
+    virtual_address: VirtualAddress,
+    attributes: Attribute,
+) {
+    let aligned_physical_address = physical_address.align_down(PAGE_SIZE);
+    let aligned_virtual_address = virtual_address.align_down(PAGE_SIZE);
 
-    let entry = get_pte(page_map, aligned_virtual_addr);
+    let entry = get_pte(page_map, aligned_virtual_address);
     unsafe {
         entry.write(
-            (aligned_physical_addr & ADDRESS_MASK)
+            (aligned_physical_address.as_u64() & ADDRESS_MASK)
                 | (attributes | Attribute::PRESENT).bits() as u64,
         );
     }
 }
 
-pub fn map_into_kernel(physical_address: u64, attributes: Attribute) {
+pub fn map_into_kernel(physical_address: PhysicalAddress, attributes: Attribute) {
     map(
         unsafe { KERNEL_PAGE_MAP },
         physical_address,
-        physical_address + boot::get_hhdm_offset(),
+        physical_address.to_higher_half(),
         attributes,
     );
 }
@@ -232,7 +242,7 @@ pub fn get_kernel_page_map() -> PageMap {
     unsafe { KERNEL_PAGE_MAP }
 }
 
-pub fn virtual_to_physical(page_map: PageMap, virtual_address: u64) -> u64 {
+pub fn virtual_to_physical(page_map: PageMap, virtual_address: VirtualAddress) -> u64 {
     let entry = get_pte(page_map, virtual_address);
-    unsafe { (*entry & ADDRESS_MASK) + (virtual_address & 0xfff) }
+    unsafe { (*entry & ADDRESS_MASK) + (virtual_address.as_u64() & 0xfff) }
 }

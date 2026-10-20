@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+pub mod address;
 pub mod allocator;
 pub mod bitmap;
 pub mod pmm;

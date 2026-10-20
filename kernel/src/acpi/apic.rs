@@ -8,7 +8,10 @@ use crate::{
     acpi::hpet,
     arch::x86_64::{cpu, pic},
     common::{boot, mmio, once::Once},
-    memory::vmm::{self, Attribute},
+    memory::{
+        address::PhysicalAddress,
+        vmm::{self, Attribute},
+    },
 };
 
 const APIC_BASE_MSR: u32 = 0x1b;
@@ -40,7 +43,10 @@ pub fn initialize() {
         BASE_LAPIC_ADDRESS.initialize(lapic_physical_address + boot::get_hhdm_offset());
     }
 
-    vmm::map_into_kernel(lapic_physical_address, Attribute::WRITE);
+    vmm::map_into_kernel(
+        PhysicalAddress::new(lapic_physical_address),
+        Attribute::WRITE,
+    );
 
     log::debug!(
         "APIC: Mapping MMIO {:#018x} -> {:#018x}",

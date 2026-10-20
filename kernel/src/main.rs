@@ -38,6 +38,7 @@ use crate::{
     filesystem::ustar,
     memory::{
         PAGE_SIZE,
+        address::{PhysicalAddress, VirtualAddress},
         pmm,
         vmm::{self, Attribute},
     },
@@ -109,7 +110,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
             math::align_up(program_header.p_vaddr + program_header.p_memsz, PAGE_SIZE);
         let page_count = (virtual_end - virtual_start) / PAGE_SIZE;
 
-        let physical_start = pmm::allocate(page_count, true) as u64;
+        let physical_start = pmm::allocate(page_count, true).unwrap();
         let mut attributes = Attribute::USER;
         if (program_header.p_flags & PF_W) == PF_W {
             attributes |= Attribute::WRITE;
@@ -117,7 +118,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
 
         for i in 0..page_count {
             let physical_address = physical_start + i * PAGE_SIZE;
-            let virtual_address = virtual_start + i * PAGE_SIZE;
+            let virtual_address = VirtualAddress::new(virtual_start + i * PAGE_SIZE);
             vmm::map(page_map, physical_address, virtual_address, attributes);
         }
 
@@ -125,7 +126,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
         let size = program_header.p_filesz as usize;
 
         let src = &bytes[offset..offset + size];
-        let dst = (physical_start + boot::get_hhdm_offset()) as *mut u8;
+        let dst = physical_start.to_higher_half().as_mut_ptr::<u8>();
 
         let page_offset = (program_header.p_vaddr - virtual_start) as usize;
         unsafe {
@@ -150,13 +151,13 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
 
     let stack_pages = 16;
     let stack_size = PAGE_SIZE * stack_pages;
-    let stack = pmm::allocate(stack_pages, true) as u64;
+    let stack = pmm::allocate(stack_pages, true).unwrap();
 
     for i in 0..stack_pages {
         vmm::map(
             page_map,
             stack + i * PAGE_SIZE,
-            virtual_stack - stack_size + i * PAGE_SIZE,
+            VirtualAddress::new(virtual_stack - stack_size + i * PAGE_SIZE),
             Attribute::WRITE | Attribute::USER,
         );
     }
@@ -170,22 +171,26 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
         let bytes = argument.as_bytes();
         physical_address -= 1;
         virtual_stack -= 1;
-        unsafe { *(physical_address as *mut u8) = 0 };
+        unsafe { *(physical_address.as_u64() as *mut u8) = 0 };
         physical_address -= bytes.len() as u64;
         virtual_stack -= bytes.len() as u64;
         unsafe {
-            ptr::copy_nonoverlapping(bytes.as_ptr(), physical_address as *mut u8, bytes.len())
+            ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                physical_address.as_u64() as *mut u8,
+                bytes.len(),
+            )
         };
         string_addresses.push(virtual_stack);
     }
 
     virtual_stack = virtual_stack & !15;
-    physical_address = physical_address & !15;
+    physical_address = PhysicalAddress::new(physical_address.as_u64() & !15);
 
     let mut push = |value: u64| {
         virtual_stack -= 8;
         physical_address -= 8;
-        unsafe { (physical_address as *mut u64).write(value) };
+        unsafe { (physical_address.as_u64() as *mut u64).write(value) };
     };
 
     let word_count = 1 + string_addresses.len() + 1 + 1;
@@ -234,7 +239,7 @@ fn load_program(bytes: &[u8], arguments: &[&str]) -> (Arc<Process>, Arc<Thread>)
         &user_process,
         elf.ehdr.e_entry,
         virtual_stack,
-        stack,
+        stack.as_u64(),
         stack_size as usize,
     );
     (user_process, user_thread)

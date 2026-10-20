@@ -11,7 +11,7 @@ use core::{
 
 use crate::{
     common::{boot, math},
-    memory::{PAGE_SIZE, pmm},
+    memory::{PAGE_SIZE, address::PhysicalAddress, pmm},
 };
 
 #[repr(C)]
@@ -29,13 +29,11 @@ unsafe impl GlobalAlloc for KernelAllocator {
 
         let page_count = math::div_round_up(size as u64, PAGE_SIZE);
 
-        let ptr = pmm::allocate(page_count + 1, false);
-        if ptr.is_null() {
+        let Some(ptr) = pmm::allocate(page_count + 1, false) else {
             return ptr::null_mut();
-        }
+        };
 
-        let ptr = (ptr as u64 + boot::get_hhdm_offset()) as *mut u8;
-
+        let ptr = ptr.to_higher_half().as_mut_ptr::<u8>();
         let header = ptr as *mut AllocationHeader;
         unsafe {
             (*header).page_count = page_count;
@@ -54,7 +52,7 @@ unsafe impl GlobalAlloc for KernelAllocator {
         let header = header_address as *const AllocationHeader;
 
         let page_count = unsafe { (*header).page_count + 1 };
-        let physical = (header_address as u64 - boot::get_hhdm_offset()) as *mut u8;
+        let physical = PhysicalAddress::new(header_address as u64 - boot::get_hhdm_offset());
 
         pmm::free(physical, page_count);
     }

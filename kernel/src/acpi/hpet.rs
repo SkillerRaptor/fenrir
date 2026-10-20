@@ -18,7 +18,10 @@ use uacpi_sys::{
 
 use crate::{
     common::{boot, mmio, once::Once},
-    memory::vmm::{self, Attribute},
+    memory::{
+        address::PhysicalAddress,
+        vmm::{self, Attribute},
+    },
 };
 
 const GENERAL_CAPABILITIES_REGISTER: u64 = 0x000;
@@ -45,7 +48,7 @@ pub fn initialize() {
         uacpi_table_unref(&raw mut table);
     }
 
-    vmm::map_into_kernel(physical_address, Attribute::WRITE);
+    vmm::map_into_kernel(PhysicalAddress::new(physical_address), Attribute::WRITE);
 
     unsafe {
         VIRTUAL_ADDRESS.initialize(physical_address + boot::get_hhdm_offset());

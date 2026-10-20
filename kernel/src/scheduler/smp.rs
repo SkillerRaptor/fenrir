@@ -30,7 +30,7 @@ pub fn initialize() {
     log::debug!("SMP: Found {} available cores", mp_infos.len());
 
     for (i, info) in mp_infos.iter().enumerate() {
-        let stack = pmm::allocate(1, true) as u64 + PAGE_SIZE + boot::get_hhdm_offset();
+        let stack = pmm::allocate(1, true).unwrap().to_higher_half().as_u64() + PAGE_SIZE;
 
         let core = Core::by_id(i);
         unsafe {

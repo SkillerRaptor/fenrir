@@ -12,9 +12,9 @@ use core::{
 
 use crate::{
     arch::x86_64::registers::Registers,
-    common::boot,
     memory::{
         PAGE_SIZE,
+        address::PhysicalAddress,
         pmm,
         vmm::{self, Attribute},
     },
@@ -61,8 +61,8 @@ unsafe impl Sync for Thread {}
 
 impl Thread {
     pub fn new_kernel(entry: fn()) -> Arc<Self> {
-        let stack_base = pmm::allocate(1, true) as u64;
-        let virtual_stack = stack_base + boot::get_hhdm_offset();
+        let stack_base = pmm::allocate(1, true).unwrap();
+        let virtual_stack = stack_base.to_higher_half();
 
         vmm::map(
             vmm::get_kernel_page_map(),
@@ -75,8 +75,8 @@ impl Thread {
             scheduler::get_kernel_process(),
             ThreadLocation::Kernel,
             unsafe { mem::transmute(entry) },
-            virtual_stack + PAGE_SIZE,
-            stack_base,
+            (virtual_stack + PAGE_SIZE).as_u64(),
+            stack_base.as_u64(),
             PAGE_SIZE as usize,
         )
     }
@@ -160,7 +160,10 @@ impl Thread {
 impl Drop for Thread {
     fn drop(&mut self) {
         if !self.stack_base.is_null() {
-            pmm::free(self.stack_base, self.stack_size as u64 / PAGE_SIZE);
+            pmm::free(
+                PhysicalAddress::new(self.stack_base as u64),
+                self.stack_size as u64 / PAGE_SIZE,
+            );
         }
     }
 }

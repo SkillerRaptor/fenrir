@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use core::ptr;
-
 use limine::memmap::{
     MEMMAP_ACPI_NVS,
     MEMMAP_ACPI_RECLAIMABLE,
@@ -20,7 +18,7 @@ use limine::memmap::{
 
 use crate::{
     common::{boot, math, once::Once},
-    memory::{PAGE_SIZE, bitmap::Bitmap},
+    memory::{PAGE_SIZE, address::PhysicalAddress, bitmap::Bitmap},
     sync::spinlock::SpinLock,
 };
 
@@ -137,7 +135,7 @@ pub fn initialize() {
     log::info!("PMM: Initialized");
 }
 
-pub fn allocate(pages: u64, clear: bool) -> *mut u8 {
+pub fn allocate(pages: u64, clear: bool) -> Option<PhysicalAddress> {
     assert!(pages > 0);
 
     let mut current_pages = 0;
@@ -161,24 +159,24 @@ pub fn allocate(pages: u64, clear: bool) -> *mut u8 {
             bitmap.set(j, true);
         }
 
-        let ptr = (page * PAGE_SIZE) as *mut u8;
+        let address = PhysicalAddress::new(page * PAGE_SIZE);
 
         if clear {
-            let address = ((ptr as u64) + boot::get_hhdm_offset()) as *mut u64;
-            for current_page in 0..(pages * (PAGE_SIZE / size_of::<u64>() as u64)) {
-                unsafe { address.add(current_page as usize).write(0) };
+            let ptr = address.to_higher_half().as_mut_ptr::<u8>();
+            unsafe {
+                ptr.write_bytes(0, (pages * PAGE_SIZE) as usize);
             }
         }
 
-        return ptr;
+        return Some(address);
     }
 
-    ptr::null_mut()
+    // TODO: Replace with error
+    None
 }
 
-pub fn free(ptr: *mut u8, pages: u64) {
-    let address = ptr as u64;
-    let page = address / PAGE_SIZE;
+pub fn free(address: PhysicalAddress, pages: u64) {
+    let page = address.as_u64() / PAGE_SIZE;
 
     let mut bitmap = BITMAP.lock();
     for i in 0..pages {
