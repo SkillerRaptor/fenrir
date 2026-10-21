@@ -22,6 +22,28 @@ pub fn initialize() {
 
     log::debug!("PMM: Scanning {} memory map entries", memory_map.len());
 
+    for entry in memory_map {
+        let ty = match entry.type_ {
+            memmap::MEMMAP_USABLE => "Usable",
+            memmap::MEMMAP_RESERVED => "Reserved",
+            memmap::MEMMAP_ACPI_RECLAIMABLE => "ACPI Reclaimable",
+            memmap::MEMMAP_ACPI_NVS => "ACPI NVS",
+            memmap::MEMMAP_BAD_MEMORY => "Bad Memory",
+            memmap::MEMMAP_BOOTLOADER_RECLAIMABLE => "Bootloader Reclaimable",
+            memmap::MEMMAP_EXECUTABLE_AND_MODULES => "Executable and Modules",
+            memmap::MEMMAP_FRAMEBUFFER => "Framebuffer",
+            memmap::MEMMAP_MAPPED_RESERVED => "Mapped Reserved",
+            _ => unreachable!(),
+        };
+
+        log::debug!(
+            "PMM:   [{:#018x}-{:#018x}] {}",
+            entry.base,
+            entry.base + entry.length,
+            ty
+        );
+    }
+
     let Some(highest_address) = memory_map
         .iter()
         .filter(|entry| entry.type_ == memmap::MEMMAP_USABLE)
