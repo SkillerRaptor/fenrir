@@ -217,8 +217,8 @@ fn syscall_handler(registers_ptr: *mut Registers) {
                 let page_map = unsafe { (*(*thread).process).page_map };
 
                 let physical_address =
-                    vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer));
-                let buffer = (physical_address + boot::get_hhdm_offset()) as *mut u8;
+                    vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer)).unwrap();
+                let buffer = physical_address.to_higher_half().as_mut_ptr::<u8>();
 
                 let initramfs = boot::get_modules()[1];
                 let bytes = ustar::lookup(initramfs.data(), "./DOOM1.WAD").unwrap();
@@ -321,8 +321,9 @@ fn syscall_handler(registers_ptr: *mut Registers) {
             let thread = core.current_thread.load(Ordering::Acquire);
             let page_map = unsafe { (*(*thread).process).page_map };
 
-            let physical_address = vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer));
-            let kernel_ptr = (physical_address + boot::get_hhdm_offset()) as *const u8;
+            let physical_address =
+                vmm::virtual_to_physical(page_map, VirtualAddress::new(buffer)).unwrap();
+            let kernel_ptr = physical_address.to_higher_half().as_mut_ptr::<u8>();
 
             let bytes = unsafe { slice::from_raw_parts(kernel_ptr, count as usize) };
             print!("{}", unsafe { str::from_utf8_unchecked(bytes) });

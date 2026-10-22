@@ -26,7 +26,7 @@ use crate::{
 
 bitflags! {
     #[derive(Clone, Copy)]
-    pub struct Attribute: u16 {
+    pub struct Attribute: u64 {
         const NULL = 0;
         const PRESENT = 1 << 0;
         const WRITE = 1 << 1;
@@ -70,16 +70,6 @@ pub fn initialize() {
 
         let entry_start = math::align_down(entry.base, PAGE_SIZE);
         let entry_end = math::align_up(entry.base + entry.length, PAGE_SIZE);
-        let entry_pages = (entry_end - entry_start) / PAGE_SIZE;
-
-        log::debug!(
-            "VMM:   [{:#018x}-{:#018x}] -> [{:#018x}-{:#018x}] ({} pages)",
-            entry_start,
-            entry_end,
-            entry_start + boot::get_hhdm_offset(),
-            entry_end + boot::get_hhdm_offset(),
-            entry_pages
-        );
 
         for page in (entry_start..entry_end).step_by(PAGE_SIZE as usize) {
             let page_address = PhysicalAddress::new(page);
@@ -152,7 +142,7 @@ pub fn create_page_map() -> PageMap {
                 (unsafe { KERNEL_PAGE_MAP.0 } + offset + hhdm_offset) as *const u64;
 
             let kernel_entry = unsafe { kernel_entry_address.read() };
-            let attributes = Attribute::from_bits_truncate((kernel_entry & 0x0fff) as u16);
+            let attributes = Attribute::from_bits_truncate(kernel_entry & 0x0fff);
             if attributes.contains(Attribute::PRESENT) {
                 let new_entry_address = (page_map.0 + offset + hhdm_offset) as *mut u64;
                 unsafe {
@@ -179,7 +169,7 @@ fn get_next_level(pml: u64, entry: u16) -> u64 {
     let pml_address = (pml + boot::get_hhdm_offset()) as *mut u64;
     let pml_entry = unsafe { pml_address.add(entry as usize) };
 
-    let attributes = Attribute::from_bits_truncate((unsafe { pml_entry.read() } & 0x0fff) as u16);
+    let attributes = Attribute::from_bits_truncate((unsafe { pml_entry.read() } & 0x0fff));
     if !attributes.contains(Attribute::PRESENT) {
         let new_level = pmm::allocate(1, true).unwrap().as_u64();
         unsafe {
@@ -211,22 +201,34 @@ fn get_pte(page_map: PageMap, virtual_address: VirtualAddress) -> *mut u64 {
     entry
 }
 
+fn invalidate_page(address: VirtualAddress) {
+    unsafe {
+        asm!(
+            "invlpg [{}]",
+            in(reg) address.as_u64(),
+            options(nostack, preserves_flags)
+        );
+    }
+}
+
 pub fn map(
     page_map: PageMap,
     physical_address: PhysicalAddress,
     virtual_address: VirtualAddress,
     attributes: Attribute,
 ) {
-    let aligned_physical_address = physical_address.align_down(PAGE_SIZE);
-    let aligned_virtual_address = virtual_address.align_down(PAGE_SIZE);
+    assert!(physical_address.is_aligned(PAGE_SIZE));
+    assert!(virtual_address.is_aligned(PAGE_SIZE));
 
-    let entry = get_pte(page_map, aligned_virtual_address);
+    let attributes = (attributes | Attribute::PRESENT).bits();
+    let value = (physical_address.as_u64() & ADDRESS_MASK) | attributes;
+
+    let entry = get_pte(page_map, virtual_address);
     unsafe {
-        entry.write(
-            (aligned_physical_address.as_u64() & ADDRESS_MASK)
-                | (attributes | Attribute::PRESENT).bits() as u64,
-        );
+        entry.write_volatile(value);
     }
+
+    invalidate_page(virtual_address);
 }
 
 pub fn map_into_kernel(physical_address: PhysicalAddress, attributes: Attribute) {
@@ -238,11 +240,21 @@ pub fn map_into_kernel(physical_address: PhysicalAddress, attributes: Attribute)
     );
 }
 
-pub fn get_kernel_page_map() -> PageMap {
-    unsafe { KERNEL_PAGE_MAP }
+pub fn virtual_to_physical(
+    page_map: PageMap,
+    virtual_address: VirtualAddress,
+) -> Option<PhysicalAddress> {
+    let entry = get_pte(page_map, virtual_address);
+    let value = unsafe { entry.read_volatile() };
+
+    if value & Attribute::PRESENT.bits() == 0 {
+        return None;
+    }
+
+    let address = (value & ADDRESS_MASK) + (virtual_address.as_u64() & (PAGE_SIZE - 1));
+    Some(PhysicalAddress::new(address))
 }
 
-pub fn virtual_to_physical(page_map: PageMap, virtual_address: VirtualAddress) -> u64 {
-    let entry = get_pte(page_map, virtual_address);
-    unsafe { (*entry & ADDRESS_MASK) + (virtual_address.as_u64() & 0xfff) }
+pub fn get_kernel_page_map() -> PageMap {
+    unsafe { KERNEL_PAGE_MAP }
 }
