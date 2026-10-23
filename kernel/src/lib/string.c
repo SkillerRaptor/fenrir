@@ -77,3 +77,17 @@ int memcmp(const void *s1, const void *s2, size_t n)
 
     return 0;
 }
+
+#ifdef strlen
+#    undef strlen
+#endif
+
+size_t strlen(const char *str)
+{
+    size_t len = 0;
+    while (str[len] != '\0') {
+        ++len;
+    }
+
+    return len;
+}

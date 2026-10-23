@@ -27,3 +27,17 @@ run: kernel iso
         -m 256M \
         -serial stdio \
         -smp 4
+
+.PHONY: debug
+debug: kernel iso
+	qemu-system-x86_64 \
+		-M q35,smm=off \
+        -accel tcg \
+        -boot d \
+        -cdrom ./build/iso/fenrir.iso \
+        --no-reboot \
+        --no-shutdown \
+        -m 256M \
+        -serial stdio \
+        -smp 1 \
+        -d int,cpu_reset

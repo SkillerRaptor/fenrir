@@ -26,12 +26,26 @@ project(
 
 sources_dir = get_option('sources_dir')
 
+flanterm_dependency = declare_dependency(
+    sources: files(
+        sources_dir / 'flanterm/src/flanterm.c',
+        sources_dir / 'flanterm/src/flanterm_backends/fb.c',
+    ),
+    include_directories: include_directories(sources_dir / 'flanterm/src')
+)
+
 limine_dependency = declare_dependency(
     include_directories: include_directories(sources_dir / 'limine-headers/include')
 )
 
+nanoprintf_dependency = declare_dependency(
+    include_directories: include_directories(sources_dir / 'nanoprintf')
+)
+
 fenrir_dependencies = [
+    flanterm_dependency,
     limine_dependency,
+    nanoprintf_dependency,
 ]
 
 fenrir_c_args = [
@@ -64,6 +78,9 @@ fenrir_link_args = [
 fenrir_sources = files(
     'src/main.c',
     'src/boot/boot.c',
+    'src/lib/console.c',
+    'src/lib/log.c',
+    'src/lib/stdio.c',
     'src/lib/string.c',
 )
 

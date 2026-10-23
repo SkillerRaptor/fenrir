@@ -15,11 +15,11 @@ ColumnLimit: 120
 FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^<std[^/]*>$'
+  - Regex: '^<std.*>$'
     Priority: 1
-  - Regex: '^<[^/]+>$'
+  - Regex: '^<.*>$'
     Priority: 2
-  - Regex: '^"[^"]+"$'
+  - Regex: '^".*"$'
     Priority: 3
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: true

@@ -4,7 +4,9 @@
 -- SPDX-License-Identifier: MIT
 --------------------------------------------------------------------------------------------
 
+local flanterm <const> = require("recipes.flanterm.flanterm")
 local limine_headers <const> = require("recipes.limine-headers.limine-headers")
+local nanoprintf <const> = require("recipes.nanoprintf.nanoprintf")
 
 local kernel = Package {
     name = "kernel",
@@ -19,7 +21,9 @@ local kernel = Package {
         "meson",
         "ninja",
         "nasm",
+        flanterm,
         limine_headers,
+        nanoprintf,
     },
     configure = [[
         meson setup ${BUILD_DIR} ${SOURCE_DIR} \
