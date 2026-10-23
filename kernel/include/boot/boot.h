@@ -12,4 +12,9 @@
 
 bool boot_is_base_revision_supported(void);
 
+const char *boot_get_bootloader_name(void);
+const char *boot_get_bootloader_version(void);
+
+const char *boot_get_firmware_type(void);
+
 struct limine_framebuffer_response *boot_get_framebuffer_response(void);

@@ -6,7 +6,17 @@
 
 #include "boot/boot.h"
 
+#include "limine.h"
+
 __attribute__((used, section(".limine_requests"))) static volatile uint64_t s_base_revision[] = LIMINE_BASE_REVISION(6);
+
+__attribute__((
+    used, section(".limine_requests"))) static volatile struct limine_bootloader_info_request s_bootloader_info_request
+    = { .id = LIMINE_BOOTLOADER_INFO_REQUEST_ID, .revision = 0 };
+
+__attribute__((
+    used, section(".limine_requests"))) static volatile struct limine_firmware_type_request s_firmware_type_request
+    = { .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID, .revision = 0 };
 
 __attribute__((
     used, section(".limine_requests"))) static volatile struct limine_framebuffer_request s_framebuffer_request
@@ -19,5 +29,25 @@ __attribute__((used, section(".limine_requests_end"))) static volatile uint64_t 
     = LIMINE_REQUESTS_END_MARKER;
 
 bool boot_is_base_revision_supported(void) { return LIMINE_BASE_REVISION_SUPPORTED(s_base_revision); }
+
+const char *boot_get_bootloader_name(void) { return s_bootloader_info_request.response->name; }
+
+const char *boot_get_bootloader_version(void) { return s_bootloader_info_request.response->version; }
+
+const char *boot_get_firmware_type(void)
+{
+    switch (s_firmware_type_request.response->firmware_type) {
+    case LIMINE_FIRMWARE_TYPE_X86BIOS:
+        return "X86BIOS";
+    case LIMINE_FIRMWARE_TYPE_EFI32:
+        return "EFI32";
+    case LIMINE_FIRMWARE_TYPE_EFI64:
+        return "EFI64";
+    case LIMINE_FIRMWARE_TYPE_SBI:
+        return "SBI";
+    default:
+        return "<unknown>";
+    }
+}
 
 struct limine_framebuffer_response *boot_get_framebuffer_response(void) { return s_framebuffer_request.response; }
