@@ -63,6 +63,7 @@ fenrir_link_args = [
 
 fenrir_sources = files(
     'src/main.c',
+    'src/boot/boot.c',
 )
 
 fenrir_includes = include_directories('include')
