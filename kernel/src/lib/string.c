@@ -17,7 +17,7 @@ void *memcpy(void *restrict dst, const void *restrict src, size_t n)
     uint8_t *dst_ptr = dst;
     const uint8_t *src_ptr = src;
 
-    for (size_t i = 0; i < n; ++n) {
+    for (size_t i = 0; i < n; ++i) {
         dst_ptr[i] = src_ptr[i];
     }
 
