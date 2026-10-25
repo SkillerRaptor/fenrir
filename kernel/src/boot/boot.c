@@ -11,15 +11,22 @@
 [[gnu::used, gnu::section(".limine_requests")]] static volatile uint64_t s_base_revision[] = LIMINE_BASE_REVISION(6);
 
 [[gnu::used,
-  gnu::section(".limine_requests")]] static volatile struct limine_bootloader_info_request s_bootloader_info_request
-    = { .id = LIMINE_BOOTLOADER_INFO_REQUEST_ID, .revision = 0 };
+  gnu::section(".limine_requests")]] static volatile struct limine_bootloader_info_request s_bootloader_info_request = {
+    .id = LIMINE_BOOTLOADER_INFO_REQUEST_ID,
+    .revision = 0,
+};
 
 [[gnu::used,
-  gnu::section(".limine_requests")]] static volatile struct limine_firmware_type_request s_firmware_type_request
-    = { .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID, .revision = 0 };
+  gnu::section(".limine_requests")]] static volatile struct limine_firmware_type_request s_firmware_type_request = {
+    .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID,
+    .revision = 0,
+};
 
 [[gnu::used, gnu::section(".limine_requests")]] static volatile struct limine_framebuffer_request s_framebuffer_request
-    = { .id = LIMINE_FRAMEBUFFER_REQUEST_ID, .revision = 0 };
+    = {
+          .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
+          .revision = 0,
+      };
 
 [[gnu::used, gnu::section(".limine_requests_start")]] static volatile uint64_t s_start_marker[]
     = LIMINE_REQUESTS_START_MARKER;
