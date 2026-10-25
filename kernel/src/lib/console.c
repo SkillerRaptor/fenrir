@@ -14,7 +14,7 @@
 
 static struct flanterm_context *s_context = nullptr;
 
-void console_init(void)
+void console_init()
 {
     const struct limine_framebuffer *framebuffer = boot_get_framebuffer_response()->framebuffers[0];
 

@@ -34,13 +34,13 @@
 [[gnu::used, gnu::section(".limine_requests_end")]] static volatile uint64_t s_end_marker[]
     = LIMINE_REQUESTS_END_MARKER;
 
-bool boot_is_base_revision_supported(void) { return LIMINE_BASE_REVISION_SUPPORTED(s_base_revision); }
+bool boot_is_base_revision_supported() { return LIMINE_BASE_REVISION_SUPPORTED(s_base_revision); }
 
-const char *boot_get_bootloader_name(void) { return s_bootloader_info_request.response->name; }
+const char *boot_get_bootloader_name() { return s_bootloader_info_request.response->name; }
 
-const char *boot_get_bootloader_version(void) { return s_bootloader_info_request.response->version; }
+const char *boot_get_bootloader_version() { return s_bootloader_info_request.response->version; }
 
-const char *boot_get_firmware_type(void)
+const char *boot_get_firmware_type()
 {
     switch (s_firmware_type_request.response->firmware_type) {
     case LIMINE_FIRMWARE_TYPE_X86BIOS:
@@ -56,4 +56,4 @@ const char *boot_get_firmware_type(void)
     }
 }
 
-struct limine_framebuffer_response *boot_get_framebuffer_response(void) { return s_framebuffer_request.response; }
+const struct limine_framebuffer_response *boot_get_framebuffer_response() { return s_framebuffer_request.response; }

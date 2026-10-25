@@ -10,11 +10,11 @@
 
 #include <limine.h>
 
-bool boot_is_base_revision_supported(void);
+bool boot_is_base_revision_supported();
 
-const char *boot_get_bootloader_name(void);
-const char *boot_get_bootloader_version(void);
+const char *boot_get_bootloader_name();
+const char *boot_get_bootloader_version();
 
-const char *boot_get_firmware_type(void);
+const char *boot_get_firmware_type();
 
-struct limine_framebuffer_response *boot_get_framebuffer_response(void);
+const struct limine_framebuffer_response *boot_get_framebuffer_response();
