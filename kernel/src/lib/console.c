@@ -16,7 +16,7 @@ static struct flanterm_context *s_context = NULL;
 
 void console_init(void)
 {
-    struct limine_framebuffer *framebuffer = boot_get_framebuffer_response()->framebuffers[0];
+    const struct limine_framebuffer *framebuffer = boot_get_framebuffer_response()->framebuffers[0];
 
     s_context = flanterm_fb_init(
         NULL,
@@ -51,9 +51,9 @@ void console_init(void)
 
 void console_putc(int c)
 {
-    const char ch = (char) c;
+    char ch = (char) c;
     if (ch == '\n') {
-        console_putc('\r');
+        flanterm_write(s_context, "\r", 1);
     }
 
     flanterm_write(s_context, &ch, 1);

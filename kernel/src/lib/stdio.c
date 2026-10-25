@@ -34,8 +34,4 @@ int printf(const char *restrict fmt, ...)
     return ret;
 }
 
-int vprintf(const char *restrict fmt, va_list args)
-{
-    int ret = npf_vpprintf(internal_putc, NULL, fmt, args);
-    return ret;
-}
+int vprintf(const char *restrict fmt, va_list args) { return npf_vpprintf(internal_putc, NULL, fmt, args); }

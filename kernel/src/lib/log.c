@@ -13,8 +13,6 @@
 
 void log_vlog(enum log_level level, const char *fmt, ...)
 {
-    static constexpr const char s_reset[] = "\x1b[0m";
-
     char *level_string = NULL;
     char *level_color = NULL;
     switch (level) {
@@ -40,7 +38,7 @@ void log_vlog(enum log_level level, const char *fmt, ...)
         break;
     }
 
-    printf("%s%s%s: ", level_color, level_string, s_reset);
+    printf("%s%s\x1b[0m: ", level_color, level_string);
 
     va_list args;
     va_start(args, fmt);
