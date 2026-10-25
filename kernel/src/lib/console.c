@@ -12,15 +12,15 @@
 #include "boot/boot.h"
 #include "lib/string.h"
 
-static struct flanterm_context *s_context = NULL;
+static struct flanterm_context *s_context = nullptr;
 
 void console_init(void)
 {
     const struct limine_framebuffer *framebuffer = boot_get_framebuffer_response()->framebuffers[0];
 
     s_context = flanterm_fb_init(
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
         framebuffer->address,
         framebuffer->width,
         framebuffer->height,
@@ -31,14 +31,14 @@ void console_init(void)
         framebuffer->green_mask_shift,
         framebuffer->blue_mask_size,
         framebuffer->blue_mask_shift,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
         0,
         0,
         1,
