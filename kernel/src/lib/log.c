@@ -11,7 +11,7 @@
 
 #include "lib/stdio.h"
 
-__attribute__((format(printf, 2, 3))) void log_vlog(enum log_level level, const char *fmt, ...)
+void log_vlog(enum log_level level, const char *fmt, ...)
 {
     static constexpr const char s_reset[] = "\x1b[0m";
 
