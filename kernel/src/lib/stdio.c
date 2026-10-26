@@ -18,7 +18,6 @@
 #define NANOPRINTF_IMPLEMENTATION
 
 #include <stdarg.h>
-#include <stdio.h>
 
 #include <nanoprintf.h>
 
