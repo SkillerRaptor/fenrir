@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "arch/x86_64/gdt.h"
+
 #include <stdint.h>
 
 #include "lib/log.h"

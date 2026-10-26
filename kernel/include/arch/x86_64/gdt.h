@@ -4,4 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
+#pragma once
+
 void gdt_init();
