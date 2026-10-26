@@ -41,3 +41,9 @@ debug: kernel iso
         -serial stdio \
         -smp 1 \
         -d int,cpu_reset
+
+.PHONY: clean
+clean:
+	rm -rf .chariot-cache/
+	rm -rf build/
+	rm -rf chariot/

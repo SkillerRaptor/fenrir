@@ -13,14 +13,14 @@
 #include "lib/console.h"
 #include "lib/stdio.h"
 
-static void hcf(void)
+static void hcf()
 {
     for (;;) {
         asm("hlt");
     }
 }
 
-void kmain(void)
+void kmain()
 {
     if (!boot_is_base_revision_supported()) {
         hcf();

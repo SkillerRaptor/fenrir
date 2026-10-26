@@ -20,8 +20,6 @@ project(
         'b_staticpic=false',
         'b_pie=false',
         'b_lto=false',
-        'b_lundef=false',
-        'strip=true',
     ],
 )
 
@@ -62,6 +60,13 @@ fenrir_c_args = [
     '-mgeneral-regs-only',
     '-mno-red-zone',
     '-mcmodel=kernel',
+    '--target=x86_64-unknown-elf',
+    '-fdefer-ts',
+]
+
+fenrir_nasm_args = [
+    '-g',
+    '-f', 'elf64'
 ]
 
 linker_script = files('linker_scripts/x86_64.ld')
@@ -74,6 +79,7 @@ fenrir_link_args = [
     '-Wl,--gc-sections',
     '-Wl,-T', linker_script[0].full_path(),
     '-Wl,-m,elf_x86_64',
+    '--target=x86_64-unknown-elf',
 ]
 
 fenrir_sources = files(
@@ -93,6 +99,7 @@ fenrir = executable(
     'fenrir',
     fenrir_sources,
     c_args: fenrir_c_args,
+    nasm_args: fenrir_nasm_args,
     link_args: fenrir_link_args,
     link_depends: linker_script,
     include_directories: fenrir_includes,

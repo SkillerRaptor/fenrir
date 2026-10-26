@@ -18,6 +18,7 @@ local kernel = Package {
     },
     dependencies = {
         "base-devel",
+        "clang",
         "meson",
         "ninja",
         "nasm",
@@ -26,6 +27,8 @@ local kernel = Package {
         nanoprintf,
     },
     configure = [[
+        CC=clang \
+        LD=ld.ldd \
         meson setup ${BUILD_DIR} ${SOURCE_DIR} \
             --prefix="${PREFIX}" \
             -Dsources_dir="${SOURCES_DIR}"
