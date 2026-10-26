@@ -18,7 +18,7 @@ void log_vlog(enum log_level level, const char *fmt, ...)
     switch (level) {
     case LOG_LEVEL_ERROR:
         level_color = "\x1b[38;2;255;0;0m";
-        level_string = "err";
+        level_string = "error";
         break;
     case LOG_LEVEL_WARNING:
         level_color = "\x1b[38;2;255;215;0m";
