@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "arch/x86_64/gdt.h"
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/stdio.h"
@@ -35,6 +36,8 @@ void kmain(void)
     printf("   Bootloader: %s %s\n", boot_get_bootloader_name(), boot_get_bootloader_version());
     printf("   Firmware: %s\n", boot_get_firmware_type());
     printf("\n");
+
+    gdt_init();
 
     hcf();
 }

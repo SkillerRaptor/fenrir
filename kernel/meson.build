@@ -7,6 +7,7 @@
 project(
     'fenrir',
     'c',
+    'nasm',
     license: 'MIT',
     version: '0.1.0',
     meson_version: '>=1.5.0',
@@ -78,6 +79,8 @@ fenrir_link_args = [
 fenrir_sources = files(
     'src/main.c',
     'src/boot/boot.c',
+    'src/arch/x86_64/gdt.asm',
+    'src/arch/x86_64/gdt.c',
     'src/lib/console.c',
     'src/lib/log.c',
     'src/lib/stdio.c',
