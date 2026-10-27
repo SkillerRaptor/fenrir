@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include "arch/x86_64/gdt.h"
+#include "arch/x86_64/idt.h"
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/stdio.h"
@@ -38,6 +35,7 @@ void kmain()
     printf("\n");
 
     gdt_init();
+    idt_init();
 
     hcf();
 }
