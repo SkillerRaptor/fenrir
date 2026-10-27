@@ -6,10 +6,18 @@
 
 #pragma once
 
-void cpu_halt();
-void cpu_pause();
+static inline void cpu_halt() { asm volatile("hlt"); }
 
-void cpu_enable_interrupts();
-void cpu_disable_interrupts();
+static inline void cpu_pause() { asm volatile("pause"); }
 
-void cpu_hcf();
+static inline void cpu_enable_interrupts() { asm volatile("sti"); }
+
+static inline void cpu_disable_interrupts() { asm volatile("cli"); }
+
+static inline void cpu_hcf()
+{
+    while (true) {
+        cpu_disable_interrupts();
+        cpu_halt();
+    }
+}
