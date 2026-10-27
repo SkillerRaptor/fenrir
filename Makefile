@@ -5,7 +5,7 @@
 #-------------------------------------------------------------------------------------------
 
 .PHONY: all
-all: bootstrap iso
+all: iso
 
 .PHONY: bootstrap
 bootstrap:
