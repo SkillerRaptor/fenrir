@@ -4,23 +4,17 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "arch/x86_64/cpu.h"
 #include "arch/x86_64/gdt.h"
 #include "arch/x86_64/idt.h"
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/stdio.h"
 
-static void hcf()
-{
-    for (;;) {
-        asm("hlt");
-    }
-}
-
 void kmain()
 {
     if (!boot_is_base_revision_supported()) {
-        hcf();
+        cpu_hcf();
     }
 
     console_init();
@@ -37,5 +31,5 @@ void kmain()
     gdt_init();
     idt_init();
 
-    hcf();
+    cpu_hcf();
 }

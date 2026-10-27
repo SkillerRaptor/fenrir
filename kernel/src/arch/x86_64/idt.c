@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "arch/x86_64/cpu.h"
 #include "arch/x86_64/registers.h"
 #include "lib/log.h"
 
@@ -135,10 +136,7 @@ static void handle_exception(struct Registers *registers)
     log_err("Halting System...\n");
     log_err("\n");
 
-    while (true) {
-        asm("cli");
-        asm("hlt");
-    }
+    cpu_hcf();
 }
 
 void idt_init()
@@ -193,9 +191,8 @@ void idt_register_handler(uint8_t isr, InterruptHandler interrupt_handler)
     InterruptHandler interrupt_handler = s_interrupt_handlers[registers->isr];
     if (interrupt_handler) {
         interrupt_handler(registers);
-    } else {
-        while (true) {
-            asm("hlt");
-        }
     }
+
+    // TODO: Implement EOI
+    cpu_hcf();
 }

@@ -85,6 +85,7 @@ fenrir_link_args = [
 fenrir_sources = files(
     'src/main.c',
     'src/boot/boot.c',
+    'src/arch/x86_64/cpu.c',
     'src/arch/x86_64/gdt.asm',
     'src/arch/x86_64/gdt.c',
     'src/arch/x86_64/idt.asm',
