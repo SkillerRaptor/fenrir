@@ -14,7 +14,7 @@ static inline void cpu_enable_interrupts() { asm volatile("sti"); }
 
 static inline void cpu_disable_interrupts() { asm volatile("cli"); }
 
-static inline void cpu_hcf()
+[[noreturn]] static inline void cpu_hcf()
 {
     while (true) {
         cpu_disable_interrupts();

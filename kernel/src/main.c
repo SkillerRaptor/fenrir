@@ -12,7 +12,7 @@
 #include "lib/stdio.h"
 #include "mem/pmm.h"
 
-void kmain()
+[[noreturn]] void kmain()
 {
     if (!boot_is_base_revision_supported()) {
         cpu_hcf();

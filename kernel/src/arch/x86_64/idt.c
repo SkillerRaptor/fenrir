@@ -94,7 +94,7 @@ static struct Entry create_entry(void *handler, enum Attribute attributes)
     };
 }
 
-static void handle_exception(struct Registers *registers)
+[[noreturn]] static void handle_exception(struct Registers *registers)
 {
     LOG_ERROR("\n");
     LOG_ERROR("%s occured!\n", EXCEPTIONS[registers->isr]);
