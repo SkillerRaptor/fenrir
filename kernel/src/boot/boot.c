@@ -28,6 +28,16 @@
           .revision = 0,
       };
 
+[[gnu::used, gnu::section(".limine_requests")]] static volatile struct limine_hhdm_request s_hhdm_request = {
+    .id = LIMINE_HHDM_REQUEST_ID,
+    .revision = 0,
+};
+
+[[gnu::used, gnu::section(".limine_requests")]] static volatile struct limine_memmap_request s_memory_map_request = {
+    .id = LIMINE_MEMMAP_REQUEST_ID,
+    .revision = 0,
+};
+
 [[gnu::used, gnu::section(".limine_requests_start")]] static volatile uint64_t s_start_marker[]
     = LIMINE_REQUESTS_START_MARKER;
 
@@ -57,3 +67,7 @@ const char *boot_get_firmware_type()
 }
 
 const struct limine_framebuffer_response *boot_get_framebuffer_response() { return s_framebuffer_request.response; }
+
+uint64_t boot_get_hhdm_offset() { return s_hhdm_request.response->offset; }
+
+const struct limine_memmap_response *boot_get_memory_map_response() { return s_memory_map_request.response; }

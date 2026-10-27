@@ -94,6 +94,9 @@ fenrir_sources = files(
     'src/lib/log.c',
     'src/lib/stdio.c',
     'src/lib/string.c',
+    'src/mem/bitmap.c',
+    'src/mem/kmalloc.c',
+    'src/mem/pmm.c',
 )
 
 fenrir_includes = include_directories('include')

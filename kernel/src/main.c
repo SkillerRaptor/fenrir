@@ -10,6 +10,7 @@
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/stdio.h"
+#include "mem/pmm.h"
 
 void kmain()
 {
@@ -30,6 +31,8 @@ void kmain()
 
     gdt_init();
     idt_init();
+
+    pmm_init();
 
     cpu_hcf();
 }

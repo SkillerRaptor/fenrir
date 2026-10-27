@@ -18,3 +18,7 @@ const char *boot_get_bootloader_version();
 const char *boot_get_firmware_type();
 
 const struct limine_framebuffer_response *boot_get_framebuffer_response();
+
+uint64_t boot_get_hhdm_offset();
+
+const struct limine_memmap_response *boot_get_memory_map_response();
