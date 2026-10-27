@@ -56,8 +56,7 @@ static struct Table s_table = { };
 extern void load_gdt(struct Descriptor *descriptor);
 extern void reload_segments();
 
-static struct Entry
-    create_descriptor(uint32_t base, uint32_t limit, enum AccessAttribute access, enum FlagAttribute flags)
+static struct Entry create_entry(uint32_t base, uint32_t limit, enum AccessAttribute access, enum FlagAttribute flags)
 {
     return (struct Entry) {
         .limit_low = (uint16_t) limit,
@@ -71,41 +70,41 @@ static struct Entry
 
 void gdt_init()
 {
-    s_table.entries[0] = create_descriptor(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
+    s_table.entries[0] = create_entry(0x00000000, 0x00000000, ACCESS_ATTRIBUTE_NONE, FLAG_ATTRIBUTE_NONE);
 
-    s_table.entries[1] = create_descriptor(
+    s_table.entries[1] = create_entry(
         0x00000000,
         0x0000ffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
             | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_NONE);
-    s_table.entries[2] = create_descriptor(
+    s_table.entries[2] = create_entry(
         0x00000000,
         0x0000ffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
             | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_NONE);
 
-    s_table.entries[3] = create_descriptor(
+    s_table.entries[3] = create_entry(
         0x00000000,
         0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
             | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_PAGE_GRANULARITY | FLAG_ATTRIBUTE_SIZE_32);
-    s_table.entries[4] = create_descriptor(
+    s_table.entries[4] = create_entry(
         0x00000000,
         0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
             | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_PAGE_GRANULARITY | FLAG_ATTRIBUTE_SIZE_32);
 
-    s_table.entries[5] = create_descriptor(
+    s_table.entries[5] = create_entry(
         0x00000000,
         0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
             | ACCESS_ATTRIBUTE_EXECUTABLE | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_PAGE_GRANULARITY | FLAG_ATTRIBUTE_LONG_MODE);
-    s_table.entries[6] = create_descriptor(
+    s_table.entries[6] = create_entry(
         0x00000000,
         0xffffffff,
         ACCESS_ATTRIBUTE_PRESENT | ACCESS_ATTRIBUTE_KERNEL_PRIVILEGE | ACCESS_ATTRIBUTE_CODE_OR_DATA
