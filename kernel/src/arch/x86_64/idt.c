@@ -96,45 +96,45 @@ static struct Entry create_entry(void *handler, enum Attribute attributes)
 
 static void handle_exception(struct Registers *registers)
 {
-    log_err("\n");
-    log_err("%s occured!\n", EXCEPTIONS[registers->isr]);
-    log_err("\n");
+    LOG_ERROR("\n");
+    LOG_ERROR("%s occured!\n", EXCEPTIONS[registers->isr]);
+    LOG_ERROR("\n");
 
-    log_err("Registers:\n");
-    log_err(
+    LOG_ERROR("Registers:\n");
+    LOG_ERROR(
         "  rax=%#018lx rbx=%#018lx rcx=%#018lx rdx=%#018lx\n",
         registers->rax,
         registers->rbx,
         registers->rcx,
         registers->rdx);
-    log_err(
+    LOG_ERROR(
         "  rsi=%#018lx rdi=%#018lx rbp=%#018lx rsp=%#018lx\n",
         registers->rsi,
         registers->rdi,
         registers->rbp,
         registers->rsp);
-    log_err(
+    LOG_ERROR(
         "   r8=%#018lx  r9=%#018lx r10=%#018lx r11=%#018lx\n",
         registers->r8,
         registers->r9,
         registers->r10,
         registers->r11);
-    log_err(
+    LOG_ERROR(
         "  r12=%#018lx r13=%#018lx r14=%#018lx r15=%#018lx\n",
         registers->r12,
         registers->r13,
         registers->r14,
         registers->r15);
-    log_err("  rip=%#018lx rfl=%#018lx\n", registers->rip, registers->flags);
-    log_err("\n");
+    LOG_ERROR("  rip=%#018lx rfl=%#018lx\n", registers->rip, registers->flags);
+    LOG_ERROR("\n");
 
-    log_err("Segments:\n");
-    log_err("  cs=%#04lx\n", registers->cs);
-    log_err("  ss=%#04lx\n", registers->ss);
-    log_err("\n");
+    LOG_ERROR("Segments:\n");
+    LOG_ERROR("  cs=%#04lx\n", registers->cs);
+    LOG_ERROR("  ss=%#04lx\n", registers->ss);
+    LOG_ERROR("\n");
 
-    log_err("Halting System...\n");
-    log_err("\n");
+    LOG_ERROR("Halting System...\n");
+    LOG_ERROR("\n");
 
     cpu_hcf();
 }
@@ -178,7 +178,7 @@ void idt_init()
 
     load_idt(&descriptor);
 
-    log_info("IDT: Initialized\n");
+    LOG_INFO("IDT: Initialized\n");
 }
 
 void idt_register_handler(uint8_t isr, InterruptHandler interrupt_handler)

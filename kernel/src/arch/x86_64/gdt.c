@@ -119,5 +119,5 @@ void gdt_init()
     load_gdt(&descriptor);
     reload_segments();
 
-    log_info("GDT: Initialized\n");
+    LOG_INFO("GDT: Initialized\n");
 }
