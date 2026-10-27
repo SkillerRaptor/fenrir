@@ -11,6 +11,7 @@
 
 void bitmap_set(struct Bitmap *bitmap, size_t index, bool value)
 {
+    ASSERT(bitmap != nullptr);
     ASSERT(index < bitmap->size * 8);
 
     const size_t byte_index = index / 8;
@@ -29,6 +30,7 @@ void bitmap_set(struct Bitmap *bitmap, size_t index, bool value)
 
 bool bitmap_is_set(const struct Bitmap *bitmap, size_t index)
 {
+    ASSERT(bitmap != nullptr);
     ASSERT(index < bitmap->size * 8);
 
     const size_t byte_index = index / 8;
@@ -40,4 +42,9 @@ bool bitmap_is_set(const struct Bitmap *bitmap, size_t index)
     return bit_value != 0;
 }
 
-void bitmap_fill(struct Bitmap *bitmap, uint8_t value) { memset(bitmap->data, value, bitmap->size); }
+void bitmap_fill(struct Bitmap *bitmap, uint8_t value)
+{
+    ASSERT(bitmap != nullptr);
+
+    memset(bitmap->data, value, bitmap->size);
+}

@@ -28,11 +28,11 @@ void *kmalloc(size_t size)
     const size_t page_count = math_div_round_up(size, PAGE_SIZE);
 
     void *physical_ptr = pmm_alloc(page_count + 1);
-    if (!physical_ptr) {
+    if (physical_ptr == nullptr) {
         return nullptr;
     }
 
-    uint8_t *ptr = (uint8_t *) ((uintptr_t) physical_ptr + boot_get_hhdm_offset());
+    uint8_t *ptr = (uint8_t *) ((uint64_t) physical_ptr + boot_get_hhdm_offset());
 
     struct AllocationHeader *header = (struct AllocationHeader *) ptr;
     header->page_count = page_count;
@@ -50,7 +50,7 @@ void *kcalloc(size_t count, size_t size)
     const size_t total_size = count * size;
 
     void *ptr = kmalloc(total_size);
-    if (!ptr) {
+    if (ptr == nullptr) {
         return nullptr;
     }
 
@@ -61,13 +61,13 @@ void *kcalloc(size_t count, size_t size)
 
 void kfree(void *ptr)
 {
-    if (!ptr) {
+    if (ptr == nullptr) {
         return;
     }
 
     uint8_t *header_address = (uint8_t *) ptr - PAGE_SIZE;
     const struct AllocationHeader *header = (const struct AllocationHeader *) header_address;
 
-    void *physical_ptr = (void *) ((uintptr_t) header_address - boot_get_hhdm_offset());
+    void *physical_ptr = (void *) ((uint64_t) header_address - boot_get_hhdm_offset());
     pmm_free(physical_ptr, header->page_count + 1);
 }

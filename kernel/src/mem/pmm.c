@@ -171,7 +171,7 @@ void *pmm_alloc(size_t page_count)
             bitmap_set(&s_bitmap, page, true);
         }
 
-        return (void *) (uintptr_t) (start_page * PAGE_SIZE);
+        return (void *) ((uint64_t) start_page * PAGE_SIZE);
     }
 
     return nullptr;
@@ -179,12 +179,16 @@ void *pmm_alloc(size_t page_count)
 
 void *pmm_calloc(size_t page_count)
 {
-    void *ptr = pmm_alloc(page_count);
-    if (!ptr) {
+    if (page_count == 0) {
         return nullptr;
     }
 
-    void *virtual_ptr = (void *) ((uintptr_t) ptr + boot_get_hhdm_offset());
+    void *ptr = pmm_alloc(page_count);
+    if (ptr == nullptr) {
+        return nullptr;
+    }
+
+    void *virtual_ptr = (void *) ((uint64_t) ptr + boot_get_hhdm_offset());
     memset(virtual_ptr, 0x00, page_count * PAGE_SIZE);
 
     return ptr;
@@ -192,7 +196,11 @@ void *pmm_calloc(size_t page_count)
 
 void pmm_free(void *ptr, size_t page_count)
 {
-    const size_t first_page = (uintptr_t) ptr / PAGE_SIZE;
+    if (ptr == nullptr || page_count == 0) {
+        return;
+    }
+
+    const size_t first_page = (uint64_t) ptr / PAGE_SIZE;
     for (size_t i = 0; i < page_count; ++i) {
         bitmap_set(&s_bitmap, first_page + i, false);
     }
