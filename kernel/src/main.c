@@ -11,6 +11,7 @@
 #include "lib/console.h"
 #include "lib/stdio.h"
 #include "mem/pmm.h"
+#include "mem/vmm.h"
 
 [[noreturn]] void kmain()
 {
@@ -33,6 +34,7 @@
     idt_init();
 
     pmm_init();
+    vmm_init();
 
     cpu_hcf();
 }

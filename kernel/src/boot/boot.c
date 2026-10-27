@@ -17,6 +17,13 @@
 };
 
 [[gnu::used,
+  gnu::section(
+      ".limine_requests")]] static volatile struct limine_executable_address_request s_executable_address_request = {
+    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST_ID,
+    .revision = 0,
+};
+
+[[gnu::used,
   gnu::section(".limine_requests")]] static volatile struct limine_firmware_type_request s_firmware_type_request = {
     .id = LIMINE_FIRMWARE_TYPE_REQUEST_ID,
     .revision = 0,
@@ -49,6 +56,10 @@ bool boot_is_base_revision_supported() { return LIMINE_BASE_REVISION_SUPPORTED(s
 const char *boot_get_bootloader_name() { return s_bootloader_info_request.response->name; }
 
 const char *boot_get_bootloader_version() { return s_bootloader_info_request.response->version; }
+
+uint64_t boot_get_executable_physical_base() { return s_executable_address_request.response->physical_base; }
+
+uint64_t boot_get_executable_virtual_base() { return s_executable_address_request.response->virtual_base; }
 
 const char *boot_get_firmware_type()
 {

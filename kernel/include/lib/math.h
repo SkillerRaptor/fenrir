@@ -19,3 +19,5 @@ static inline uint64_t math_align_up(uint64_t value, uint64_t alignment)
 }
 
 static inline uint64_t math_align_down(uint64_t value, uint64_t alignment) { return ((value / alignment) * alignment); }
+
+static inline bool math_is_aligned(uint64_t value, uint64_t alignment) { return (value & (alignment - 1)) == 0; }
