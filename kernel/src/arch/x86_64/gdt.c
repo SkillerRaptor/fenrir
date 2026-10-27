@@ -53,7 +53,7 @@ struct Table {
 
 static struct Table s_table = { };
 
-extern void load_gdt(struct Descriptor *descriptor);
+extern void load_gdt(const struct Descriptor *descriptor);
 extern void reload_segments();
 
 static struct Entry create_entry(uint32_t base, uint32_t limit, enum AccessAttribute access, enum FlagAttribute flags)
@@ -111,7 +111,7 @@ void gdt_init()
             | ACCESS_ATTRIBUTE_READABLE_WRITABLE | ACCESS_ATTRIBUTE_ACCESSED,
         FLAG_ATTRIBUTE_PAGE_GRANULARITY | FLAG_ATTRIBUTE_LONG_MODE);
 
-    struct Descriptor descriptor = {
+    const struct Descriptor descriptor = {
         .size = sizeof(s_table) - 1,
         .address = (uintptr_t) &s_table,
     };

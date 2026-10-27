@@ -40,7 +40,7 @@ struct [[gnu::packed]] Descriptor {
 static_assert(sizeof(struct Descriptor) == 10);
 
 extern void *interrupt_handlers[];
-extern void load_idt(struct Descriptor *descriptor);
+extern void load_idt(const struct Descriptor *descriptor);
 
 static const char *const EXCEPTIONS[31] = {
     "Divide-by-zero Error",
@@ -81,7 +81,7 @@ static InterruptHandler s_interrupt_handlers[256] = { };
 
 static struct Entry create_entry(void *handler, enum Attribute attributes)
 {
-    uintptr_t address = (uintptr_t) handler;
+    const uintptr_t address = (uintptr_t) handler;
 
     return (struct Entry) {
         .offset_low = (uint16_t) address,
@@ -171,7 +171,7 @@ void idt_init()
 
     s_interrupt_handlers[30] = handle_exception;
 
-    struct Descriptor descriptor = {
+    const struct Descriptor descriptor = {
         .size = sizeof(s_entries) - 1,
         .address = (uintptr_t) s_entries,
     };
@@ -188,7 +188,7 @@ void idt_register_handler(uint8_t isr, InterruptHandler interrupt_handler)
 
 [[gnu::used]] void interrupt_raise(struct Registers *registers)
 {
-    InterruptHandler interrupt_handler = s_interrupt_handlers[registers->isr];
+    const InterruptHandler interrupt_handler = s_interrupt_handlers[registers->isr];
     if (interrupt_handler) {
         interrupt_handler(registers);
     }

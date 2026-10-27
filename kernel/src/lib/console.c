@@ -51,7 +51,7 @@ void console_init()
 
 void console_putc(int c)
 {
-    char ch = (char) c;
+    const char ch = (char) c;
     if (ch == '\n') {
         flanterm_write(s_context, "\r", 1);
     }
