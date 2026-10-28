@@ -15,7 +15,6 @@
 #include "lib/string.h"
 
 static constexpr char COLOR_RESET[] = "\x1b[0m";
-static constexpr char COLOR_ASSERTION[] = "\x1b[38;2;50;50;255m";
 static constexpr char COLOR_FUNCTION[] = "\x1b[38;2;255;215;0m";
 static constexpr char COLOR_FILE[] = "\x1b[38;2;0;128;0m";
 
@@ -24,10 +23,8 @@ static constexpr char COLOR_FILE[] = "\x1b[38;2;0;128;0m";
 {
     LOG_ERROR("\n");
     LOG_ERROR(
-        "Assertion '%s%s%s' failed in %s%s%s at %s%s:%u%s",
-        COLOR_ASSERTION,
+        "Assertion '%s' failed in %s%s%s at %s%s:%u%s",
         assertion,
-        COLOR_RESET,
         COLOR_FUNCTION,
         function,
         COLOR_RESET,
