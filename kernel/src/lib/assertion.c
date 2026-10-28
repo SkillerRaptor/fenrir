@@ -8,6 +8,8 @@
 
 #include <stdarg.h>
 
+#include <__stdarg_va_list.h>
+
 #include "arch/x86_64/cpu.h"
 #include "lib/log.h"
 #include "lib/stacktrace.h"
@@ -47,19 +49,24 @@ static constexpr char COLOR_FILE[] = "\x1b[38;2;0;128;0m";
     cpu_hcf();
 }
 
-[[noreturn]] void _panic(const char *message, const char *file, uint32_t line, const char *function)
+[[noreturn]] void _panic(const char *file, uint32_t line, const char *function, const char *fmt, ...)
 {
     LOG_ERROR("\n");
     LOG_ERROR(
-        "Panic in %s%s%s at %s%s:%u%s: %s\n",
+        "Panic in %s%s%s at %s%s:%u%s: ",
         COLOR_FUNCTION,
         function,
         COLOR_RESET,
         COLOR_FILE,
         file,
         line,
-        COLOR_RESET,
-        message);
+        COLOR_RESET);
+
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+
     LOG_ERROR("\n");
 
     LOG_ERROR("Stacktrace:\n");

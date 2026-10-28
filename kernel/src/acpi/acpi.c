@@ -9,14 +9,14 @@
 #include <uacpi/sleep.h>
 #include <uacpi/uacpi.h>
 
+#include "lib/assertion.h"
 #include "lib/log.h"
 
 void acpi_init()
 {
     uacpi_status ret = uacpi_initialize(0);
     if (uacpi_unlikely_error(ret)) {
-        LOG_ERROR("ACPI: uacpi_initialize failed: %s\n", uacpi_status_to_string(ret));
-        return;
+        PANIC("ACPI: uacpi_initialize failed: %s\n", uacpi_status_to_string(ret));
     }
 
     LOG_INFO("ACPI: Initialized\n");
