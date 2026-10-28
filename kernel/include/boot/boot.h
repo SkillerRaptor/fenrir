@@ -25,3 +25,5 @@ const struct limine_framebuffer_response *boot_get_framebuffer_response();
 uint64_t boot_get_hhdm_offset();
 
 const struct limine_memmap_response *boot_get_memory_map_response();
+
+const struct limine_module_response *boot_get_module_response();

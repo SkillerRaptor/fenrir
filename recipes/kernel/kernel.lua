@@ -35,10 +35,12 @@ local kernel = Package {
     ]],
     build = [[
         meson compile -C ${BUILD_DIR} -j "${PARALLELISM}"
+        nm -Cn "${BUILD_DIR}/fenrir" | grep -e ' t ' -e ' T ' | cut -d' ' -f1,3- > "${BUILD_DIR}/kernel_symbols.map"
     ]],
     install = [[
         mkdir -p "${INSTALL_DIR}/boot"
         cp "${BUILD_DIR}/fenrir" "${INSTALL_DIR}/boot/fenrir"
+        cp "${BUILD_DIR}/kernel_symbols.map" "${INSTALL_DIR}/boot/kernel_symbols.map"
     ]]
 }
 

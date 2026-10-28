@@ -100,6 +100,7 @@ fenrir_sources = files(
     'src/lib/assertion.c',
     'src/lib/console.c',
     'src/lib/log.c',
+    'src/lib/stacktrace.c',
     'src/lib/stdio.c',
     'src/lib/string.c',
     'src/mem/bitmap.c',

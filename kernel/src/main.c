@@ -10,6 +10,7 @@
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/log.h"
+#include "lib/stacktrace.h"
 #include "lib/stdio.h"
 #include "mem/pmm.h"
 #include "mem/vmm.h"
@@ -36,6 +37,8 @@
 
     pmm_init();
     vmm_init();
+
+    stacktrace_init();
 
     LOG_INFO("Fenrir successfully booted!\n");
 

@@ -27,7 +27,7 @@ local iso = Package {
 
         mkdir -p "${root}/boot/limine" "${root}/EFI/BOOT" "${INSTALL_DIR}"
 
-        cp "${SYSROOT_DIR}/boot/fenrir" "${root}/boot/"
+        cp "${SYSROOT_DIR}/boot/fenrir" "${SYSROOT_DIR}/boot/kernel_symbols.map" "${root}/boot/"
         cp "${SOURCE_DIR}/limine.conf" "${root}/boot/limine/"
         cp "${limine_share}/limine-bios.sys" \
            "${limine_share}/limine-bios-cd.bin" \
