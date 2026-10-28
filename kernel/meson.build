@@ -23,6 +23,13 @@ project(
     ],
 )
 
+fs = import('fs')
+src_prefix = fs.relative_to(meson.project_source_root(), meson.project_build_root())
+add_project_arguments(
+  '-fmacro-prefix-map=' + src_prefix + '/=',
+  language: 'c',
+)
+
 sources_dir = get_option('sources_dir')
 
 flanterm_dependency = declare_dependency(
