@@ -199,6 +199,11 @@ void vmm_map_page(struct PageMap *page_map, uint64_t phys_addr, uint64_t virt_ad
     invalidate_page(virt_addr);
 }
 
+void vmm_map_page_into_kernel(uint64_t phys_addr, enum PageAttribute attributes)
+{
+    vmm_map_page(s_kernel_page_map, phys_addr, phys_addr + boot_get_hhdm_offset(), attributes);
+}
+
 void vmm_unmap_page(struct PageMap *page_map, uint64_t virt_addr)
 {
     ASSERT(page_map != nullptr);

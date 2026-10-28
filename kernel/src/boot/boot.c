@@ -67,6 +67,12 @@ static volatile struct limine_module_request s_modules_request = {
     .internal_modules = s_internal_modules_ptr,
 };
 
+[[gnu::used, gnu::section(".limine_requests")]]
+static volatile struct limine_rsdp_request s_rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST_ID,
+    .revision = 0,
+};
+
 [[gnu::used, gnu::section(".limine_requests_start")]]
 static volatile uint64_t s_start_marker[] = LIMINE_REQUESTS_START_MARKER;
 
@@ -106,3 +112,5 @@ uint64_t boot_get_hhdm_offset() { return s_hhdm_request.response->offset; }
 const struct limine_memmap_response *boot_get_memory_map_response() { return s_memory_map_request.response; }
 
 const struct limine_module_response *boot_get_module_response() { return s_modules_request.response; }
+
+void *boot_get_rsdp_address() { return s_rsdp_request.response->address; }

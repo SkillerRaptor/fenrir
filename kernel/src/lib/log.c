@@ -6,12 +6,19 @@
 
 #include "lib/log.h"
 
-#include <stdarg.h>
 #include <stddef.h>
 
 #include "lib/stdio.h"
 
-void log_vlog(enum log_level level, const char *fmt, ...)
+void log_log(enum log_level level, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    log_vlog(level, fmt, args);
+    va_end(args);
+}
+
+void log_vlog(enum log_level level, const char *fmt, va_list args)
 {
     char *level_color = "";
     char *level_string = "<unknown>";
@@ -39,9 +46,5 @@ void log_vlog(enum log_level level, const char *fmt, ...)
     }
 
     printf("%s%s\x1b[0m: ", level_color, level_string);
-
-    va_list args;
-    va_start(args, fmt);
     vprintf(fmt, args);
-    va_end(args);
 }

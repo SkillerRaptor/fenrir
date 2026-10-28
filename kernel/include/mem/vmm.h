@@ -27,4 +27,5 @@ void vmm_switch_page_map(struct PageMap *page_map);
 struct PageMap *vmm_get_kernel_page_map();
 
 void vmm_map_page(struct PageMap *page_map, uint64_t phys_addr, uint64_t virt_addr, enum PageAttribute attributes);
+void vmm_map_page_into_kernel(uint64_t phys_addr, enum PageAttribute attributes);
 void vmm_unmap_page(struct PageMap *page_map, uint64_t virt_addr);

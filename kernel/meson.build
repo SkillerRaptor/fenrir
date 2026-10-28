@@ -48,10 +48,35 @@ nanoprintf_dependency = declare_dependency(
     include_directories: include_directories(sources_dir / 'nanoprintf')
 )
 
+uacpi_dependency = declare_dependency(
+    sources: files(
+        sources_dir / 'uacpi/source/tables.c',
+        sources_dir / 'uacpi/source/types.c',
+        sources_dir / 'uacpi/source/uacpi.c',
+        sources_dir / 'uacpi/source/utilities.c',
+        sources_dir / 'uacpi/source/interpreter.c',
+        sources_dir / 'uacpi/source/opcodes.c',
+        sources_dir / 'uacpi/source/namespace.c',
+        sources_dir / 'uacpi/source/stdlib.c',
+        sources_dir / 'uacpi/source/opregion.c',
+        sources_dir / 'uacpi/source/default_handlers.c',
+        sources_dir / 'uacpi/source/io.c',
+        sources_dir / 'uacpi/source/notify.c',
+        sources_dir / 'uacpi/source/sleep.c',
+        sources_dir / 'uacpi/source/registers.c',
+        sources_dir / 'uacpi/source/resources.c',
+        sources_dir / 'uacpi/source/event.c',
+        sources_dir / 'uacpi/source/mutex.c',
+        sources_dir / 'uacpi/source/osi.c',
+    ),
+    include_directories: include_directories(sources_dir / 'uacpi/include')
+)
+
 fenrir_dependencies = [
     flanterm_dependency,
     limine_dependency,
     nanoprintf_dependency,
+    uacpi_dependency,
 ]
 
 fenrir_c_args = [
@@ -91,12 +116,14 @@ fenrir_link_args = [
 
 fenrir_sources = files(
     'src/main.c',
-    'src/boot/boot.c',
+    'src/acpi/acpi.c',
+    'src/acpi/uacpi.c',
     'src/arch/x86_64/cpu.c',
     'src/arch/x86_64/gdt.asm',
     'src/arch/x86_64/gdt.c',
     'src/arch/x86_64/idt.asm',
     'src/arch/x86_64/idt.c',
+    'src/boot/boot.c',
     'src/lib/assertion.c',
     'src/lib/console.c',
     'src/lib/log.c',
@@ -107,10 +134,13 @@ fenrir_sources = files(
     'src/mem/kmalloc.c',
     'src/mem/pmm.c',
     'src/mem/vmm.c',
+    'src/sync/semaphore.c',
     'src/sync/spinlock.c',
 )
 
 fenrir_includes = include_directories('include')
+
+add_project_arguments('-DUACPI_NATIVE_ALLOC_ZEROED', '-DUACPI_FORMATTED_LOGGING', language: 'c')
 
 fenrir = executable(
     'fenrir',

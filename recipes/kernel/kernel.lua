@@ -7,6 +7,7 @@
 local flanterm <const> = require("recipes.flanterm.flanterm")
 local limine_headers <const> = require("recipes.limine-headers.limine-headers")
 local nanoprintf <const> = require("recipes.nanoprintf.nanoprintf")
+local uacpi <const> = require("recipes.uacpi.uacpi")
 
 local kernel = Package {
     name = "kernel",
@@ -25,6 +26,7 @@ local kernel = Package {
         flanterm,
         limine_headers,
         nanoprintf,
+        uacpi,
     },
     configure = [[
         CC=clang \

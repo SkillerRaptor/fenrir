@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "acpi/acpi.h"
 #include "arch/x86_64/cpu.h"
 #include "arch/x86_64/gdt.h"
 #include "arch/x86_64/idt.h"
@@ -39,6 +40,8 @@
     vmm_init();
 
     stacktrace_init();
+
+    acpi_init();
 
     LOG_INFO("Fenrir successfully booted!\n");
 

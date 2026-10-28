@@ -27,3 +27,5 @@ uint64_t boot_get_hhdm_offset();
 const struct limine_memmap_response *boot_get_memory_map_response();
 
 const struct limine_module_response *boot_get_module_response();
+
+void *boot_get_rsdp_address();
