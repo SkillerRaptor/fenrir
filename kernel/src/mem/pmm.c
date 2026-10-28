@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "boot/boot.h"
+#include "lib/assertion.h"
 #include "lib/log.h"
 #include "lib/math.h"
 #include "lib/string.h"
@@ -73,10 +74,7 @@ void pmm_init()
         }
     }
 
-    if (s_highest_address == 0) {
-        // TODO: Panic
-        return;
-    }
+    VERIFY(s_highest_address != 0, "Failed to find usable region in memory map");
 
     s_total_pages = math_div_round_up(s_highest_address, PAGE_SIZE);
 
@@ -97,10 +95,7 @@ void pmm_init()
         break;
     }
 
-    if (!bitmap_found) {
-        // TODO: Panic
-        return;
-    }
+    VERIFY(bitmap_found, "Failed to find usable region to hold the bitmap");
 
     s_bitmap.data = (uint8_t *) (bitmap_base + boot_get_hhdm_offset());
     s_bitmap.size = bitmap_bytes;

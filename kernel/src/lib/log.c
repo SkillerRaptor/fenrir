@@ -13,8 +13,8 @@
 
 void log_vlog(enum log_level level, const char *fmt, ...)
 {
-    char *level_string = nullptr;
-    char *level_color = nullptr;
+    char *level_color = "";
+    char *level_string = "<unknown>";
     switch (level) {
     case LOG_LEVEL_ERROR:
         level_color = "\x1b[38;2;255;0;0m";

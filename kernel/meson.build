@@ -90,7 +90,7 @@ fenrir_sources = files(
     'src/arch/x86_64/gdt.c',
     'src/arch/x86_64/idt.asm',
     'src/arch/x86_64/idt.c',
-    'src/lib/assert.c',
+    'src/lib/assertion.c',
     'src/lib/console.c',
     'src/lib/log.c',
     'src/lib/stdio.c',

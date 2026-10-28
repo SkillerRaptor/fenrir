@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #include "boot/boot.h"
-#include "lib/assert.h"
+#include "lib/assertion.h"
 #include "lib/log.h"
 #include "lib/math.h"
 #include "limine.h"
@@ -125,7 +125,7 @@ void vmm_switch_page_map(struct PageMap *page_map)
 {
     ASSERT(page_map != nullptr);
     ASSERT(page_map->top_level != nullptr);
-    ASSERT(math_is_aligned((uint64_t) page_map->top_level, PAGE_SIZE));
+    VERIFY(math_is_aligned((uint64_t) page_map->top_level, PAGE_SIZE));
 
     asm volatile("mov %0, %%cr3" : : "r"(page_map->top_level) : "memory");
 }
@@ -186,8 +186,8 @@ void vmm_map_page(struct PageMap *page_map, uint64_t phys_addr, uint64_t virt_ad
 {
     ASSERT(page_map != nullptr);
     ASSERT(page_map->top_level != nullptr);
-    ASSERT(math_is_aligned(phys_addr, PAGE_SIZE));
-    ASSERT(math_is_aligned(virt_addr, PAGE_SIZE));
+    VERIFY(math_is_aligned(phys_addr, PAGE_SIZE));
+    VERIFY(math_is_aligned(virt_addr, PAGE_SIZE));
 
     volatile uint64_t *pte = get_pte(page_map, virt_addr, true);
     if (!pte) {
@@ -203,7 +203,7 @@ void vmm_unmap_page(struct PageMap *page_map, uint64_t virt_addr)
 {
     ASSERT(page_map != nullptr);
     ASSERT(page_map->top_level != nullptr);
-    ASSERT(math_is_aligned(virt_addr, PAGE_SIZE));
+    VERIFY(math_is_aligned(virt_addr, PAGE_SIZE));
 
     volatile uint64_t *pte = get_pte(page_map, virt_addr, false);
     if (!pte) {

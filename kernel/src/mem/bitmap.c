@@ -6,13 +6,13 @@
 
 #include "mem/bitmap.h"
 
-#include "lib/assert.h"
+#include "lib/assertion.h"
 #include "lib/string.h"
 
 void bitmap_set(struct Bitmap *bitmap, size_t index, bool value)
 {
     ASSERT(bitmap != nullptr);
-    ASSERT(index < bitmap->size * 8);
+    VERIFY(index < bitmap->size * 8);
 
     const size_t byte_index = index / 8;
     const size_t bit_index = index % 8;
@@ -31,7 +31,7 @@ void bitmap_set(struct Bitmap *bitmap, size_t index, bool value)
 bool bitmap_is_set(const struct Bitmap *bitmap, size_t index)
 {
     ASSERT(bitmap != nullptr);
-    ASSERT(index < bitmap->size * 8);
+    VERIFY(index < bitmap->size * 8);
 
     const size_t byte_index = index / 8;
     const size_t bit_index = index % 8;
