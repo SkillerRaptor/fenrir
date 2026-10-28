@@ -107,6 +107,7 @@ fenrir_sources = files(
     'src/mem/kmalloc.c',
     'src/mem/pmm.c',
     'src/mem/vmm.c',
+    'src/sync/spinlock.c',
 )
 
 fenrir_includes = include_directories('include')
