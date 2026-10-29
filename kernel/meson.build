@@ -141,7 +141,12 @@ fenrir_sources = files(
 
 fenrir_includes = include_directories('include')
 
-add_project_arguments('-DUACPI_NATIVE_ALLOC_ZEROED', '-DUACPI_FORMATTED_LOGGING', language: 'c')
+add_project_arguments(
+    '-DUACPI_NATIVE_ALLOC_ZEROED',
+    '-DUACPI_FORMATTED_LOGGING',
+    '-DUACPI_NATIVE_MMIO',
+    language: 'c'
+)
 
 fenrir = executable(
     'fenrir',

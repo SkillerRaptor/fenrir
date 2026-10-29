@@ -15,6 +15,7 @@
 #include "boot/boot.h"
 #include "lib/log.h"
 #include "lib/math.h"
+#include "lib/mmio.h"
 #include "lib/stdio.h"
 #include "mem/kmalloc.h"
 #include "mem/page.h"
@@ -306,17 +307,15 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
  * If UACPI_NATIVE_MMIO is not defined, uACPI uses builtin generic MMIO
  * helpers that use simple volatile stores/loads.
  */
-#ifdef UACPI_NATIVE_MMIO
-uacpi_u8 uacpi_kernel_mmio_read8(void *);
-uacpi_u16 uacpi_kernel_mmio_read16(void *);
-uacpi_u32 uacpi_kernel_mmio_read32(void *);
-uacpi_u64 uacpi_kernel_mmio_read64(void *);
+uacpi_u8 uacpi_kernel_mmio_read8(void *ptr) { return mmio_read8(ptr); }
+uacpi_u16 uacpi_kernel_mmio_read16(void *ptr) { return mmio_read16(ptr); }
+uacpi_u32 uacpi_kernel_mmio_read32(void *ptr) { return mmio_read32(ptr); }
+uacpi_u64 uacpi_kernel_mmio_read64(void *ptr) { return mmio_read64(ptr); }
 
-void uacpi_kernel_mmio_write8(void *, uacpi_u8);
-void uacpi_kernel_mmio_write16(void *, uacpi_u16);
-void uacpi_kernel_mmio_write32(void *, uacpi_u32);
-void uacpi_kernel_mmio_write64(void *, uacpi_u64);
-#endif
+void uacpi_kernel_mmio_write8(void *ptr, uacpi_u8 value) { mmio_write8(ptr, value); }
+void uacpi_kernel_mmio_write16(void *ptr, uacpi_u16 value) { mmio_write16(ptr, value); }
+void uacpi_kernel_mmio_write32(void *ptr, uacpi_u32 value) { mmio_write32(ptr, value); }
+void uacpi_kernel_mmio_write64(void *ptr, uacpi_u64 value) { mmio_write64(ptr, value); }
 
 /**
  * Allocate a block of memory of 'size' bytes.
