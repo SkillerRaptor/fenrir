@@ -8,6 +8,7 @@
 #include "arch/x86_64/cpu.h"
 #include "arch/x86_64/gdt.h"
 #include "arch/x86_64/idt.h"
+#include "arch/x86_64/pic.h"
 #include "boot/boot.h"
 #include "lib/console.h"
 #include "lib/log.h"
@@ -42,6 +43,7 @@
     stacktrace_init();
 
     acpi_early_init();
+    pic_disable();
 
     LOG_INFO("Fenrir successfully booted!\n");
 

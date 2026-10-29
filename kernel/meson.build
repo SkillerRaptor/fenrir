@@ -122,6 +122,7 @@ fenrir_sources = files(
     'src/arch/x86_64/gdt.c',
     'src/arch/x86_64/idt.asm',
     'src/arch/x86_64/idt.c',
+    'src/arch/x86_64/pic.c',
     'src/boot/boot.c',
     'src/lib/assertion.c',
     'src/lib/console.c',
