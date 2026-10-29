@@ -12,7 +12,7 @@
 #include "lib/assertion.h"
 #include "lib/log.h"
 
-void acpi_init()
+void acpi_early_init()
 {
     uacpi_status ret = uacpi_initialize(0);
     if (uacpi_unlikely_error(ret)) {

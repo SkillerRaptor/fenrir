@@ -6,4 +6,4 @@
 
 #pragma once
 
-void acpi_init();
+void acpi_early_init();

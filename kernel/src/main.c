@@ -41,7 +41,7 @@
 
     stacktrace_init();
 
-    acpi_init();
+    acpi_early_init();
 
     LOG_INFO("Fenrir successfully booted!\n");
 
