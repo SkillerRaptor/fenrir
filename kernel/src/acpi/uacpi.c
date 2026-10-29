@@ -10,6 +10,7 @@
 #include <uacpi/status.h>
 #include <uacpi/types.h>
 
+#include "arch/x86_64/cpu.h"
 #include "arch/x86_64/io.h"
 #include "boot/boot.h"
 #include "lib/log.h"
@@ -423,9 +424,9 @@ uacpi_thread_id uacpi_kernel_get_thread_id(void)
  */
 uacpi_interrupt_state uacpi_kernel_disable_interrupts(void)
 {
-    LOG_TRACE("uacpi_kernel_disable_interrupts()\n");
-
-    return 0;
+    const bool interrupts_enabled = cpu_are_interrupts_enabled();
+    cpu_disable_interrupts();
+    return (uacpi_interrupt_state) interrupts_enabled;
 }
 
 /**
@@ -434,9 +435,9 @@ uacpi_interrupt_state uacpi_kernel_disable_interrupts(void)
  */
 void uacpi_kernel_restore_interrupts(uacpi_interrupt_state state)
 {
-    (void) state;
-
-    LOG_TRACE("uacpi_kernel_restore_interrupts()\n");
+    if ((bool) state) {
+        cpu_enable_interrupts();
+    }
 }
 
 /**

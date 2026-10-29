@@ -118,7 +118,6 @@ fenrir_sources = files(
     'src/main.c',
     'src/acpi/acpi.c',
     'src/acpi/uacpi.c',
-    'src/arch/x86_64/cpu.c',
     'src/arch/x86_64/gdt.asm',
     'src/arch/x86_64/gdt.c',
     'src/arch/x86_64/idt.asm',
