@@ -10,6 +10,7 @@
 #include <flanterm_backends/fb.h>
 
 #include "boot/boot.h"
+#include "lib/serial.h"
 #include "lib/string.h"
 
 static struct flanterm_context *s_context = nullptr;
@@ -47,6 +48,8 @@ void console_init()
         0,
         0,
         true);
+
+    serial_init();
 }
 
 void console_putc(int c)
@@ -57,6 +60,7 @@ void console_putc(int c)
     }
 
     flanterm_write(s_context, &ch, 1);
+    serial_putc(c);
 }
 
 void console_puts(const char *str)
